@@ -2,7 +2,12 @@ import numpy as np
 from astropy import units as u
 from astropy.constants import k_B, m_p
 
-def T_to_vth(T, mass=m_p, n=2):
+from . import config
+from .utils import check_parameters
+
+
+@check_parameters
+def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''
     Calculate thermal velocity from temperature.
     
@@ -15,20 +20,21 @@ def T_to_vth(T, mass=m_p, n=2):
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
     :return: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
-    if not isinstance(T, u.Quantity) or not T.unit.is_equivalent(u.K):
-        raise ValueError("Temperature T must have units of Kelvin (u.K)")
-    if not isinstance(mass, u.Quantity) or not mass.unit.is_equivalent(u.kg):
-        raise ValueError("Mass must have units of kilogram (u.kg)")
-    if not isinstance(n, (int, float)):
-        raise ValueError("n must be a number")
     
-    T = T.to(u.K)
-    mass = mass.to(u.kg)
+    if config.ENABLE_VALUE_CHECKING:
+        if not T.unit.is_equivalent(u.K):
+            raise ValueError("Temperature T must have units of temperature (u.K)")
+        if not mass.unit.is_equivalent(u.kg):
+            raise ValueError("Mass must have units of mass (u.kg)")
+    
+    T = T.si
+    mass = mass.si
     vth = (n * k_B * T / mass)**0.5
-    return vth.to(u.m / u.s)
+    return vth.si
 
 
-def vth_to_T(vth, mass=m_p, n=2):
+@check_parameters
+def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''
     Calculate temperature from thermal velocity.
     
@@ -41,50 +47,57 @@ def vth_to_T(vth, mass=m_p, n=2):
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
     :return: Temperature with units (e.g., T * u.K).
     '''
-    if not isinstance(vth, u.Quantity) or not vth.unit.is_equivalent(u.m / u.s):
-        raise ValueError("Thermal velocity vth must have units of meters per second (u.m/u.s)")
-    if not isinstance(mass, u.Quantity) or not mass.unit.is_equivalent(u.kg):
-        raise ValueError("Mass must have units of kilogram (u.kg)")
-    if not isinstance(n, (int, float)):
-        raise ValueError("n must be a number")
     
-    vth = vth.to(u.m / u.s)
-    mass = mass.to(u.kg)
+    if config.ENABLE_VALUE_CHECKING:
+        if not vth.unit.is_equivalent(u.m / u.s):
+            raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
+        if not mass.unit.is_equivalent(u.kg):
+            raise ValueError("Mass must have units of mass (u.kg)")
+    
+    vth = vth.si
+    mass = mass.si
     T = mass * vth**2 / (n * k_B)
-    return T.to(u.K)
+    return T.si
 
 
-def E_to_T(E):
+@check_parameters
+def E_to_T(E: u.Quantity) -> u.Quantity:
     '''
     Calculate temperature from energy.
     
     :param E: Energy with units (e.g., E * u.J).
     :return: Temperature with units (e.g., T * u.K).
     '''
-    if not isinstance(E, u.Quantity) or not E.unit.is_equivalent(u.J):
-        raise ValueError("Energy E must have units of Joules (u.J)")
     
-    E = E.to(u.J)
+    if config.ENABLE_VALUE_CHECKING:
+        if not E.unit.is_equivalent(u.J):
+            raise ValueError("Energy E must have units of energy (u.J)")
+    
+    E = E.si
     T = E / k_B
-    return T.to(u.K)
+    return T.si
 
 
-def T_to_E(T):
+@check_parameters
+def T_to_E(T: u.Quantity) -> u.Quantity:
     '''
     Calculate energy from temperature.
     
     :param T: Temperature with units (e.g., T * u.K).
     :return: Energy with units (e.g., E * u.J).
     '''
-    if not isinstance(T, u.Quantity) or not T.unit.is_equivalent(u.K):
-        raise ValueError("Temperature T must have units of Kelvin (u.K)")
     
-    T = T.to(u.K)
+    if config.ENABLE_VALUE_CHECKING:
+        if not T.unit.is_equivalent(u.K):
+            raise ValueError("Temperature T must have units of temperature (u.K)")
+    
+    T = T.si
     E = k_B * T
-    return E.to(u.J)
+    return E.si
 
 
-def E_to_vth(E, mass=m_p, n=2):
+@check_parameters
+def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''
     Calculate thermal velocity from energy.
     
@@ -97,19 +110,21 @@ def E_to_vth(E, mass=m_p, n=2):
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
     :return: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
-    if not isinstance(E, u.Quantity) or not E.unit.is_equivalent(u.J):
-        raise ValueError("Energy E must have units of Joules (u.J)")
-    if not isinstance(mass, u.Quantity) or not mass.unit.is_equivalent(u.kg):
-        raise ValueError("Mass must have units of kilogram (u.kg)")
-    if not isinstance(n, (int, float)):
-        raise ValueError("n must be a number")
     
-    E = E.to(u.J)
-    mass = mass.to(u.kg)
+    if config.ENABLE_VALUE_CHECKING:
+        if not E.unit.is_equivalent(u.J):
+            raise ValueError("Energy E must have units of energy (u.J)")
+        if not mass.unit.is_equivalent(u.kg):
+            raise ValueError("Mass must have units of mass (u.kg)")
+    
+    E = E.si
+    mass = mass.si
     vth = (2 * E / mass)**0.5
-    return vth.to(u.m / u.s)
+    return vth.si
 
-def vth_to_E(vth, mass=m_p, n=2):
+
+@check_parameters
+def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''
     Calculate energy from thermal velocity.
     
@@ -122,17 +137,17 @@ def vth_to_E(vth, mass=m_p, n=2):
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
     :return: Energy with units (e.g., E * u.J).
     '''
-    if not isinstance(vth, u.Quantity) or not vth.unit.is_equivalent(u.m / u.s):
-        raise ValueError("Thermal velocity vth must have units of meters per second (u.m/u.s)")
-    if not isinstance(mass, u.Quantity) or not mass.unit.is_equivalent(u.kg):
-        raise ValueError("Mass must have units of kilogram (u.kg)")
-    if not isinstance(n, (int, float)):
-        raise ValueError("n must be a number")
     
-    vth = vth.to(u.m / u.s)
-    mass = mass.to(u.kg)
+    if config.ENABLE_VALUE_CHECKING:
+        if not vth.unit.is_equivalent(u.m / u.s):
+            raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
+        if not mass.unit.is_equivalent(u.kg):
+            raise ValueError("Mass must have units of mass (u.kg)")
+    
+    vth = vth.si
+    mass = mass.si
     E = 0.5 * mass * vth**2
-    return E.to(u.J)
+    return E.si
 
 
 

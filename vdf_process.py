@@ -1,8 +1,17 @@
 import numpy as np
 from scipy.constants import physical_constants
 
-def vdfSph2Cart(azimuth, elevation, energy, vdf, v_unit_new=None):
-    
+from . import config
+from .utils import check_parameters
+
+
+@check_parameters
+def Sph2Cart(azimuth: np.ndarray, 
+             elevation: np.ndarray, 
+             energy: np.ndarray, 
+             vdf: np.ndarray, 
+             v_unit_new: np.ndarray|None=None
+             ) -> np.ndarray:
     '''
     This function calculates the 3D scatters of VDF in the new coordinate system. (Only tested for SolO data)
     
@@ -15,22 +24,14 @@ def vdfSph2Cart(azimuth, elevation, energy, vdf, v_unit_new=None):
     :return: Array of 3D scatters of VDF in shape (time, azimuth*elevation*energy, 4), where the last dimension is [v_x, v_y, v_z, f(v)].
     '''
     
-    if not isinstance(azimuth, np.ndarray) or not isinstance(elevation, np.ndarray) or not isinstance(energy, np.ndarray):
-        raise TypeError("Azimuth, elevation, and energy must be numpy arrays.")
-    if not isinstance(vdf, np.ndarray):
-        raise TypeError("VDF must be a numpy array.")
-    if v_unit_new is not None and not isinstance(v_unit_new, np.ndarray):
-        raise TypeError("v_unit_new must be a numpy array if provided.")
-    
-    if azimuth.ndim != 1 or elevation.ndim != 1 or energy.ndim != 1:
-        raise ValueError("Azimuth, elevation, and energy must be 1-dimensional arrays.")
-    if vdf.ndim != 4:
-        raise ValueError("VDF must be a 4-dimensional array with shape (time, azimuth, elevation, energy).")
-    if v_unit_new is not None and v_unit_new.shape != (vdf.shape[0], 3, 3):
-        raise ValueError("v_unit_new must have shape (time, 3, 3).")
-    
-    if vdf.shape[1] != len(azimuth) or vdf.shape[2] != len(elevation) or vdf.shape[3] != len(energy):
-        raise ValueError("The dimensions of VDF must match the lengths of azimuth, elevation, and energy arrays.")
+    if config.ENABLE_VALUE_CHECKING:
+        
+        if azimuth.ndim != 1 or elevation.ndim != 1 or energy.ndim != 1:
+            raise ValueError("Azimuth, elevation, and energy must be 1-dimensional arrays.")
+        if vdf.ndim != 4 or vdf.shape[1] != len(azimuth) or vdf.shape[2] != len(elevation) or vdf.shape[3] != len(energy):
+            raise ValueError("VDF must be a 4-dimensional array with shape (time, azimuth, elevation, energy).")
+        if v_unit_new is not None and v_unit_new.shape != (vdf.shape[0], 3, 3):
+            raise ValueError("v_unit_new must have shape (time, 3, 3).")
     
     if v_unit_new is None:
         v_unit_new = np.tile(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).reshape(1, 3, 3), (vdf.shape[0], 1, 1))

@@ -2,9 +2,27 @@ import numpy as np
 from astropy.constants import e, m_p, au, eps0, u as u_const
 from scipy import integrate
 from astropy import units as u
-from vth_E_T import T_to_E, T_to_vth
 
-def coulomb_collisional_age(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_number_i, m_i=None, charge_number_j=1, mass_number_j=1, m_j=None, distance=au):
+from . import config
+from .vth_E_T import T_to_E, T_to_vth
+from .utils import check_parameters
+
+
+@check_parameters
+def calc_Ac(v_j: u.Quantity, 
+            T_j: u.Quantity, 
+            n_j: u.Quantity, 
+            v_i: u.Quantity, 
+            T_i: u.Quantity, 
+            n_i: u.Quantity, 
+            charge_number_i: int, 
+            mass_number_i: int, 
+            m_i: u.Quantity|None = None, 
+            charge_number_j: int = 1, 
+            mass_number_j: int = 1, 
+            m_j: u.Quantity|None = None, 
+            distance: u.Quantity = au
+            ) -> float:
 
     '''
     Calculate Coulomb collisional age, reproduced according to the algorithm of Tracy et al. (2015)
@@ -27,32 +45,33 @@ def coulomb_collisional_age(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_
         - Ac: Coulomb Collisional Age
     '''
     
-    if not all(isinstance(x, u.Quantity) and x.unit.is_equivalent(u.m/u.s) for x in [v_j, v_i]):
-        raise ValueError("v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).")
-    if not all(isinstance(x, u.Quantity) and x.unit.is_equivalent(u.K) for x in [T_j, T_i]):
-        raise ValueError("T_j and T_i must be quantities with units of temperature (K).")
-    if not all(isinstance(x, u.Quantity) and x.unit.is_equivalent(u.m**-3) for x in [n_j, n_i]):
-        raise ValueError("n_j and n_i must be quantities with units of number density (m^-3).")
-    if not isinstance(distance, u.Quantity) or not distance.unit.is_equivalent(u.au):
-        raise ValueError("distance must be a quantity with units of astronomical units (AU).")
-    if not all(isinstance(x, int) and x > 0 for x in [charge_number_i, mass_number_i, charge_number_j, mass_number_j]):
-        raise ValueError("charge_number_i, mass_number_i, charge_number_j, mass_number_j, and n_vth must be positive integers.")
-    if m_i is not None and (not isinstance(m_i, u.Quantity) or not m_i.unit.is_equivalent(u.kg) or m_i <= 0):
-        raise ValueError("m_i must be a positive quantity with units of mass (kg) or None.")
-    if m_j is not None and (not isinstance(m_j, u.Quantity) or not m_j.unit.is_equivalent(u.kg) or m_j <= 0):
-        raise ValueError("m_j must be a positive quantity with units of mass (kg) or None.")
+    if config.ENABLE_VALUE_CHECKING:
+        if not all(x.unit.is_equivalent(u.m/u.s) for x in [v_j, v_i]):
+            raise ValueError("v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).")
+        if not all(x.unit.is_equivalent(u.K) for x in [T_j, T_i]):
+            raise ValueError("T_j and T_i must be quantities with units of temperature (K).")
+        if not all(x.unit.is_equivalent(u.m**-3) for x in [n_j, n_i]):
+            raise ValueError("n_j and n_i must be quantities with units of number density (m^-3).")
+        if not distance.unit.is_equivalent(u.au):
+            raise ValueError("distance must be a quantity with units of astronomical units (AU).")
+        if not all(x > 0 for x in [charge_number_i, mass_number_i, charge_number_j, mass_number_j]):
+            raise ValueError("charge_number_i, mass_number_i, charge_number_j, mass_number_j, and n_vth must be positive integers.")
+        if m_i is not None and (not m_i.unit.is_equivalent(u.kg) or m_i <= 0):
+            raise ValueError("m_i must be a positive quantity with units of mass (kg) or None.")
+        if m_j is not None and (not m_j.unit.is_equivalent(u.kg) or m_j <= 0):
+            raise ValueError("m_j must be a positive quantity with units of mass (kg) or None.")
     
-    v_j = v_j.to(u.m / u.s)
-    v_i = v_i.to(u.m / u.s)
-    T_j = T_j.to(u.K)
-    T_i = T_i.to(u.K)
-    n_j = n_j.to(u.m**-3)
-    n_i = n_i.to(u.m**-3)
-    distance = distance.to(u.m)
+    v_j = v_j.si
+    v_i = v_i.si
+    T_j = T_j.si
+    T_i = T_i.si
+    n_j = n_j.si
+    n_i = n_i.si
+    distance = distance.si
     if m_i is not None:
-        m_i = m_i.to(u.kg)
+        m_i = m_i.si
     if m_j is not None:
-        m_j = m_j.to(u.kg)
+        m_j = m_j.si
     
     q_e = e.si
     q_j = - charge_number_j * q_e
@@ -70,14 +89,14 @@ def coulomb_collisional_age(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_
     vth2_j = T_to_vth(T_j, mass=m_j, n=n_vth)**2
     vth2_i = T_to_vth(T_i, mass=m_i, n=n_vth)**2
     
-    ln_lambda = 29.9 - np.log(((charge_number_i*charge_number_j*(mass_number_i + mass_number_j) / (mass_number_i*Te_j + mass_number_j*Te_i)) * np.sqrt(n_i*charge_number_i**2 / Te_i + n_j*charge_number_j**2 / Te_j)).to_value())
+    ln_lambda = 29.9 - np.log(((charge_number_i*charge_number_j*(mass_number_i + mass_number_j) / (mass_number_i*Te_j + mass_number_j*Te_i)) * np.sqrt(n_i*charge_number_i**2 / Te_i + n_j*charge_number_j**2 / Te_j)).to_value()) # 无量纲化
     x = np.abs(v_i - v_j) / np.sqrt(vth2_i + vth2_j)
     phi_x = np.array([(2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, xi)[0] for xi in x]) if x.size > 1 else (2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, x)[0]
-    nu_th = ((1 / (3*np.pi*eps0**2)) * (q_i**2 * q_j**2 * ln_lambda * n_j / (m_i * m_j * (vth2_i + vth2_j)**(3/2))) * (phi_x / x)).to(1/u.s) # 此处量纲恰好是1/s，单位转换并未影响数值
+    nu_th = ((1 / (3*np.pi*eps0**2)) * (q_i**2 * q_j**2 * ln_lambda * n_j / (m_i * m_j * (vth2_i + vth2_j)**(3/2))) * (phi_x / x))
     t_travel = distance / v_j
     Ac = nu_th * t_travel
     
-    return Ac
+    return Ac.si.to_value()
 
 
 if __name__ == "__main__":
@@ -95,7 +114,7 @@ if __name__ == "__main__":
     distance = 1 * au
 
     # Call the function
-    result = coulomb_collisional_age(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_number_i, distance=distance, 
+    result = calc_Ac(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_number_i, distance=distance, 
                                     #  charge_number_j=charge_number_j, mass_number_j=mass_number_j
                                      )
 

@@ -1,7 +1,12 @@
 import numpy as np
 
+from . import config
+from .utils import check_parameters
+
+
 # Source: https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py
-def minVar(data, verbose=False):
+@check_parameters
+def min_var(data: np.ndarray, verbose: bool=False):
     
     """
     This program computes the principal variance directions and variances of a
