@@ -45,7 +45,7 @@ def calc_Ac(v_j: u.Quantity,
         - Ac: Coulomb Collisional Age
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not all(x.unit.is_equivalent(u.m/u.s) for x in [v_j, v_i]):
             raise ValueError("v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).")
         if not all(x.unit.is_equivalent(u.K) for x in [T_j, T_i]):

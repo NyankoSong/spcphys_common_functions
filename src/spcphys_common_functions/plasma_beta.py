@@ -20,7 +20,7 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
     :return: Thermal pressure.
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not n.unit.is_equivalent(u.m**-3):
             raise TypeError("n must be a quantity with units of number density (m^-3)")
         if not T.unit.is_equivalent(u.K):
@@ -44,7 +44,7 @@ def pressure_magnetic(b: u.Quantity):
     
     b = b.to(u.T)
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not b.unit.is_equivalent(u.T):
             raise TypeError("b must be a quantity with units of magnetic field (T)")
         
@@ -65,7 +65,7 @@ def calc_beta(p_date: List[datetime], n: u.Quantity, b_date: List[datetime], b: 
     :return: Plasma beta.
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not n.unit.is_equivalent(u.m**-3):
             raise TypeError("n must be a quantity with units of number density (m^-3)")
         if not b.unit.is_equivalent(u.T):
@@ -86,13 +86,13 @@ def calc_beta(p_date: List[datetime], n: u.Quantity, b_date: List[datetime], b: 
 
 
 
-if __name__ == "__main__":
-    # Test data
-    from datetime import timedelta
-    p_date = [datetime(2021, 1, 1) + timedelta(days=i) for i in range(10)]
-    n = (np.random.rand(10)*10+10) * u.m**-3
-    b_date = [datetime(2021, 1, 1) + timedelta(days=i) for i in range(10)]
-    b = np.random.rand(10, 3)*20 * u.T
-    T = (np.random.rand(10)*10000+100000) * u.K
+# if __name__ == "__main__":
+#     # Test data
+#     from datetime import timedelta
+#     p_date = [datetime(2021, 1, 1) + timedelta(days=i) for i in range(10)]
+#     n = (np.random.rand(10)*10+10) * u.m**-3
+#     b_date = [datetime(2021, 1, 1) + timedelta(days=i) for i in range(10)]
+#     b = np.random.rand(10, 3)*20 * u.T
+#     T = (np.random.rand(10)*10000+100000) * u.K
     
-    print(calc_beta(p_date, n, b_date, b, T))
+#     print(calc_beta(p_date, n, b_date, b, T))

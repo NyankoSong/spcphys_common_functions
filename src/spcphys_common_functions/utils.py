@@ -1,8 +1,8 @@
 import collections
 import functools
 import inspect
-from typing import get_origin, get_args
-# import types
+from typing import Union, get_origin, get_args
+import types
 
 def check_parameters(func):
     """
@@ -42,8 +42,19 @@ def check_parameters(func):
                 anno_origin = get_origin(item.anno)  # 获取泛型的原始类型
                 anno_args = get_args(item.anno)  # 获取泛型的参数类型
                 
+                # 如果是联合类型（Union）
+                if anno_origin in (Union, types.UnionType):
+                    if not any(isinstance(item.value, arg) for arg in anno_args):
+                        raise TypeError(
+                            error_msg.format(
+                                argument=item.arg_name,
+                                expected=item.anno,
+                                got=type(item.value),
+                                value=item.value
+                            )
+                        )
                 # 如果是泛型类型（如 List[datetime]）
-                if anno_origin:
+                elif anno_origin:
                     if not isinstance(item.value, anno_origin) or not all(isinstance(v, anno_args[0]) for v in item.value):
                         raise TypeError(
                             error_msg.format(

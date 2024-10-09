@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy import stats as astats
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
+from matplotlib.collections import QuadMesh
 from scipy.signal import convolve2d
 import scipy.stats as stats
 
@@ -77,21 +78,23 @@ def _mean_std_line_params(x, y, x_edges, scale):
 
 
 @check_parameters
-def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quantity, scales: list|tuple|str='linear', norm_type: str|None=None,
+def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quantity, z: np.ndarray|u.Quantity|None=None, least_samples_per_cell: int=1, scales: list|tuple|str='linear', norm_type: str|None=None,
                 color_norm_type: str='linear', color_norm_range: list|tuple|None=None, bins: int|np.ndarray|list|str='freedman', hist_pcolormesh_args: dict|None=None,
                 contour_levels: list|np.ndarray|None=None, contour_smooth: int|float|None=None, contour_args: dict|None=None,
                 fit_line: bool=False, fit_line_plot_args: dict|None=None,
                 mean_std: bool=False, mean_std_errorbar_args: dict|None=None,
                 separate: str|None=None,
                 mean_std_line: bool=False, mean_std_line_args: dict|None=None,
-                ) -> plt.Axes:
+                ) -> QuadMesh:
     
     '''
-    Plot a 2D histogram.
+    Plot a 2D histogram. If z is provided, overplot z as color.
 
     :param axes: The matplotlib axes to plot on.
     :param x: The x-axis data, can be a numpy array or an astropy Quantity.
     :param y: The y-axis data, can be a numpy array or an astropy Quantity.
+    :param z: The z-axis data, can be a numpy array or an astropy Quantity. Default is None.
+    :param least_samples_per_cell: The least number of samples per cell to plot, valid only when z is not None. Default is 0.
     :param scales: The scales for the axes, can be 'linear' or 'log'. Default is 'linear'.
     :param norm_type: The normalization type, can be 'max', 'sum', or None. Default is None.
     :param color_norm_type: The color normalization type, can be 'linear' or 'log'. Default is 'linear'.
@@ -112,7 +115,9 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     :return: The matplotlib axes with the plot.
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
+        if least_samples_per_cell < 1:
+            raise ValueError("least_samples_per_cell must be a positive integer.")
         if norm_type and norm_type not in ['max', 'sum']:
             raise ValueError("norm_type must be 'max', 'sum' or None.")
         if color_norm_type not in ['log', 'linear']:
@@ -140,99 +145,120 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         y = y.value
     
     
-    bins = [bins, bins] if len(bins) == 1 else bins
-    scales = [scales, scales] if len(scales) == 1 else scales
+    bins = [bins, bins] if isinstance(bins, str|int) else bins
+    scales = [scales, scales] if isinstance(scales, str) and z is None else [scales, scales, scales] if isinstance(scales, str) else scales
     
-    bins_x = _determine_bins(x, bins, scales[0])
-    bins_y = _determine_bins(y, bins, scales[1])
+    bins_x = _determine_bins(x, bins[0], scales[0])
+    bins_y = _determine_bins(y, bins[1], scales[1])
     
     z_hist, x_edges, y_edges = np.histogram2d(x, y, bins=[bins_x, bins_y])
     if len(z_hist.shape) < 2:
         raise ValueError("No enough data to plot 2D histogram.")
-    
-    if norm_type == 'max':
-        if separate == 'x':
-            z_hist /= z_hist.max(axis=1)
-        elif separate == 'y':
-            z_hist /= z_hist.max(axis=0)
-        else:
-            z_hist /= z_hist.max()
-    elif norm_type == 'sum':
-        if separate == 'x':
-            z_hist /= z_hist.sum(axis=1)
-        elif separate == 'y':
-            z_hist /= z_hist.sum(axis=0)
-        else:
-            z_hist /= z_hist.sum()
-        
-    if color_norm_type == 'log':
-        color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=z_hist.min(), vmax=z_hist.max())
-    elif color_norm_type == 'linear':
-        color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=z_hist.min(), vmax=z_hist.max())
         
     x_mid = (x_edges[1:] + x_edges[:-1]) / 2
     y_mid = (y_edges[1:] + y_edges[:-1]) / 2
     
-    z_masked = np.ma.masked_where(z_hist == 0, z_hist)
-    axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_args)
+    if z is not None:
+        z_scaled = np.log10(z) if scales[2] == 'log' else z
+        z_mat = np.full(z_hist.shape, np.nan)
+        for j in range(len(x_edges) - 1):
+            for k in range(len(y_edges) - 1):
+                z_jk = z_scaled[(x > x_edges[j]) & (x <= x_edges[j + 1]) & (y > y_edges[k]) & (y <= y_edges[k + 1])]
+                z_mat[j, k] = np.mean(z_jk) if len(z_jk) >= least_samples_per_cell else np.nan
+        z_mat = 10**z_mat if scales[2] == 'log' else z_mat
+        
+        if scales[2] == 'log':
+            color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=np.nanmin(z_mat), vmax=np.nanmax(z_mat))
+        elif scales[2] == 'linear':
+            color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=np.nanmin(z_mat), vmax=np.nanmax(z_mat))
+            
+        quadmesh = axes.pcolormesh(x_edges, y_edges, z_mat.T, norm=color_norm, **hist_pcolormesh_args)
+        
+    else:
+        if norm_type == 'max':
+            if separate == 'x':
+                z_hist /= z_hist.max(axis=1)
+            elif separate == 'y':
+                z_hist /= z_hist.max(axis=0)
+            else:
+                z_hist /= z_hist.max()
+        elif norm_type == 'sum':
+            if separate == 'x':
+                z_hist /= z_hist.sum(axis=1)
+            elif separate == 'y':
+                z_hist /= z_hist.sum(axis=0)
+            else:
+                z_hist /= z_hist.sum()
+        
+        if color_norm_type == 'log':
+            color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=z_hist.min(), vmax=z_hist.max())
+        elif color_norm_type == 'linear':
+            color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=z_hist.min(), vmax=z_hist.max())
+        
+        z_masked = np.ma.masked_where(z_hist == 0, z_hist)
+        quadmesh = axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_args)
     
+        if not separate:
+            if contour_levels:
+                if contour_smooth:
+                    if isinstance(contour_smooth, int) or int(contour_smooth) == contour_smooth:
+                        z_hist = convolve2d(z_hist, np.ones((contour_smooth, contour_smooth)), mode='same')
+                    elif isinstance(contour_smooth, float):
+                        z_hist = convolve2d(z_hist, np.ones((int(contour_smooth*z_hist.shape[0]), int(contour_smooth*z_hist.shape[1]))), mode='same')
+                axes.contour(x_mid, y_mid, z_hist.T, levels=contour_levels, **contour_args)
+            
+            if fit_line:
+                if scales[0] == 'log':
+                    x_fit = np.log10(x)
+                else:
+                    x_fit = x
+                if scales[1] == 'log':
+                    y_fit = np.log10(y)
+                else:
+                    y_fit = y
+                    
+                slope, intercept, r_value, p_value, _ = stats.linregress(x_fit, y_fit)
+                x_fitted = np.array([x_fit.min(), x_fit.max()])
+                y_fitted = slope * x_fitted + intercept
+                
+                if scales[0] == 'log':
+                    x_fitted = 10**x_fitted
+                    right_label = f'{slope:.2f}' + r'$\log_{10}x$'
+                else:
+                    right_label = f'{slope:.2f}' + r'$x$'
+                if scales[1] == 'log':
+                    y_fitted = 10**y_fitted
+                    left_label = r'$\log_{10}y=$'
+                else:
+                    left_label = r'$y=$'
+                    
+                end_label =  (r'$+$' if intercept > 0 else '') + f'{intercept:.2f}\n' + r'$r\approx$' + f'{r_value:.2f}' + r'$\ \ p\geqslant$' + f'{p_value:.2f}'
+                
+                _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, label=left_label+right_label+end_label, **fit_line_plot_args)
+            
+            if mean_std:
+                unlog_x_mean, x_cap, x_label = _mean_std_params(x, scales[0])
+                unlog_y_mean, y_cap, y_label = _mean_std_params(y, scales[1])
+                    
+                axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_args)
+            
+        else:
+            if mean_std_line:
+                if separate == 'x':
+                    unlog_y_means, y_caps = _mean_std_line_params(x, y, x_edges, scales[1])
+                    axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_args)
+                elif separate == 'y':
+                    unlog_x_means, x_caps = _mean_std_line_params(y, x, y_edges, scales[0])
+                    axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_args)
+                    
+    
+        
     if scales[0] == 'log':
         axes.set_xscale('log')
     if scales[1] == 'log':
         axes.set_yscale('log')
         
-    if not separate:
-        if contour_levels:
-            if contour_smooth:
-                if isinstance(contour_smooth, int) or int(contour_smooth) == contour_smooth:
-                    z_hist = convolve2d(z_hist, np.ones((contour_smooth, contour_smooth)), mode='same')
-                elif isinstance(contour_smooth, float):
-                    z_hist = convolve2d(z_hist, np.ones((int(contour_smooth*z_hist.shape[0]), int(contour_smooth*z_hist.shape[1]))), mode='same')
-            axes.contour(x_mid, y_mid, z_hist.T, levels=contour_levels, **contour_args)
-        
-        if fit_line:
-            if scales[0] == 'log':
-                x_fit = np.log10(x)
-            else:
-                x_fit = x
-            if scales[1] == 'log':
-                y_fit = np.log10(y)
-            else:
-                y_fit = y
-                
-            slope, intercept, r_value, p_value, _ = stats.linregress(x_fit, y_fit)
-            x_fitted = np.array([x_fit.min(), x_fit.max()])
-            y_fitted = slope * x_fitted + intercept
-            
-            if scales[0] == 'log':
-                x_fitted = 10**x_fitted
-                right_label = f'{slope:.2f}' + r'$\log_{10}x$'
-            else:
-                right_label = f'{slope:.2f}' + r'$x$'
-            if scales[1] == 'log':
-                y_fitted = 10**y_fitted
-                left_label = r'$\log_{10}y=$'
-            else:
-                left_label = r'$y=$'
-                
-            end_label =  (r'$+$' if intercept > 0 else '') + f'{intercept:.2f}\n' + r'$r\approx$' + f'{r_value:.2f}' + r'$\ \ p\geqslant$' + f'{p_value:.2f}'
-            
-            _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, label=left_label+right_label+end_label, **fit_line_plot_args)
-        
-        if mean_std:
-            unlog_x_mean, x_cap, x_label = _mean_std_params(x, scales[0])
-            unlog_y_mean, y_cap, y_label = _mean_std_params(y, scales[1])
-                
-            axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_args)
-        
-    else:
-        if mean_std_line:
-            if separate == 'x':
-                unlog_y_means, y_caps = _mean_std_line_params(x, y, x_edges, scales[1])
-                axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_args)
-            elif separate == 'y':
-                unlog_x_means, x_caps = _mean_std_line_params(y, x, y_edges, scales[0])
-                axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_args)
-        
-    return axes
-
+    return quadmesh
+    
+    
+    

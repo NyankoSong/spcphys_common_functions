@@ -6,11 +6,11 @@ from .utils import check_parameters
 
 
 @check_parameters
-def Sph2Cart(azimuth: np.ndarray, 
-             elevation: np.ndarray, 
-             energy: np.ndarray, 
-             vdf: np.ndarray, 
-             v_unit_new: np.ndarray|None=None
+def sph_to_cart(azimuth: np.ndarray,
+             elevation: np.ndarray,
+             energy: np.ndarray,
+             vdf: np.ndarray,
+             v_unit_new: np.ndarray|None=None,
              ) -> np.ndarray:
     '''
     This function calculates the 3D scatters of VDF in the new coordinate system. (Only tested for SolO data)
@@ -24,7 +24,7 @@ def Sph2Cart(azimuth: np.ndarray,
     :return: Array of 3D scatters of VDF in shape (time, azimuth*elevation*energy, 4), where the last dimension is [v_x, v_y, v_z, f(v)].
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         
         if azimuth.ndim != 1 or elevation.ndim != 1 or energy.ndim != 1:
             raise ValueError("Azimuth, elevation, and energy must be 1-dimensional arrays.")

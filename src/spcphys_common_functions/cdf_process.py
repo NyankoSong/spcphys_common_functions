@@ -1,10 +1,10 @@
+from typing import List
 import cdflib
 import numpy as np
 import pandas as pd
 from multiprocessing import Pool
 import pickle
 import os
-from typing import List
 
 from . import config
 from .utils import check_parameters
@@ -160,7 +160,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     if the variable has no condition, use 'none' instead, this will set the boundary to [-1E30, 1E30].
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not os.path.exists(dir_path):
             raise FileNotFoundError(f'{dir_path} not found!')
         if output_dir is not None and not os.path.exists(output_dir):

@@ -1,4 +1,5 @@
-import numpy as np
+'''Transformations between thermal velocity, energy, and temperature.'''
+
 from astropy import units as u
 from astropy.constants import k_B, m_p
 
@@ -21,7 +22,7 @@ def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     :return: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not T.unit.is_equivalent(u.K):
             raise ValueError("Temperature T must have units of temperature (u.K)")
         if not mass.unit.is_equivalent(u.kg):
@@ -48,7 +49,7 @@ def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     :return: Temperature with units (e.g., T * u.K).
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not vth.unit.is_equivalent(u.m / u.s):
             raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
         if not mass.unit.is_equivalent(u.kg):
@@ -69,7 +70,7 @@ def E_to_T(E: u.Quantity) -> u.Quantity:
     :return: Temperature with units (e.g., T * u.K).
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not E.unit.is_equivalent(u.J):
             raise ValueError("Energy E must have units of energy (u.J)")
     
@@ -87,7 +88,7 @@ def T_to_E(T: u.Quantity) -> u.Quantity:
     :return: Energy with units (e.g., E * u.J).
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not T.unit.is_equivalent(u.K):
             raise ValueError("Temperature T must have units of temperature (u.K)")
     
@@ -111,7 +112,7 @@ def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     :return: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not E.unit.is_equivalent(u.J):
             raise ValueError("Energy E must have units of energy (u.J)")
         if not mass.unit.is_equivalent(u.kg):
@@ -138,7 +139,7 @@ def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     :return: Energy with units (e.g., E * u.J).
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not vth.unit.is_equivalent(u.m / u.s):
             raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
         if not mass.unit.is_equivalent(u.kg):
@@ -152,33 +153,33 @@ def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
 
 
 
-if __name__ == "__main__":
-    T = 1e6 * u.K  # Temperature
-    vth = 1e5 * u.m / u.s  # Thermal velocity
-    E = 1e-17 * u.J  # Energy
+# if __name__ == "__main__":
+#     T = 1e6 * u.K  # Temperature
+#     vth = 1e5 * u.m / u.s  # Thermal velocity
+#     E = 1e-17 * u.J  # Energy
 
-    # Test T_to_vth
-    vth_calculated = T_to_vth(T)
-    print(f"T_to_vth({T}) = {vth_calculated}")
+#     # Test T_to_vth
+#     vth_calculated = T_to_vth(T)
+#     print(f"T_to_vth({T}) = {vth_calculated}")
 
-    # Test vth_to_T
-    T_calculated = vth_to_T(vth)
-    print(f"vth_to_T({vth}) = {T_calculated}")
+#     # Test vth_to_T
+#     T_calculated = vth_to_T(vth)
+#     print(f"vth_to_T({vth}) = {T_calculated}")
 
-    # Test E_to_T
-    T_from_E = E_to_T(E)
-    print(f"E_to_T({E}) = {T_from_E}")
+#     # Test E_to_T
+#     T_from_E = E_to_T(E)
+#     print(f"E_to_T({E}) = {T_from_E}")
     
-    # Test T_to_E
-    E_from_T = T_to_E(T)
-    print(f"T_to_E({T}) = {E_from_T}")
+#     # Test T_to_E
+#     E_from_T = T_to_E(T)
+#     print(f"T_to_E({T}) = {E_from_T}")
 
-    # Test E_to_vth
-    vth_from_E = E_to_vth(E)
-    print(f"E_to_vth({E}) = {vth_from_E}")
+#     # Test E_to_vth
+#     vth_from_E = E_to_vth(E)
+#     print(f"E_to_vth({E}) = {vth_from_E}")
 
-    # Test vth_to_E
-    E_from_vth = vth_to_E(vth)
-    print(f"vth_to_E({vth}) = {E_from_vth}")
+#     # Test vth_to_E
+#     E_from_vth = vth_to_E(vth)
+#     print(f"vth_to_E({vth}) = {E_from_vth}")
     
-    pass
+#     pass

@@ -23,7 +23,7 @@ def calc_alfven(p_date: List[datetime], v: u.Quantity, n: u.Quantity, b_date: Li
     :return: Tuple of cross helicity, Alfven ratio, and compressibility.
     '''
     
-    if config.ENABLE_VALUE_CHECKING:
+    if config._ENABLE_VALUE_CHECKING:
         if not v.unit.is_equivalent(u.m/u.s):
             raise ValueError("v must be a quantity with units of velocity (m/s).")
         if not n.unit.is_equivalent(u.m**-3):
@@ -56,19 +56,19 @@ def calc_alfven(p_date: List[datetime], v: u.Quantity, n: u.Quantity, b_date: Li
 
 
 
-if __name__ == "__main__":
-    # Test data
-    from datetime import timedelta
-    p_date = [datetime(2023, 1, 1) + timedelta(days=i) for i in range(10)]
-    v = np.random.rand(10, 3)
-    n = np.random.rand(10)
-    b_date = [datetime(2023, 1, 1, 0, 30) + timedelta(hours=i) for i in range(240)]
-    b = np.random.rand(240, 3)
+# if __name__ == "__main__":
+#     # Test data
+#     from datetime import timedelta
+#     p_date = [datetime(2023, 1, 1) + timedelta(days=i) for i in range(10)]
+#     v = np.random.rand(10, 3)
+#     n = np.random.rand(10)
+#     b_date = [datetime(2023, 1, 1, 0, 30) + timedelta(hours=i) for i in range(240)]
+#     b = np.random.rand(240, 3)
 
-    # Call the function
-    cross_helicity, alfven_ratio, compressibility = calc_alfven(p_date, v, n, b_date, b)
+#     # Call the function
+#     cross_helicity, alfven_ratio, compressibility = calc_alfven(p_date, v, n, b_date, b)
 
-    # Print the results
-    print("Cross Helicity:", cross_helicity)
-    print("Alfven Ratio:", alfven_ratio)
-    print("Compressibility:", compressibility)
+#     # Print the results
+#     print("Cross Helicity:", cross_helicity)
+#     print("Alfven Ratio:", alfven_ratio)
+#     print("Compressibility:", compressibility)
