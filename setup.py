@@ -25,7 +25,7 @@ setup(
     # package_data= {
         # 'src' : ["resources/"]
     # },
-    packages=find_packages(),  # 必填，指定打包的目录，默认是当前目录，如果是其他目录比如 src, 可以使用 find_packages(where='src')
+    packages=find_packages(where='src'),  # 必填，指定打包的目录，默认是当前目录，如果是其他目录比如 src, 可以使用 find_packages(where='src')
     install_requires=install_requires,  # 指定你的项目依赖的 python 包，这里直接读取 requirements.txt
     # 分类器通过对项目进行分类，帮助用户找到项目
     classifiers=[

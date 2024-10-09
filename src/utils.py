@@ -69,20 +69,3 @@ def check_parameters(func):
 
     return wrapper
 
-# # 自动为模块中的所有函数应用装饰器
-# def apply_decorator_to_all_functions(module, decorator):
-#     """
-#     动态为模块中的所有函数应用装饰器。
-#     """
-#     for attribute_name in dir(module):
-#         attribute = getattr(module, attribute_name)
-        
-#         if isinstance(attribute, (types.FunctionType, types.MethodType)):
-#             # 如果是函数或方法，则应用装饰器
-#             setattr(module, attribute_name, decorator(attribute))
-#         elif isinstance(attribute, type):  # 如果是类，为类中的所有方法应用装饰器
-#             for method_name in dir(attribute):
-#                 method = getattr(attribute, method_name)
-#                 if isinstance(method, (types.FunctionType, types.MethodType)):
-#                     setattr(attribute, method_name, decorator(method))
-
