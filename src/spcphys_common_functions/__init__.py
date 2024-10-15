@@ -8,5 +8,9 @@ from .plasma_beta import calc_beta, pressure_thermal, pressure_magnetic
 from .cdf_process import process_satellite_data
 from .plot_tools import plot_hist2d
 
+from .datasets.general_dataset import GeneralDataset
+from .variables.general_variable import GeneralVariable
+from .satellites.general_satellite import GeneralSatellite
+
 
 

@@ -26,10 +26,10 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
         if not T.unit.is_equivalent(u.K):
             raise TypeError("T must be a quantity with units of temperature (K)")
     
-    n = n.to(u.m**-3)
-    T = T.to(u.K)
+    n = n.si
+    T = T.si
         
-    return (n * k_B * T).to(u.Pa)
+    return (n * k_B * T).si
 
 
 @check_parameters
@@ -42,13 +42,13 @@ def pressure_magnetic(b: u.Quantity):
     :return: Magnetic pressure.
     '''
     
-    b = b.to(u.T)
-    
     if config._ENABLE_VALUE_CHECKING:
         if not b.unit.is_equivalent(u.T):
             raise TypeError("b must be a quantity with units of magnetic field (T)")
+    
+    b = b.si
         
-    return (np.linalg.norm(b, axis=1)**2 / (2 * mu0)).to(u.Pa)
+    return (np.linalg.norm(b, axis=1)**2 / (2 * mu0)).si
 
 
 @check_parameters
@@ -73,9 +73,9 @@ def calc_beta(p_date: List[datetime], n: u.Quantity, b_date: List[datetime], b: 
         if not T.unit.is_equivalent(u.K):
             raise TypeError("T must be a quantity with units of temperature (K)")
     
-    n = n.to(u.m**-3)
-    b = b.to(u.T)
-    T = T.to(u.K)
+    n = n.si
+    b = b.si
+    T = T.si
     
     pth = pressure_thermal(n, T)
     pb = pressure_magnetic(b)

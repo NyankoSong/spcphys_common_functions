@@ -1,11 +1,12 @@
 from typing import List
-import cdflib
-import numpy as np
-import pandas as pd
 from multiprocessing import Pool
 import pickle
 import os
+import cdflib
+import numpy as np
+import pandas as pd
 
+from .preprocess import _get_boundary
 from . import config
 from .utils import check_parameters
 
@@ -34,29 +35,6 @@ def _recursion_traversal_dir(path:str) -> List[str]:
     return satellite_paths
 
 
-def _get_condition(condition: List[str]) -> List[float]:
-
-    '''
-    Get the condition of the variable.
-    
-    :param condition: list, the condition of the variable.
-    :return: list, the boundary of the condition.
-    '''
-
-    boundary = [-1E30, 1E30]
-    if condition[0].lower() != 'none':
-        for i, c in enumerate(condition):
-            if 'inf' in c:
-                boundary[i] = -np.inf if c[0] == '-' else np.inf
-            elif 'E' in c:
-                s = c.split('E')
-                boundary[i] = float(s[0]) * 10 ** float(s[1])
-            else:
-                boundary[i] = float(c)
-                
-    return boundary
-
-
 def _get_satellite_file_infos(dir_path:str, info_filename: str|None=None):
     
     '''
@@ -70,20 +48,20 @@ def _get_satellite_file_infos(dir_path:str, info_filename: str|None=None):
     satellite_paths = _recursion_traversal_dir(dir_path)
     satellite_file_infos = dict()
     for satellite_path in satellite_paths:
-        satellite_name = satellite_path.split('/')[-2]
-        satellite_file_infos[satellite_name] = {'PATH': satellite_path, 'INFO': {}, 'CDFs': []}
+        # satellite_name = satellite_path.split('/')[-2]
+        satellite_info = {'PATH': satellite_path, 'INFO': {}, 'CDFs': []}
         for file in os.listdir(satellite_path):
             file_path = os.path.join(satellite_path, file)
             file_path = file_path.replace('\\', '/')
             if file_path.endswith('.cdf'):
-                satellite_file_infos[satellite_name]['CDFs'].append(file)
+                satellite_info['CDFs'].append(file)
             if (info_filename is not None and file_path.endswith(info_filename)) or (info_filename is None and file_path.endswith('.csv')):
                 info = pd.read_csv(file_path)
-                satellite_file_infos[satellite_name]['INFO']['startswith'] = info.iloc[:, 0].tolist()
-                satellite_file_infos[satellite_name]['INFO']['dataset'] = info.iloc[:, 1].tolist()
-                satellite_file_infos[satellite_name]['INFO']['timeres'] = info.iloc[:, 2].tolist()
-                satellite_file_infos[satellite_name]['INFO']['varname'] = [s.split(' ') for s in info.iloc[:, 3].tolist()]
-                satellite_file_infos[satellite_name]['INFO']['condition'] = [_get_condition(sub_s) for sub_s in [s.split(' ') for s in info.iloc[:, 4].tolist()]]
+                satellite_info['INFO']['startswith'] = info.iloc[:, 0].tolist()
+                satellite_info['INFO']['dataset'] = info.iloc[:, 1].tolist()
+                satellite_info['INFO']['timeres'] = info.iloc[:, 2].tolist()
+                satellite_info['INFO']['varname'] = [s.split(' ') for s in info.iloc[:, 3].tolist()]
+                satellite_info['INFO']['condition'] = [_get_boundary(sub_s) for sub_s in [s.split(' ') for s in info.iloc[:, 4].tolist()]]
                 
     return satellite_file_infos
 
@@ -105,8 +83,6 @@ def _parallel_convert_epoches(epoch, num_processes=None):
         num_processes = int(os.cpu_count() * num_processes)
     elif num_processes > 1:
         num_processes = int(num_processes)
-    else:
-        raise ValueError('num_processes should be a positive value!')
     
     if num_processes < 1:
         num_processes = 1
@@ -115,15 +91,13 @@ def _parallel_convert_epoches(epoch, num_processes=None):
         num_processes = len(epoch)
     epoch_chunks = _chunks(epoch, num_processes)
         
-    pool = Pool(processes=num_processes)
-    results = pool.map(_convert_epoches, epoch_chunks)
-    pool.close()
-    pool.join()
+    with Pool(processes=num_processes) as p:
+        results = p.map(_convert_epoches, epoch_chunks)
     
     return np.concatenate(results)
 
 @check_parameters
-def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=0.9):
+def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1):
     
     '''
     Combine all satellite data into a single file for each satellite. 
@@ -170,7 +144,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     
     satellite_file_infos = _get_satellite_file_infos(dir_path, info_filename)
     
-    for satellite_name in satellite_file_infos.keys():
+    for satellite_name, satellite_info in satellite_file_infos.items():
         if output_dir is not None:
             dir_path = output_dir
         data_file_name = satellite_name + '_data.pkl'
@@ -180,11 +154,11 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
             continue
         
         data_dict = dict()
-        for dataset, startswith, varnames, timeres, condition in zip(satellite_file_infos[satellite_name]['INFO']['dataset'],
-                                                                     satellite_file_infos[satellite_name]['INFO']['startswith'],
-                                                                     satellite_file_infos[satellite_name]['INFO']['varname'], 
-                                                                     satellite_file_infos[satellite_name]['INFO']['timeres'], 
-                                                                     satellite_file_infos[satellite_name]['INFO']['condition']):
+        for dataset, startswith, varnames, timeres, condition in zip(satellite_info['INFO']['dataset'],
+                                                                     satellite_info['INFO']['startswith'],
+                                                                     satellite_info['INFO']['varname'], 
+                                                                     satellite_info['INFO']['timeres'], 
+                                                                     satellite_info['INFO']['condition']):
             print(f'Processing {satellite_name} {dataset}...')
             data_dict[dataset] = dict()
             data_dict[dataset]['TIMERES'] = timeres
@@ -195,10 +169,10 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                 var_tmp = None
                 date_tmp = None
                 err_flag = False
-                dataset_cdfs = [cdf for cdf in satellite_file_infos[satellite_name]['CDFs'] if cdf.startswith(startswith)]
+                dataset_cdfs = [cdf for cdf in satellite_info['CDFs'] if cdf.startswith(startswith)]
                 for cdf_i, cdf in enumerate(dataset_cdfs):
                     print(f'\r({cdf_i+1}/{len(dataset_cdfs)}) Reading {cdf}...', end='')
-                    cdf_path = os.path.join(satellite_file_infos[satellite_name]['PATH'], cdf)
+                    cdf_path = os.path.join(satellite_info['PATH'], cdf)
                     cdf_file = cdflib.CDF(cdf_path)
                     try:
                         cdf_var = cdf_file.varget(varname)
@@ -254,7 +228,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
         print(f'{data_file_name} saved to {dir_path}!')
 
 
-if __name__ == '__main__':
-    dir_path = '/mnt/hc320/shares/mengsy/Documents/cdf_read_new/'
-    info_filename = 'info.csv'
-    process_satellite_data(dir_path, info_filename)
+# if __name__ == '__main__':
+#     dir_path = '/mnt/hc320/shares/mengsy/Documents/cdf_read_new/'
+#     info_filename = 'info.csv'
+#     process_satellite_data(dir_path, info_filename)

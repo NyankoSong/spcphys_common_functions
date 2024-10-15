@@ -9,19 +9,19 @@ from .utils import check_parameters
 
 
 @check_parameters
-def calc_Ac(v_j: u.Quantity, 
-            T_j: u.Quantity, 
-            n_j: u.Quantity, 
-            v_i: u.Quantity, 
-            T_i: u.Quantity, 
-            n_i: u.Quantity, 
-            charge_number_i: int, 
-            mass_number_i: int, 
-            m_i: u.Quantity|None = None, 
-            charge_number_j: int = 1, 
-            mass_number_j: int = 1, 
-            m_j: u.Quantity|None = None, 
-            distance: u.Quantity = au
+def calc_Ac(v_j: u.Quantity,
+            T_j: u.Quantity,
+            n_j: u.Quantity,
+            v_i: u.Quantity,
+            T_i: u.Quantity,
+            n_i: u.Quantity,
+            charge_number_i: int,
+            mass_number_i: int,
+            m_i: u.Quantity|None = None,
+            charge_number_j: int = 1,
+            mass_number_j: int = 1,
+            m_j: u.Quantity|None = None,
+            distance: u.Quantity = au,
             ) -> float:
 
     '''
@@ -99,26 +99,26 @@ def calc_Ac(v_j: u.Quantity,
     return Ac.si.to_value()
 
 
-if __name__ == "__main__":
-    # Example parameters for oxygen ion (O) and proton (H)
-    v_j = 400 * u.km / u.s
-    T_j = 1e6 * u.K
-    n_j = 20 / u.cm**3
-    v_i = 500 * u.km / u.s
-    T_i = 1e7 * u.K
-    n_i = 0.02 / u.cm**3
-    charge_number_i = 6  # Oxygen ion
-    mass_number_i = 16  # Oxygen ion
-    # charge_number_j = 1  # Proton, default field particle
-    # mass_number_j = 1  # Proton, default field particle
-    distance = 1 * au
+# if __name__ == "__main__":
+#     # Example parameters for oxygen ion (O) and proton (H)
+#     v_j = 400 * u.km / u.s
+#     T_j = 1e6 * u.K
+#     n_j = 20 / u.cm**3
+#     v_i = 500 * u.km / u.s
+#     T_i = 1e7 * u.K
+#     n_i = 0.02 / u.cm**3
+#     charge_number_i = 6  # Oxygen ion
+#     mass_number_i = 16  # Oxygen ion
+#     # charge_number_j = 1  # Proton, default field particle
+#     # mass_number_j = 1  # Proton, default field particle
+#     distance = 1 * au
 
-    # Call the function
-    result = calc_Ac(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_number_i, distance=distance, 
-                                    #  charge_number_j=charge_number_j, mass_number_j=mass_number_j
-                                     )
+#     # Call the function
+#     result = calc_Ac(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_number_i, distance=distance, 
+#                                     #  charge_number_j=charge_number_j, mass_number_j=mass_number_j
+#                                      )
 
-    print(f'v_j = {v_j}, T_j = {T_j}, n_j = {n_j}, v_i = {v_i}, T_i = {T_i}, n_i = {n_i}, charge_number_i = {charge_number_i}, mass_number_i = {mass_number_i}, distance = {distance}')
-    print(f'Ac = {result}')
+#     print(f'v_j = {v_j}, T_j = {T_j}, n_j = {n_j}, v_i = {v_i}, T_i = {T_i}, n_i = {n_i}, charge_number_i = {charge_number_i}, mass_number_i = {mass_number_i}, distance = {distance}')
+#     print(f'Ac = {result}')
     
-    pass
+#     pass

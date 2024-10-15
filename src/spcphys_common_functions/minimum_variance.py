@@ -1,10 +1,11 @@
+'''Modified from https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py'''
+
 import numpy as np
 
 from . import config
 from .utils import check_parameters
 
 
-# Source: https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py
 @check_parameters
 def min_var(data: np.ndarray, verbose: bool=False):
     

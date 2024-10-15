@@ -8,13 +8,14 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.collections import QuadMesh
 from scipy.signal import convolve2d
-import scipy.stats as stats
+from scipy import stats
 
 from . import config
 from .utils import check_parameters
 
 
 def _determine_bins(x, bins, scale):
+    x = x[~np.isnan(x)]
     if scale == 'linear':
         _, bins = astats.histogram(x, bins=bins)
     elif scale == 'log':
@@ -35,13 +36,13 @@ def _log_or_linear_plot(scales: List[str], ax: plt.Axes =None):
         return plt.semilogy if ax is None else ax.semilogy
     else:
         return plt.plot if ax is None else ax.plot
-    
+
 
 def _logarithmic_error(x):
     log_x = np.log10(x)
-    log_x_mean = np.mean(log_x, axis=0)
+    log_x_mean = np.nanmean(log_x, axis=0)
     unlog_x_mean = 10**log_x_mean
-    log_x_std = np.std(log_x, axis=0)
+    log_x_std = np.nanstd(log_x, axis=0)
     # log_x_err = np.abs(log_x_std/log_x_mean/2.303) # 废弃，此方法并不是这么用的，而是用于没有原始数据的观测数据，例如只提供了均值和标准差
     # x_cap = [np.abs(x_mid - 10**(log_x_mean - log_x_err)),  np.abs(x_mid - 10**(log_x_mean + log_x_err))]
     x_cap = [np.abs(unlog_x_mean - 10**(log_x_mean - log_x_std)),  np.abs(unlog_x_mean - 10**(log_x_mean + log_x_std))]
@@ -53,7 +54,7 @@ def _mean_std_params(x, scale):
         unlog_x_mean, log_x_std, x_cap = _logarithmic_error(x)
         x_label = r'$x=10\^($' + f'{np.log10(unlog_x_mean):.2f}' + r'$\pm$' + f'{log_x_std:.2f}' + r'$)$'
     else:
-        x_mean, x_err = np.mean(x, axis=0), np.std(x, axis=0)
+        x_mean, x_err = np.nanmean(x, axis=0), np.nanstd(x, axis=0)
         x_cap = [x_err, x_err]
         x_label = r'$x=$' + f'{x_mean:.2f}' + r'$\pm$' + f'{x_err:.2f}'
     return unlog_x_mean, x_cap, x_label
@@ -70,7 +71,7 @@ def _mean_std_line_params(x, y, x_edges, scale):
     else:
         for i in range(len(x_edges)-1):
             y_window = y[(x > x_edges[i]) & (x < x_edges[i+1])]
-            y_mean, y_err = np.mean(y_window), np.std(y_window)
+            y_mean, y_err = np.nanmean(y_window), np.std(y_window)
             unlog_y_means.append(y_mean)
             y_caps.append([y_err, y_err])
 
@@ -164,7 +165,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         for j in range(len(x_edges) - 1):
             for k in range(len(y_edges) - 1):
                 z_jk = z_scaled[(x > x_edges[j]) & (x <= x_edges[j + 1]) & (y > y_edges[k]) & (y <= y_edges[k + 1])]
-                z_mat[j, k] = np.mean(z_jk) if len(z_jk) >= least_samples_per_cell else np.nan
+                z_mat[j, k] = np.nanmean(z_jk) if len(z_jk) >= least_samples_per_cell else np.nan
         z_mat = 10**z_mat if scales[2] == 'log' else z_mat
         
         if scales[2] == 'log':
@@ -177,23 +178,23 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     else:
         if norm_type == 'max':
             if separate == 'x':
-                z_hist /= z_hist.max(axis=1)
+                z_hist /= np.nanmax(z_hist, axis=1)
             elif separate == 'y':
-                z_hist /= z_hist.max(axis=0)
+                z_hist /= np.nanmax(z_hist, axis=0)
             else:
-                z_hist /= z_hist.max()
+                z_hist /= np.nanmax(z_hist)
         elif norm_type == 'sum':
             if separate == 'x':
-                z_hist /= z_hist.sum(axis=1)
+                z_hist /= np.nansum(z_hist, axis=1)
             elif separate == 'y':
-                z_hist /= z_hist.sum(axis=0)
+                z_hist /= np.nansum(z_hist, axis=0)
             else:
-                z_hist /= z_hist.sum()
+                z_hist /= np.nansum(z_hist)
         
         if color_norm_type == 'log':
-            color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=z_hist.min(), vmax=z_hist.max())
+            color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=np.nanmin(z_hist), vmax=np.nanmax(z_hist))
         elif color_norm_type == 'linear':
-            color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=z_hist.min(), vmax=z_hist.max())
+            color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=np.nanmin(z_hist), vmax=np.nanmax(z_hist))
         
         z_masked = np.ma.masked_where(z_hist == 0, z_hist)
         quadmesh = axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_args)
@@ -218,7 +219,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
                     y_fit = y
                     
                 slope, intercept, r_value, p_value, _ = stats.linregress(x_fit, y_fit)
-                x_fitted = np.array([x_fit.min(), x_fit.max()])
+                x_fitted = np.array([np.nanmin(x_fit), np.nanmax(x_fit)])
                 y_fitted = slope * x_fitted + intercept
                 
                 if scales[0] == 'log':
