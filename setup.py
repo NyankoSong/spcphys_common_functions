@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from os import path
 from setuptools import setup, find_packages
 
@@ -6,7 +5,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'requirements.txt'), 'r', encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
 
-with open(path.join(here, 'README.md'), 'r', encoding='utf-8') as f:
+with open(path.join(here, 'Readme.md'), 'r', encoding='utf-8') as f:
     long_description = f.read()
 
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
@@ -25,7 +24,7 @@ setup(
     # package_data= {
         # 'src' : ["resources/"]
     # },
-    packages=find_packages(where='src'),  # 必填，指定打包的目录，默认是当前目录，如果是其他目录比如 src, 可以使用 find_packages(where='src')
+    packages=find_packages(where='src/spcphys_common_funtions'),  # 必填，指定打包的目录，默认是当前目录，如果是其他目录比如 src, 可以使用 find_packages(where='src')
     install_requires=install_requires,  # 指定你的项目依赖的 python 包，这里直接读取 requirements.txt
     # 分类器通过对项目进行分类，帮助用户找到项目
     classifiers=[
