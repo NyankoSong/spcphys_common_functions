@@ -1,9 +1,7 @@
 from typing import List, Tuple
 from datetime import datetime
 import numpy as np
-import pandas as pd
 from astropy import units as u
-# from scipy.constants import mu_0, m_p
 from astropy.constants import mu0, m_p
 
 from . import config
@@ -12,20 +10,50 @@ from .utils import check_parameters
 
 @check_parameters
 def calc_dx(x: u.Quantity, axis=0, **mean_kwargs):
+    '''
+    Remove the mean value from the input array.
+    
+    :param x: Input array.
+    :param axis: Axis along which to calculate the mean value. Default is 0.
+    :param mean_kwargs: Additional keyword arguments to pass to the numpy.nanmean function.
+
+    :return: Array with the mean value removed, as an astropy Quantity.
+    '''
+    
     return x - np.nanmean(x, axis=axis, **mean_kwargs)
 
 
 @check_parameters
 def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False):
+    '''
+    Calculate the Alfven velocity.
+
+    :param b: Magnetic field data in shape (time, 3).
+    :param n: Proton number density data in shape (time).
+    :param dva: Whether to remove mean value from magnetic field data. Default is False.
+    
+    :return: Alfven velocity.
+    '''
+    
     bottom = np.sqrt(mu0 * np.nanmean(n) * m_p)
     if dva:
-        return calc_dx(b) / bottom
+        return (calc_dx(b) / bottom).si
     else:
-        return b / bottom
+        return (b / bottom).si
     
     
 @check_parameters
 def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: List[datetime]|np.ndarray|u.Quantity, yp: u.Quantity, **interp_kwargs):
+    '''
+    Perform multi-dimensional interpolation on the given data.
+
+    :param x: Array of x-coordinates at which to evaluate the interpolated values.
+    :param xp: Array of x-coordinates of the data points.
+    :param yp: Array of y-coordinates of the data points. Must be a Quantity with the same number of rows as xp.
+    :param interp_kwargs: Additional keyword arguments to pass to the numpy.interp function.
+    
+    :return: Interpolated values at the x-coordinates, with the same number of columns as yp.
+    '''
     
     if config._ENABLE_VALUE_CHECKING:
         if yp.shape[0] != xp.shape[0]:
@@ -44,7 +72,7 @@ def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: L
 
 
 @check_parameters
-def calc_alfven(p_date: List[datetime], v: u.Quantity, n: u.Quantity, b_date: List[datetime], b: u.Quantity) -> Tuple[float, float, float]:
+def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity) -> Tuple[float, float, float]:
     '''
     Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
     
@@ -88,23 +116,16 @@ def calc_alfven(p_date: List[datetime], v: u.Quantity, n: u.Quantity, b_date: Li
     alfven_ratio = dv2_mean / dvA2_mean
     compressibility = np.nanmean(dn**2) * np.nanmean(b_magnitude**2) / (np.nanmean(n)**2 * db_magnitude2_mean)
     
-    return r3, residual_energy, cross_helicity, alfven_ratio, compressibility
+    return r3.si, residual_energy.si, cross_helicity.si, alfven_ratio.si, compressibility.si
 
 
-
-# if __name__ == "__main__":
-#     # Test data
-#     from datetime import timedelta
-#     p_date = [datetime(2023, 1, 1) + timedelta(days=i) for i in range(10)]
-#     v = np.random.rand(10, 3)
-#     n = np.random.rand(10)
-#     b_date = [datetime(2023, 1, 1, 0, 30) + timedelta(hours=i) for i in range(240)]
-#     b = np.random.rand(240, 3)
-
-#     # Call the function
-#     cross_helicity, alfven_ratio, compressibility = calc_alfven(p_date, v, n, b_date, b)
-
-#     # Print the results
-#     print("Cross Helicity:", cross_helicity)
-#     print("Alfven Ratio:", alfven_ratio)
-#     print("Compressibility:", compressibility)
+@check_parameters
+def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: np.ndarray|None =None, z: np.ndarray|None =None):
+    
+    
+    if len(r.shape) == 1 or r.shape[0] == 1:
+        r = np.tile(r, (v.shape[0], 1))
+    r = r / np.linalg.norm(r, axis=1)
+    
+    if z is None:
+        cos_theta = np.dot(v, r) / (np.linalg.norm(v, axis=1) * np.linalg.norm(r, axis=1))

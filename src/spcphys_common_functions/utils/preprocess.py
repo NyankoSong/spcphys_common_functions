@@ -48,7 +48,7 @@ def find_argnan(x: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple[st
     return np.where((x < boundary[0]) | (x > boundary[1]))[0]
 
 
-def process_nan(data: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple[str|float]|None=None, time: List[datetime]|None=None, method:str|None=None) -> List[np.ndarray]:
+def process_nan(data: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple[str|float]|None=None, time: List[datetime]|np.ndarray|None=None, method:str|None=None) -> List[np.ndarray]:
     '''
     Process NaN values in the input data.
     

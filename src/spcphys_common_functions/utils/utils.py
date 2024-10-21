@@ -44,7 +44,12 @@ def check_parameters(func):
                 
                 # 如果是联合类型（Union）
                 if anno_origin in (Union, types.UnionType):
-                    if not any(isinstance(item.value, arg) for arg in anno_args):
+                    if not any(
+                        isinstance(item.value, arg) if not get_origin(arg) else (
+                            isinstance(item.value, get_origin(arg)) and all(isinstance(v, get_args(arg)[0]) for v in item.value)
+                        )
+                        for arg in anno_args
+                    ):
                         raise TypeError(
                             error_msg.format(
                                 argument=item.arg_name,

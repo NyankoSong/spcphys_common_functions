@@ -6,7 +6,7 @@ from .utils import check_parameters
 
 
 @check_parameters
-def sph_to_cart(azimuth: np.ndarray,
+def vdf_sph_to_cart(azimuth: np.ndarray,
              elevation: np.ndarray,
              energy: np.ndarray,
              vdf: np.ndarray,
