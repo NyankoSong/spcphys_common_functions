@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 from astropy import units as u
 from astropy.constants import mu0, m_p
+import numba
 
 from . import config
 from .utils import check_parameters
@@ -120,12 +121,61 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
 
 
 @check_parameters
-def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: np.ndarray|None =None, z: np.ndarray|None =None):
+def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: u.Quantity|np.ndarray, z: u.Quantity|np.ndarray|None =None) ->Tuple[u.Quantity|np.ndarray]:
     
+    """
+    Convert a vector from Cartesian coordinates to spherical coordinates.
+
+    :param v: The vector to be converted. Shape should be (N, 3), where N is the number of vectors.
+    :param r: The radial component of the vector. Shape should be (N, 3) or (3,).
+    :param z: The z-component of the vector. Shape should be (N, 3) or (3,). If None, the function will only compute the magnitude and angle between v and r. Default is None.
     
+    :return: If z is None, returns the magnitude and angle between v and r. Otherwise, returns the magnitude, azimuth, and elevation.
+    """
+    
+    if config._ENABLE_VALUE_CHECKING:
+        if type(v) != type(r):
+            raise TypeError("v and r must have the same type.")
+        if isinstance(v, u.Quantity) and not v.unit.is_equivalent(r.unit):
+            raise ValueError("v and r must have the same units.")
+        if z is not None:
+            if type(v) != type(z):
+                raise TypeError("v and z must have the same type.")
+            if isinstance(v, u.Quantity) and not v.unit.is_equivalent(z.unit):
+                raise ValueError("v and z must have the same units.")
+        
     if len(r.shape) == 1 or r.shape[0] == 1:
         r = np.tile(r, (v.shape[0], 1))
-    r = r / np.linalg.norm(r, axis=1)
+    r = r / np.tile(np.linalg.norm(r, axis=1), (3, 1)).T
+    
+    v_mag = np.linalg.norm(v, axis=1)
     
     if z is None:
-        cos_theta = np.dot(v, r) / (np.linalg.norm(v, axis=1) * np.linalg.norm(r, axis=1))
+        theta = np.arccos(np.einsum('ij,ij->i', v, r) / v_mag)
+        
+        if isinstance(v, u.Quantity):
+            theta = theta.to(u.deg)
+        else:
+            theta = np.rad2deg(theta)
+            
+        return v_mag, theta
+    
+    else:
+        if len(z.shape) == 1 or z.shape[0] == 1:
+            z = np.tile(z, (v.shape[0], 1))
+        z = z / np.tile(np.linalg.norm(z, axis=1), (3, 1)).T
+        
+        y = np.cross(z, r)
+        
+        v_r, v_y, v_z = np.einsum('ij,ij->i', v, r), np.einsum('ij,ij->i', v, y), np.einsum('ij,ij->i', v, z)
+        azimuth = np.arctan2(v_y, v_r)
+        elevation = np.arcsin(v_z / v_mag)
+        
+        if isinstance(v, u.Quantity):
+            azimuth = azimuth.to(u.deg)
+            elevation = elevation.to(u.deg)
+        else:
+            azimuth = np.rad2deg(azimuth)
+            elevation = np.rad2deg(elevation)
+            
+        return v_mag, azimuth, elevation
