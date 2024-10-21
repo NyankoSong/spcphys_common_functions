@@ -3,7 +3,6 @@ from datetime import datetime
 import numpy as np
 from astropy import units as u
 from astropy.constants import mu0, m_p
-import numba
 
 from . import config
 from .utils import check_parameters
@@ -44,7 +43,7 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False):
     
     
 @check_parameters
-def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: List[datetime]|np.ndarray|u.Quantity, yp: u.Quantity, **interp_kwargs):
+def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: List[datetime]|np.ndarray|u.Quantity, yp: np.ndarray|u.Quantity, **interp_kwargs):
     '''
     Perform multi-dimensional interpolation on the given data.
 
@@ -65,15 +64,18 @@ def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: L
     if isinstance(xp[0], datetime):
         xp = np.array([i.timestamp() for i in xp])
         
-    y = np.zeros((x.shape(0), yp.shape[1]))
+    y = np.zeros((x.shape[0], yp.shape[1]))
     for i, col in enumerate(yp.T):
         y[:, i] = np.interp(x, xp, col, **interp_kwargs)
         
-    return y
+    if isinstance(yp, u.Quantity):
+        return y * yp.unit
+    else:
+        return y
 
 
 @check_parameters
-def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity) -> Tuple[float, float, float]:
+def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity) -> Tuple[u.Quantity]:
     '''
     Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
     
@@ -93,6 +95,12 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
             raise ValueError("n must be a quantity with units of number density (m^-3).")
         if not b.unit.is_equivalent(u.T):
             raise ValueError("b must be a quantity with units of magnetic field (T).")
+        if v.shape[1] != 3 or b.shape[1] != 3:
+            raise ValueError("v and b must have 3 columns.")
+        if v.shape[0] != n.shape[0] or len(p_date) != n.shape[0]:
+            raise ValueError("p_date, v and n must have the same number of rows.")
+        if len(b_date) != b.shape[0]:
+            raise ValueError("b_date and b must have the same number of rows.")
         
     v = v.si
     n = n.si
