@@ -9,7 +9,7 @@ from .utils import check_parameters
 
 
 @check_parameters
-def calc_dx(x: u.Quantity, axis=0, **mean_kwargs):
+def calc_dx(x: u.Quantity|np.ndarray, axis=0, **mean_kwargs) -> u.Quantity|np.ndarray:
     '''
     Remove the mean value from the input array.
     
@@ -24,7 +24,7 @@ def calc_dx(x: u.Quantity, axis=0, **mean_kwargs):
 
 
 @check_parameters
-def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False):
+def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
     '''
     Calculate the Alfven velocity.
 
@@ -32,7 +32,7 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False):
     :param n: Proton number density data in shape (time).
     :param dva: Whether to remove mean value from magnetic field data. Default is False.
     
-    :return: Alfven velocity.
+    :return va/dva: Alfven velocity or Alfven velocity with mean value removed.
     '''
     
     bottom = np.sqrt(mu0 * np.nanmean(n) * m_p)
@@ -43,7 +43,7 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False):
     
     
 @check_parameters
-def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: List[datetime]|np.ndarray|u.Quantity, yp: np.ndarray|u.Quantity, **interp_kwargs):
+def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: List[datetime]|np.ndarray|u.Quantity, yp: np.ndarray|u.Quantity, **interp_kwargs) -> np.ndarray|u.Quantity:
     '''
     Perform multi-dimensional interpolation on the given data.
 
@@ -52,7 +52,7 @@ def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: L
     :param yp: Array of y-coordinates of the data points. Must be a Quantity with the same number of rows as xp.
     :param interp_kwargs: Additional keyword arguments to pass to the numpy.interp function.
     
-    :return: Interpolated values at the x-coordinates, with the same number of columns as yp.
+    :return y: Interpolated values at the x, with the same number of columns as yp.
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -85,7 +85,11 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     :param b_date: List of datetime objects for magnetic field data.
     :param b: Magnetic field data in shape (time, 3).
     
-    :return: Tuple of Alfvenic parameters (correlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
+    :return r3: Correlation coefficient between velocity and magnetic field.
+    :return residual_energy: Residual energy.
+    :return cross_helicity: Cross helicity.
+    :return alfven_ratio: Alfven ratio.
+    :return compressibility: Compressibility. 
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -108,16 +112,22 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     
     dv = calc_dx(v) #dV
     dvA = multi_dimensional_interpolate(p_date, b_date, calc_va(b, n, dva=True)) # dV_A
-    dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
-    dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
-    dv_dvA_mean = np.trace(np.dot(dv.T, dvA)) / len(dv) # <dV * dV_A>
+    
+    # dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
+    # dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
+    # dv_dvA_mean = np.trace(np.dot(dv.T, dvA)) / len(dv) # <dV * dV_A>
+    
+    dv2_mean = np.nanmean(np.nansum(dv**2, axis=1))
+    dvA2_mean = np.nanmean(np.nansum(dvA**2, axis=1))
+    dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv, dvA))
     
     dn = calc_dx(n)
     
     b_magnitude = np.linalg.norm(b, axis=1)
     # 可压缩系数的磁场扰动是先做差、再取模
     db = calc_dx(b)
-    db_magnitude2_mean = np.nansum(db**2) / len(db)
+    # db_magnitude2_mean = np.nansum(db**2) / len(db)
+    db_magnitude2_mean = np.nanmean(np.nansum(db**2, axis=1))
     
     r3 = dv_dvA_mean / np.sqrt(dv2_mean * dvA2_mean) # Wu2021, Cvb
     residual_energy = (dv2_mean - dvA2_mean) / (dv2_mean + dvA2_mean) # Wu2021, R

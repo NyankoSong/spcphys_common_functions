@@ -17,7 +17,7 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
     :param n: Proton number density data in shape (time).
     :param T: Proton temperature data in shape (time).
     
-    :return: Thermal pressure.
+    :return pth: Thermal pressure.
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -39,7 +39,7 @@ def pressure_magnetic(b: u.Quantity):
     
     :param b: Magnetic field data in shape (time, 3).
     
-    :return: Magnetic pressure.
+    :return pb: Magnetic pressure.
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -62,7 +62,7 @@ def calc_beta(p_date: List[datetime], n: u.Quantity, b_date: List[datetime], b: 
     :param b: Magnetic field data in shape (time, 3).
     :param T: Proton temperature data in shape (time).
     
-    :return: Plasma beta.
+    :return beta: Plasma beta.
     '''
     
     if config._ENABLE_VALUE_CHECKING:

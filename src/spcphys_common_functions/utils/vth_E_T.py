@@ -19,7 +19,8 @@ def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
               n=3 for root mean square speed,
               n=8/π for mean speed,
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-    :return: Thermal velocity with units (e.g., vth * u.m/u.s).
+              
+    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -46,7 +47,8 @@ def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
               n=3 for root mean square speed,
               n=8/π for mean speed,
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-    :return: Temperature with units (e.g., T * u.K).
+              
+    :return T: Temperature with units (e.g., T * u.K).
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -67,7 +69,8 @@ def E_to_T(E: u.Quantity) -> u.Quantity:
     Calculate temperature from energy.
     
     :param E: Energy with units (e.g., E * u.J).
-    :return: Temperature with units (e.g., T * u.K).
+    
+    :return T: Temperature with units (e.g., T * u.K).
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -85,7 +88,8 @@ def T_to_E(T: u.Quantity) -> u.Quantity:
     Calculate energy from temperature.
     
     :param T: Temperature with units (e.g., T * u.K).
-    :return: Energy with units (e.g., E * u.J).
+    
+    :return E: Energy with units (e.g., E * u.J).
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -109,7 +113,8 @@ def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
               n=3 for root mean square speed,
               n=8/π for mean speed,
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-    :return: Thermal velocity with units (e.g., vth * u.m/u.s).
+              
+    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
     
     if config._ENABLE_VALUE_CHECKING:
@@ -136,7 +141,8 @@ def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
               n=3 for root mean square speed,
               n=8/π for mean speed,
               n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-    :return: Energy with units (e.g., E * u.J).
+              
+    :return E: Energy with units (e.g., E * u.J).
     '''
     
     if config._ENABLE_VALUE_CHECKING:

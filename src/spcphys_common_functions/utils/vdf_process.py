@@ -21,7 +21,7 @@ def vdf_sph_to_cart(azimuth: np.ndarray,
     :param vdf: VDF data in shape (time, azimuth, elevation, energy).
     :param v_unit_new: Base vectors of the new coordinate system in shape (time, 3, 3), where the last dimension is [e_ix, e_iy, e_iz]. Default is None, which means the original base vectors [[1,0,0],[0,1,0],[0,0,1]] is used.
     
-    :return: Array of 3D scatters of VDF in shape (time, azimuth*elevation*energy, 4), where the last dimension is [v_x, v_y, v_z, f(v)].
+    :return vdf_array: Array of 3D scatters of VDF in shape (time, azimuth*elevation*energy, 4), where the last dimension is [v_x, v_y, v_z, f(v)].
     '''
     
     if config._ENABLE_VALUE_CHECKING:

@@ -113,7 +113,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     :param mean_std_line: Whether to plot a line for mean and standard deviation. Default is False.
     :param mean_std_line_args: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}.
     
-    :return: The matplotlib axes with the plot.
+    :return quadmesh: The QuadMesh object of the 2D histogram.
     '''
     
     if config._ENABLE_VALUE_CHECKING:

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from datetime import datetime, timedelta
 from bisect import bisect_left
 import numpy as np
@@ -8,7 +8,7 @@ from .utils import check_parameters
 
 
 @check_parameters
-def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|int, step: timedelta|int =1, start_time: datetime|None =None) -> List[np.ndarray]:
+def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|int, step: timedelta|int =1, start_time: datetime|None =None) -> Tuple[List[Tuple[datetime, datetime]], List[np.ndarray]]:
     """
     Generate sliding time windows over a list of datetime objects.
 
@@ -19,7 +19,8 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     :param step: Step size between windows, specified as either an integer (number of elements) or a timedelta (duration). Default is 1.
     :param start_time: Optional start time for the windows. If not provided, the first element of the time list is used.
     
-    :return: List of numpy arrays, each containing the indices of the elements in the corresponding window.
+    :return time_window_ranges: List of tuples representing the start and end times of each window.
+    :return time_window_indices: List of numpy arrays containing the indices of the elements in each window.
     """
         
     if config._ENABLE_VALUE_CHECKING:
@@ -28,12 +29,14 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
         
     if isinstance(window_size, int):
         time_window_indices = [np.arange(i, i + window_size) for i in range(len(time) - window_size + 1, step)]
+        time_window_ranges = [(time[i], time[i + window_size - 1]) for i in range(len(time) - window_size + 1, step)]
     elif isinstance(window_size, timedelta):
         if start_time is None:
             start_time = time[0]
-        time_window_indices = [np.arange(bisect_left(time, start_time + i * step), bisect_left(time, start_time + i * step + window_size)) for i in range(int(((time[-1] - time[0]).total_seconds() - window_size.total_seconds()) / step.total_seconds() + 1))]
+        time_window_ranges = [(start_time + i * step, start_time + i * step + window_size) for i in range(int(((time[-1] - time[0]).total_seconds() - window_size.total_seconds()) / step.total_seconds() + 1))]
+        time_window_indices = [np.arange(bisect_left(time, left_bound), bisect_left(time, right_bound)) for left_bound, right_bound in time_window_ranges]
     else:
         raise ValueError('window_size and step should be either int or timedelta.')
         
-    return time_window_indices
+    return time_window_ranges, time_window_indices
     

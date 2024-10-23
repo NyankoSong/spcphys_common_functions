@@ -41,8 +41,7 @@ def calc_Ac(v_j: u.Quantity,
     :param m_j: Field particle mass, kg, default None, calculated from mass_number_j with atomic mass constant
     :param distance: heliocentric distance, AU, default 1 AU
     
-    :return: 
-        - Ac: Coulomb Collisional Age
+    :return Ac: Coulomb Collisional Age
     '''
     
     if config._ENABLE_VALUE_CHECKING:
