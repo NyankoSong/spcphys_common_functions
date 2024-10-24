@@ -4,8 +4,8 @@ from scipy import integrate
 from astropy import units as u
 
 from . import config
-from .vth_E_T import T_to_E, T_to_vth
 from .utils import check_parameters
+from .vth_E_T import T_to_E, T_to_vth
 
 
 @check_parameters

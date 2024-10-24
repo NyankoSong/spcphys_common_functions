@@ -5,6 +5,7 @@ from typing import List, Tuple
 import numpy as np
 from astropy import units as u
 import pandas as pd
+import xarray
 
 from . import config
 from .utils import check_parameters
@@ -71,3 +72,21 @@ def process_nan(data: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple
     #         data = pd.DataFrame(data, index=time).interpolate().values
 
     return data
+
+
+def _npdt64_to_dt(npdt64: np.ndarray) -> List[datetime]:
+    '''
+    Convert numpy datetime64 to datetime.
+    '''
+    
+    return [pd.to_datetime(date).to_pydatetime() for date in npdt64]
+
+
+def xarray_to_quantity(x: xarray.DataArray|xarray.Dataset) -> Tuple[List[datetime], dict]:
+    '''
+    Convert xarray from cdaweb to datetime list and dict of quantities.
+    '''
+    
+    
+    
+    return

@@ -39,7 +39,7 @@ def ballistic_backmapping(pos_situ: SkyCoord, v_r: u.Quantity, r_target: u.Quant
     """
     Calculate the target position for ballistic backmapping.
 
-    :param pos_situ: Current position coordinates.
+    :param pos_situ: Current position, should be able to transform to HeliographicCarrington.
     :param v_r: Radial velocity, must have velocity units (u.m/u.s).
     :param r_target: Target radius, default is None.
     :param t_travel: Travel time, must have time units (u.s), default is None.
@@ -63,9 +63,9 @@ def ballistic_backmapping(pos_situ: SkyCoord, v_r: u.Quantity, r_target: u.Quant
     t_travel = t_travel.si if t_travel is not None and isinstance(t_travel, u.Quantity) else t_travel.total_seconds() * u.s if t_travel is not None else t_travel
         
     if t_travel is None:
-        t_travel = (pos_situ.radius - r_target) / v_r
+        t_travel = ((pos_situ.radius - r_target) / v_r).si
     elif r_target is None:
-        r_target = pos_situ.radius - v_r * t_travel
+        r_target = (pos_situ.radius - v_r * t_travel).si
         
     phi_target = (pos_situ.lon + t_travel * sidereal_rotation_rate.to(u.deg/u.s)).to(u.deg) % (360 * u.deg)
     time_target = [pos_situ.obstime.value[i] - timedelta(seconds=np.float64(t_travel.value[i])) for i in range(len(pos_situ.obstime))]

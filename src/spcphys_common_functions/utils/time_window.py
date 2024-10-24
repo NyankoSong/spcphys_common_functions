@@ -7,6 +7,10 @@ from . import config
 from .utils import check_parameters
 
 
+def _time_indices(time: datetime, time_range: List[datetime]|Tuple[datetime]) -> np.ndarray:
+    return np.arange(bisect_left(time, time_range[0]), bisect_left(time, time_range[1]))
+
+
 @check_parameters
 def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|int, step: timedelta|int =1, start_time: datetime|None =None) -> Tuple[List[Tuple[datetime, datetime]], List[np.ndarray]]:
     """
@@ -34,7 +38,7 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
         if start_time is None:
             start_time = time[0]
         time_window_ranges = [(start_time + i * step, start_time + i * step + window_size) for i in range(int(((time[-1] - time[0]).total_seconds() - window_size.total_seconds()) / step.total_seconds() + 1))]
-        time_window_indices = [np.arange(bisect_left(time, left_bound), bisect_left(time, right_bound)) for left_bound, right_bound in time_window_ranges]
+        time_window_indices = [_time_indices(time, time_window_range) for time_window_range in time_window_ranges]
     else:
         raise ValueError('window_size and step should be either int or timedelta.')
         

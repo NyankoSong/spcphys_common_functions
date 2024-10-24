@@ -1,17 +1,18 @@
 import numpy as np
 from scipy.constants import physical_constants
+from astropy import units as u
 
 from . import config
 from .utils import check_parameters
 
 
 @check_parameters
-def vdf_sph_to_cart(azimuth: np.ndarray,
-             elevation: np.ndarray,
-             energy: np.ndarray,
-             vdf: np.ndarray,
+def vdf_sph_to_cart(azimuth: u.Quantity,
+             elevation: u.Quantity,
+             energy: u.Quantity,
+             vdf: u.Quantity|np.ndarray,
              v_unit_new: np.ndarray|None=None,
-             ) -> np.ndarray:
+             ) -> u.Quantity:
     '''
     This function calculates the 3D scatters of VDF in the new coordinate system. (Only tested for SolO data)
     
@@ -32,6 +33,8 @@ def vdf_sph_to_cart(azimuth: np.ndarray,
             raise ValueError("VDF must be a 4-dimensional array with shape (time, azimuth, elevation, energy).")
         if v_unit_new is not None and v_unit_new.shape != (vdf.shape[0], 3, 3):
             raise ValueError("v_unit_new must have shape (time, 3, 3).")
+        if not azimuth.unit.is_equivalent(u.deg) or not elevation.unit.is_equivalent(u.deg) or not energy.unit.is_equivalent(u.J):
+            raise ValueError("Azimuth, elevation, and energy must have units equivalent to deg, deg, and J.")
     
     if v_unit_new is None:
         v_unit_new = np.tile(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).reshape(1, 3, 3), (vdf.shape[0], 1, 1))
