@@ -80,12 +80,12 @@ def _mean_std_line_params(x, y, x_edges, scale):
 
 @check_parameters
 def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quantity, z: np.ndarray|u.Quantity|None=None, least_samples_per_cell: int=1, scales: list|tuple|str='linear', norm_type: str|None=None,
-                color_norm_type: str='linear', color_norm_range: list|tuple|None=None, bins: int|np.ndarray|list|str='freedman', hist_pcolormesh_args: dict|None=None,
-                contour_levels: list|np.ndarray|None=None, contour_smooth: int|float|None=None, contour_args: dict|None=None,
-                fit_line: bool=False, fit_line_plot_args: dict|None=None,
-                mean_std: bool=False, mean_std_errorbar_args: dict|None=None,
+                color_norm_type: str='linear', color_norm_range: list|tuple|None=None, bins: int|np.ndarray|list|str='freedman', hist_pcolormesh_kwargs: dict|None=None,
+                contour_levels: list|np.ndarray|None=None, contour_smooth: int|float|None=None, contour_kwargs: dict|None=None,
+                fit_line: bool=False, fit_line_plot_kwargs: dict|None=None,
+                mean_std: bool=False, mean_std_errorbar_kwargs: dict|None=None,
                 separate: str|None=None,
-                mean_std_line: bool=False, mean_std_line_args: dict|None=None,
+                mean_std_line: bool=False, mean_std_line_kwargs: dict|None=None,
                 ) -> QuadMesh:
     
     '''
@@ -101,17 +101,17 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     :param color_norm_type: The color normalization type, can be 'linear' or 'log'. Default is 'linear'.
     :param color_norm_range: The range for color normalization. Default is None.
     :param bins: The bins for the histogram, can be an integer, numpy array, list, or a string ('freedman', 'scott', 'knuth', 'blocks'). Default is 'freedman'.
-    :param hist_pcolormesh_args: Additional arguments for pcolormesh. Default is {'cmap':'jet'}.
+    :param hist_pcolormesh_kwargs: Additional arguments for pcolormesh. Default is {'cmap':'jet'}.
     :param contour_levels: The levels for contour plotting. Default is None.
     :param contour_smooth: The smoothing parameter for contours. Default is None.
-    :param contour_args: Additional arguments for contour plotting. Default is {}.
+    :param contour_kwargs: Additional arguments for contour plotting. Default is {}.
     :param fit_line: Whether to fit a line to the data. Default is False.
-    :param fit_line_plot_args: Arguments for plotting the fit line. Default is {'color':'k', 'linestyle':'--', 'linewidth':1}.
+    :param fit_line_plot_kwargs: Arguments for plotting the fit line. Default is {'color':'k', 'linestyle':'--', 'linewidth':1}.
     :param mean_std: Whether to plot mean and standard deviation. Default is False.
-    :param mean_std_errorbar_args: Arguments for plotting error bars of mean and standard deviation. Default is {'fmt':'none', 'color':'k', 'capsize':2}.
+    :param mean_std_errorbar_kwargs: Arguments for plotting error bars of mean and standard deviation. Default is {'fmt':'none', 'color':'k', 'capsize':2}.
     :param separate: Whether to normalize separately along 'x' or 'y' axis. Default is None.
     :param mean_std_line: Whether to plot a line for mean and standard deviation. Default is False.
-    :param mean_std_line_args: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}.
+    :param mean_std_line_kwargs: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}.
     
     :return quadmesh: The QuadMesh object of the 2D histogram.
     '''
@@ -128,16 +128,16 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         if separate and separate not in ['x', 'y']:
             raise ValueError("separate must be 'x', 'y' or None.")
         
-    if hist_pcolormesh_args is None:
-        hist_pcolormesh_args = {'cmap':'jet'}
-    if contour_args is None:
-        contour_args = {}
-    if fit_line_plot_args is None:
-        fit_line_plot_args = {'color':'k', 'linestyle':'--', 'linewidth':1}
-    if mean_std_errorbar_args is None:
-        mean_std_errorbar_args = {'fmt':'none', 'color':'k', 'capsize':2}
-    if mean_std_line_args is None:
-        mean_std_line_args = {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}
+    if hist_pcolormesh_kwargs is None:
+        hist_pcolormesh_kwargs = {'cmap':'jet'}
+    if contour_kwargs is None:
+        contour_kwargs = {}
+    if fit_line_plot_kwargs is None:
+        fit_line_plot_kwargs = {'color':'k', 'linestyle':'--', 'linewidth':1}
+    if mean_std_errorbar_kwargs is None:
+        mean_std_errorbar_kwargs = {'fmt':'none', 'color':'k', 'capsize':2}
+    if mean_std_line_kwargs is None:
+        mean_std_line_kwargs = {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}
         
 
     if isinstance(x, u.Quantity):
@@ -173,7 +173,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         elif scales[2] == 'linear':
             color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=np.nanmin(z_mat), vmax=np.nanmax(z_mat))
             
-        quadmesh = axes.pcolormesh(x_edges, y_edges, z_mat.T, norm=color_norm, **hist_pcolormesh_args)
+        quadmesh = axes.pcolormesh(x_edges, y_edges, z_mat.T, norm=color_norm, **hist_pcolormesh_kwargs)
         
     else:
         if norm_type == 'max':
@@ -197,7 +197,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
             color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=np.nanmin(z_hist), vmax=np.nanmax(z_hist))
         
         z_masked = np.ma.masked_where(z_hist == 0, z_hist)
-        quadmesh = axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_args)
+        quadmesh = axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_kwargs)
     
         if not separate:
             if contour_levels:
@@ -206,7 +206,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
                         z_hist = convolve2d(z_hist, np.ones((contour_smooth, contour_smooth)), mode='same')
                     elif isinstance(contour_smooth, float):
                         z_hist = convolve2d(z_hist, np.ones((int(contour_smooth*z_hist.shape[0]), int(contour_smooth*z_hist.shape[1]))), mode='same')
-                axes.contour(x_mid, y_mid, z_hist.T, levels=contour_levels, **contour_args)
+                axes.contour(x_mid, y_mid, z_hist.T, levels=contour_levels, **contour_kwargs)
             
             if fit_line:
                 if scales[0] == 'log':
@@ -235,22 +235,22 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
                     
                 end_label =  (r'$+$' if intercept > 0 else '') + f'{intercept:.2f}\n' + r'$r\approx$' + f'{r_value:.2f}' + r'$\ \ p\geqslant$' + f'{p_value:.2f}'
                 
-                _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, label=left_label+right_label+end_label, **fit_line_plot_args)
+                _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, label=left_label+right_label+end_label, **fit_line_plot_kwargs)
             
             if mean_std:
                 unlog_x_mean, x_cap, x_label = _mean_std_params(x, scales[0])
                 unlog_y_mean, y_cap, y_label = _mean_std_params(y, scales[1])
                     
-                axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_args)
+                axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_kwargs)
             
         else:
             if mean_std_line:
                 if separate == 'x':
                     unlog_y_means, y_caps = _mean_std_line_params(x, y, x_edges, scales[1])
-                    axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_args)
+                    axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_kwargs)
                 elif separate == 'y':
                     unlog_x_means, x_caps = _mean_std_line_params(y, x, y_edges, scales[0])
-                    axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_args)
+                    axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_kwargs)
                     
     
         
@@ -261,5 +261,84 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         
     return quadmesh
     
+
+def _auto_downsample(axes: plt.Axes, x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, max_dens: int =1000):
+    """
+    Downsamples the data points to ensure the density of points on the plot does not exceed a specified maximum density.
+
+    :param axes: The matplotlib axes object where the data will be plotted.
+    :param x: The x-coordinates of the data points.
+    :param y: The y-coordinates of the data points.
+    :param max_dens: The maximum allowed number of points per inch on the plot.
     
+    :return x: The downsampled x.
+    :return y: The downsampled y.
+    """
+
+    examine_size = 10 # axes_width / examine_size
+    
+    x = np.asarray(x) if isinstance(x, list) else x
+    
+    nan_mask = np.isnan(y)
+    y_nan = y[nan_mask]
+    y_non_nan = y[~nan_mask]
+    x_non_nan = x[~nan_mask]
+    
+    axes_width = axes.get_position().width * axes.get_figure().get_size_inches()[0]
+    true_dens = len(x_non_nan) / axes_width
+    
+    hists, bin_edges = np.histogram(x_non_nan, bins=int(axes_width)*examine_size)
+    high_density_bins = np.where(hists > max_dens/examine_size)[0]
+    
+    if len(high_density_bins) == 0:
+        return x, y
+    
+    low_density_mask = np.ones(len(x_non_nan), dtype=bool)
+    
+    downsampled_indices = []
+    for bin_index in high_density_bins:
+        bin_mask = (x_non_nan >= bin_edges[bin_index]) & (x_non_nan < bin_edges[bin_index + 1])
+        indices = np.flatnonzero(bin_mask)
+        low_density_mask[indices] = False
+        downsampled_indices.extend(np.linspace(indices[0], indices[-1], int(max_dens/examine_size), dtype=int))
+    
+    non_nan_indices = np.concatenate([np.flatnonzero(low_density_mask), downsampled_indices]).astype(int)
+    non_nan_indices = np.sort(non_nan_indices)  # Sort final indices to maintain order
+    
+    final_x_unsorted = np.concatenate([x_non_nan[non_nan_indices], x[nan_mask]])
+    final_indices = np.argsort(final_x_unsorted)
+    final_x = final_x_unsorted[final_indices]
+    final_y = np.concatenate([y_non_nan[non_nan_indices], y_nan])[final_indices]
+    
+    return final_x, final_y
+
+
+
+def plot(x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, axes: plt.Axes|None =None, scale: str='linear', auto_downsample: bool =True, max_dens: int =1000, **plot_kwargs):
+    '''
+    Plot x and y data.
+    
+    :param x: The x-axis data.
+    :param y: The y-axis data.
+    :param axes: The matplotlib axes to plot on. Default is None.
+    :param scale: The scale for the plot, can be 'linear' or 'log'. Default is 'linear'.
+    :param auto_downsample: Whether to automatically downsample the data. Default is True.
+    :param max_dens: The maximum number of data points per inch. Default is 1000.
+    :param plot_kwargs: Additional arguments for the plot function.
+    '''
+    
+    if axes is None:
+        fig, ax = plt.subplots()
+    else:
+        ax = axes
+    
+    if scale == 'log':
+        plot_func = ax.semilogy
+    elif scale == 'linear':
+        plot_func = ax.plot
+    
+    if auto_downsample:
+        x, y = _auto_downsample(ax, x, y, max_dens)
+        
+    plot_func(x, y, **plot_kwargs)
     
