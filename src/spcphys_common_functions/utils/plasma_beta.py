@@ -20,11 +20,10 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
     :return pth: Thermal pressure.
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not n.unit.is_equivalent(u.m**-3):
-            raise TypeError("n must be a quantity with units of number density (m^-3)")
-        if not T.unit.is_equivalent(u.K):
-            raise TypeError("T must be a quantity with units of temperature (K)")
+    if not n.unit.is_equivalent(u.m**-3):
+        raise TypeError("n must be a quantity with units of number density (m^-3)")
+    if not T.unit.is_equivalent(u.K):
+        raise TypeError("T must be a quantity with units of temperature (K)")
     
     n = n.si
     T = T.si
@@ -42,9 +41,8 @@ def pressure_magnetic(b: u.Quantity):
     :return pb: Magnetic pressure.
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not b.unit.is_equivalent(u.T):
-            raise TypeError("b must be a quantity with units of magnetic field (T)")
+    if not b.unit.is_equivalent(u.T):
+        raise TypeError("b must be a quantity with units of magnetic field (T)")
     
     b = b.si
         
@@ -65,13 +63,12 @@ def calc_beta(p_date: List[datetime], n: u.Quantity, b_date: List[datetime], b: 
     :return beta: Plasma beta.
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not n.unit.is_equivalent(u.m**-3):
-            raise TypeError("n must be a quantity with units of number density (m^-3)")
-        if not b.unit.is_equivalent(u.T):
-            raise TypeError("b must be a quantity with units of magnetic field (T)")
-        if not T.unit.is_equivalent(u.K):
-            raise TypeError("T must be a quantity with units of temperature (K)")
+    if not n.unit.is_equivalent(u.m**-3):
+        raise TypeError("n must be a quantity with units of number density (m^-3)")
+    if not b.unit.is_equivalent(u.T):
+        raise TypeError("b must be a quantity with units of magnetic field (T)")
+    if not T.unit.is_equivalent(u.K):
+        raise TypeError("T must be a quantity with units of temperature (K)")
     
     n = n.si
     b = b.si

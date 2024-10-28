@@ -44,21 +44,20 @@ def calc_Ac(v_j: u.Quantity,
     :return Ac: Coulomb Collisional Age
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not all(x.unit.is_equivalent(u.m/u.s) for x in [v_j, v_i]):
-            raise ValueError("v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).")
-        if not all(x.unit.is_equivalent(u.K) for x in [T_j, T_i]):
-            raise ValueError("T_j and T_i must be quantities with units of temperature (K).")
-        if not all(x.unit.is_equivalent(u.m**-3) for x in [n_j, n_i]):
-            raise ValueError("n_j and n_i must be quantities with units of number density (m^-3).")
-        if not distance.unit.is_equivalent(u.au):
-            raise ValueError("distance must be a quantity with units of astronomical units (AU).")
-        if not all(x > 0 for x in [charge_number_i, mass_number_i, charge_number_j, mass_number_j]):
-            raise ValueError("charge_number_i, mass_number_i, charge_number_j, mass_number_j, and n_vth must be positive integers.")
-        if m_i is not None and (not m_i.unit.is_equivalent(u.kg) or m_i <= 0):
-            raise ValueError("m_i must be a positive quantity with units of mass (kg) or None.")
-        if m_j is not None and (not m_j.unit.is_equivalent(u.kg) or m_j <= 0):
-            raise ValueError("m_j must be a positive quantity with units of mass (kg) or None.")
+    if not all(x.unit.is_equivalent(u.m/u.s) for x in [v_j, v_i]):
+        raise ValueError("v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).")
+    if not all(x.unit.is_equivalent(u.K) for x in [T_j, T_i]):
+        raise ValueError("T_j and T_i must be quantities with units of temperature (K).")
+    if not all(x.unit.is_equivalent(u.m**-3) for x in [n_j, n_i]):
+        raise ValueError("n_j and n_i must be quantities with units of number density (m^-3).")
+    if not distance.unit.is_equivalent(u.au):
+        raise ValueError("distance must be a quantity with units of astronomical units (AU).")
+    if not all(x > 0 for x in [charge_number_i, mass_number_i, charge_number_j, mass_number_j]):
+        raise ValueError("charge_number_i, mass_number_i, charge_number_j, mass_number_j, and n_vth must be positive integers.")
+    if m_i is not None and (not m_i.unit.is_equivalent(u.kg) or m_i <= 0):
+        raise ValueError("m_i must be a positive quantity with units of mass (kg) or None.")
+    if m_j is not None and (not m_j.unit.is_equivalent(u.kg) or m_j <= 0):
+        raise ValueError("m_j must be a positive quantity with units of mass (kg) or None.")
     
     v_j = v_j.si
     v_i = v_i.si

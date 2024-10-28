@@ -21,9 +21,8 @@ def most_probable_x(x: u.Quantity|np.ndarray, bins: np.ndarray|str|int='freedman
     :return x_mp: The most probable value in the input array.
     """
     
-    if config._ENABLE_VALUE_CHECKING:
-        if len(x.shape) > 1:
-            raise ValueError('Input x must be one-dimensional.')
+    if len(x.shape) > 1:
+        raise ValueError('Input x must be one-dimensional.')
     
     x = x[~np.isnan(x)]
     
@@ -47,13 +46,12 @@ def ballistic_backmapping(pos_situ: SkyCoord, v_r: u.Quantity, r_target: u.Quant
     :return pos_target: Target position in heliographic Carrington coordinates.
     """
     
-    if config._ENABLE_VALUE_CHECKING:
-        if (r_target is None and t_travel is None) or (r_target is not None and t_travel is not None):
-            raise ValueError('Either r_target or t_travel must be specified.')
-        if not v_r.unit.is_equivalent(u.m / u.s):
-            raise ValueError('Radial velocity v_r must have units of velocity (u.m/u.s)')
-        if isinstance(t_travel, u.Quantity) and not t_travel.unit.is_equivalent(u.s):
-            raise ValueError('Travel time t_travel must have units of time (u.s)')
+    if (r_target is None and t_travel is None) or (r_target is not None and t_travel is not None):
+        raise ValueError('Either r_target or t_travel must be specified.')
+    if not v_r.unit.is_equivalent(u.m / u.s):
+        raise ValueError('Radial velocity v_r must have units of velocity (u.m/u.s)')
+    if isinstance(t_travel, u.Quantity) and not t_travel.unit.is_equivalent(u.s):
+        raise ValueError('Travel time t_travel must have units of time (u.s)')
         
     if pos_situ.frame is not HeliographicCarrington:
         pos_situ = pos_situ.transform_to(HeliographicCarrington)

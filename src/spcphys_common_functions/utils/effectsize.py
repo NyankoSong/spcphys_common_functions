@@ -24,13 +24,12 @@ def es_cohen(x1: np.ndarray|u.Quantity, x2:np.ndarray|u.Quantity, conf_interval:
     :return ci: Confidence interval.
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if len(x1.shape) != 1 or len(x2.shape) != 1:
-            raise ValueError("x1 and x2 must be 1D arrays.")
-        if log_scale and skewed:
-            raise ValueError("log_scale and skewed cannot be True at the same time.")
-        if not 0 < conf_interval < 1:
-            raise ValueError("conf_interval must be a float between 0 and 1.")
+    if len(x1.shape) != 1 or len(x2.shape) != 1:
+        raise ValueError("x1 and x2 must be 1D arrays.")
+    if log_scale and skewed:
+        raise ValueError("log_scale and skewed cannot be True at the same time.")
+    if not 0 < conf_interval < 1:
+        raise ValueError("conf_interval must be a float between 0 and 1.")
     
     if skewed:
         x_total = np.concatenate((x1, x2))

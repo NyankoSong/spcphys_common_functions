@@ -56,9 +56,8 @@ def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: L
     :return y: Interpolated values at the x, with the same number of columns as yp.
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if yp.shape[0] != xp.shape[0]:
-            raise ValueError(f"xp and yp must have the same number of rows. (But got xp.shape={xp.shape} and yp.shape={yp.shape})")
+    if yp.shape[0] != xp.shape[0]:
+        raise ValueError(f"xp and yp must have the same number of rows. (But got xp.shape={xp.shape} and yp.shape={yp.shape})")
     
     if isinstance(x[0], datetime):
         x = np.array([i.timestamp() for i in x])
@@ -93,19 +92,18 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     :return compressibility: Compressibility. 
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not v.unit.is_equivalent(u.m/u.s):
-            raise ValueError("v must be a quantity with units of velocity (m/s).")
-        if not n.unit.is_equivalent(u.m**-3):
-            raise ValueError("n must be a quantity with units of number density (m^-3).")
-        if not b.unit.is_equivalent(u.T):
-            raise ValueError("b must be a quantity with units of magnetic field (T).")
-        if v.shape[1] != 3 or b.shape[1] != 3:
-            raise ValueError("v and b must have 3 columns.")
-        if v.shape[0] != n.shape[0] or len(p_date) != n.shape[0]:
-            raise ValueError("p_date, v and n must have the same number of rows.")
-        if len(b_date) != b.shape[0]:
-            raise ValueError("b_date and b must have the same number of rows.")
+    if not v.unit.is_equivalent(u.m/u.s):
+        raise ValueError("v must be a quantity with units of velocity (m/s).")
+    if not n.unit.is_equivalent(u.m**-3):
+        raise ValueError("n must be a quantity with units of number density (m^-3).")
+    if not b.unit.is_equivalent(u.T):
+        raise ValueError("b must be a quantity with units of magnetic field (T).")
+    if v.shape[1] != 3 or b.shape[1] != 3:
+        raise ValueError("v and b must have 3 columns.")
+    if v.shape[0] != n.shape[0] or len(p_date) != n.shape[0]:
+        raise ValueError("p_date, v and n must have the same number of rows.")
+    if len(b_date) != b.shape[0]:
+        raise ValueError("b_date and b must have the same number of rows.")
     
     if time_window_ranges is None:
         time_window_ranges = [(min(b_date[0], p_date[0]), max(b_date[-1], p_date[-1]))]
@@ -176,16 +174,15 @@ def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: u.Quantity|np.ndarray, z: u.Qua
     :return: If z is None, returns the magnitude and angle between v and r. Otherwise, returns the magnitude, azimuth, and elevation.
     """
     
-    if config._ENABLE_VALUE_CHECKING:
-        if type(v) != type(r):
-            raise TypeError("v and r must have the same type.")
-        if isinstance(v, u.Quantity) and not v.unit.is_equivalent(r.unit):
-            raise ValueError("v and r must have the same units.")
-        if z is not None:
-            if type(v) != type(z):
-                raise TypeError("v and z must have the same type.")
-            if isinstance(v, u.Quantity) and not v.unit.is_equivalent(z.unit):
-                raise ValueError("v and z must have the same units.")
+    if type(v) != type(r):
+        raise TypeError("v and r must have the same type.")
+    if isinstance(v, u.Quantity) and not v.unit.is_equivalent(r.unit):
+        raise ValueError("v and r must have the same units.")
+    if z is not None:
+        if type(v) != type(z):
+            raise TypeError("v and z must have the same type.")
+        if isinstance(v, u.Quantity) and not v.unit.is_equivalent(z.unit):
+            raise ValueError("v and z must have the same units.")
         
     if len(r.shape) == 1 or r.shape[0] == 1:
         r = np.tile(r, (v.shape[0], 1))

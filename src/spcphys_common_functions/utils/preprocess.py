@@ -80,13 +80,3 @@ def _npdt64_to_dt(npdt64: np.ndarray) -> List[datetime]:
     '''
     
     return [pd.to_datetime(date).to_pydatetime() for date in npdt64]
-
-
-def xarray_to_quantity(x: xarray.DataArray|xarray.Dataset) -> Tuple[List[datetime], dict]:
-    '''
-    Convert xarray from cdaweb to datetime list and dict of quantities.
-    '''
-    
-    
-    
-    return

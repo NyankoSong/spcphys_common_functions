@@ -116,17 +116,16 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     :return quadmesh: The QuadMesh object of the 2D histogram.
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if least_samples_per_cell < 1:
-            raise ValueError("least_samples_per_cell must be a positive integer.")
-        if norm_type and norm_type not in ['max', 'sum']:
-            raise ValueError("norm_type must be 'max', 'sum' or None.")
-        if color_norm_type not in ['log', 'linear']:
-            raise ValueError("color_norm_type must be 'log' or 'linear'.")
-        if isinstance(bins, str) and bins not in ['freedman', 'scott', 'knuth', 'blocks']:
-            raise ValueError("bins must be 'freedman', 'scott', 'knuth', 'blocks', an integer, a numpy array, or a list.")
-        if separate and separate not in ['x', 'y']:
-            raise ValueError("separate must be 'x', 'y' or None.")
+    if least_samples_per_cell < 1:
+        raise ValueError("least_samples_per_cell must be a positive integer.")
+    if norm_type and norm_type not in ['max', 'sum']:
+        raise ValueError("norm_type must be 'max', 'sum' or None.")
+    if color_norm_type not in ['log', 'linear']:
+        raise ValueError("color_norm_type must be 'log' or 'linear'.")
+    if isinstance(bins, str) and bins not in ['freedman', 'scott', 'knuth', 'blocks']:
+        raise ValueError("bins must be 'freedman', 'scott', 'knuth', 'blocks', an integer, a numpy array, or a list.")
+    if separate and separate not in ['x', 'y']:
+        raise ValueError("separate must be 'x', 'y' or None.")
         
     if hist_pcolormesh_kwargs is None:
         hist_pcolormesh_kwargs = {'cmap':'jet'}
@@ -279,13 +278,12 @@ def _auto_downsample(axes: plt.Axes, x: np.ndarray|list|u.Quantity, y: np.ndarra
     
     x = np.asarray(x) if isinstance(x, list) else x
     
-    nan_mask = np.isnan(y)
+    nan_mask = np.isnan(y) if len(y.shape) == 1 else np.isnan(y).all(axis=1)
     y_nan = y[nan_mask]
     y_non_nan = y[~nan_mask]
     x_non_nan = x[~nan_mask]
     
     axes_width = axes.get_position().width * axes.get_figure().get_size_inches()[0]
-    true_dens = len(x_non_nan) / axes_width
     
     hists, bin_edges = np.histogram(x_non_nan, bins=int(axes_width)*examine_size)
     high_density_bins = np.where(hists > max_dens/examine_size)[0]
@@ -328,7 +326,7 @@ def plot(x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, axes: plt.Axes
     '''
     
     if axes is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 3))
     else:
         ax = axes
     

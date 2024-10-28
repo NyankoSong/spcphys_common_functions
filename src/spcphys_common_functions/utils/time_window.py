@@ -27,9 +27,8 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     :return time_window_indices: List of numpy arrays containing the indices of the elements in each window.
     """
         
-    if config._ENABLE_VALUE_CHECKING:
-        if type(window_size) != type(step):
-            raise ValueError('window_size and step should have the same type (timedelta or int).')
+    if type(window_size) != type(step):
+        raise ValueError('window_size and step should have the same type (timedelta or int).')
         
     if isinstance(window_size, int):
         time_window_indices = [np.arange(i, i + window_size) for i in range(len(time) - window_size + 1, step)]

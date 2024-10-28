@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from scipy.constants import physical_constants
 from astropy import units as u
@@ -25,16 +26,16 @@ def vdf_sph_to_cart(azimuth: u.Quantity,
     :return vdf_array: Array of 3D scatters of VDF in shape (time, azimuth*elevation*energy, 4), where the last dimension is [v_x, v_y, v_z, f(v)].
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        
-        if azimuth.ndim != 1 or elevation.ndim != 1 or energy.ndim != 1:
-            raise ValueError("Azimuth, elevation, and energy must be 1-dimensional arrays.")
-        if vdf.ndim != 4 or vdf.shape[1] != len(azimuth) or vdf.shape[2] != len(elevation) or vdf.shape[3] != len(energy):
-            raise ValueError("VDF must be a 4-dimensional array with shape (time, azimuth, elevation, energy).")
-        if v_unit_new is not None and v_unit_new.shape != (vdf.shape[0], 3, 3):
-            raise ValueError("v_unit_new must have shape (time, 3, 3).")
-        if not azimuth.unit.is_equivalent(u.deg) or not elevation.unit.is_equivalent(u.deg) or not energy.unit.is_equivalent(u.J):
-            raise ValueError("Azimuth, elevation, and energy must have units equivalent to deg, deg, and J.")
+    if azimuth.ndim != 1 or elevation.ndim != 1 or energy.ndim != 1:
+        raise ValueError("Azimuth, elevation, and energy must be 1-dimensional arrays.")
+    if vdf.ndim != 4 or vdf.shape[1] != len(azimuth) or vdf.shape[2] != len(elevation) or vdf.shape[3] != len(energy):
+        raise ValueError("VDF must be a 4-dimensional array with shape (time, azimuth, elevation, energy).")
+    if v_unit_new is not None and v_unit_new.shape != (vdf.shape[0], 3, 3):
+        raise ValueError("v_unit_new must have shape (time, 3, 3).")
+    if not azimuth.unit.is_equivalent(u.deg) or not elevation.unit.is_equivalent(u.deg) or not energy.unit.is_equivalent(u.J):
+        raise ValueError("Azimuth, elevation, and energy must have units equivalent to deg, deg, and J.")
+    if not vdf.unit.is_equivalent(u.s**3 / u.m**6):
+        warnings.warn("VDF does not have units equivalent to s^3/m^6. Is this phase space density instead of counts?", UserWarning)
     
     if v_unit_new is None:
         v_unit_new = np.tile(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).reshape(1, 3, 3), (vdf.shape[0], 1, 1))

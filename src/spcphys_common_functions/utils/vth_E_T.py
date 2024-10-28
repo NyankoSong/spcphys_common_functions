@@ -23,11 +23,10 @@ def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not T.unit.is_equivalent(u.K):
-            raise ValueError("Temperature T must have units of temperature (u.K)")
-        if not mass.unit.is_equivalent(u.kg):
-            raise ValueError("Mass must have units of mass (u.kg)")
+    if not T.unit.is_equivalent(u.K):
+        raise ValueError("Temperature T must have units of temperature (u.K)")
+    if not mass.unit.is_equivalent(u.kg):
+        raise ValueError("Mass must have units of mass (u.kg)")
     
     T = T.si
     mass = mass.si
@@ -51,11 +50,10 @@ def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     :return T: Temperature with units (e.g., T * u.K).
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not vth.unit.is_equivalent(u.m / u.s):
-            raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
-        if not mass.unit.is_equivalent(u.kg):
-            raise ValueError("Mass must have units of mass (u.kg)")
+    if not vth.unit.is_equivalent(u.m / u.s):
+        raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
+    if not mass.unit.is_equivalent(u.kg):
+        raise ValueError("Mass must have units of mass (u.kg)")
     
     vth = vth.si
     mass = mass.si
@@ -73,9 +71,8 @@ def E_to_T(E: u.Quantity) -> u.Quantity:
     :return T: Temperature with units (e.g., T * u.K).
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not E.unit.is_equivalent(u.J):
-            raise ValueError("Energy E must have units of energy (u.J)")
+    if not E.unit.is_equivalent(u.J):
+        raise ValueError("Energy E must have units of energy (u.J)")
     
     E = E.si
     T = E / k_B
@@ -92,9 +89,8 @@ def T_to_E(T: u.Quantity) -> u.Quantity:
     :return E: Energy with units (e.g., E * u.J).
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not T.unit.is_equivalent(u.K):
-            raise ValueError("Temperature T must have units of temperature (u.K)")
+    if not T.unit.is_equivalent(u.K):
+        raise ValueError("Temperature T must have units of temperature (u.K)")
     
     T = T.si
     E = k_B * T
@@ -117,11 +113,10 @@ def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not E.unit.is_equivalent(u.J):
-            raise ValueError("Energy E must have units of energy (u.J)")
-        if not mass.unit.is_equivalent(u.kg):
-            raise ValueError("Mass must have units of mass (u.kg)")
+    if not E.unit.is_equivalent(u.J):
+        raise ValueError("Energy E must have units of energy (u.J)")
+    if not mass.unit.is_equivalent(u.kg):
+        raise ValueError("Mass must have units of mass (u.kg)")
     
     E = E.si
     mass = mass.si
@@ -145,11 +140,10 @@ def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     :return E: Energy with units (e.g., E * u.J).
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not vth.unit.is_equivalent(u.m / u.s):
-            raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
-        if not mass.unit.is_equivalent(u.kg):
-            raise ValueError("Mass must have units of mass (u.kg)")
+    if not vth.unit.is_equivalent(u.m / u.s):
+        raise ValueError("Thermal velocity vth must have units of velocity (u.m/u.s)")
+    if not mass.unit.is_equivalent(u.kg):
+        raise ValueError("Mass must have units of mass (u.kg)")
     
     vth = vth.si
     mass = mass.si

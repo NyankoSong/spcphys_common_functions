@@ -134,13 +134,12 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     if the variable has no condition, use 'none' instead, this will set the boundary to [-1E30, 1E30].
     '''
     
-    if config._ENABLE_VALUE_CHECKING:
-        if not os.path.exists(dir_path):
-            raise FileNotFoundError(f'{dir_path} not found!')
-        if output_dir is not None and not os.path.exists(output_dir):
-            raise FileNotFoundError(f'{output_dir} not found!')
-        if num_processes < 0 or num_processes > os.cpu_count():
-            raise ValueError(f'num_processes should be in the range of (0, 1] or (1, {os.cpu_count()}]!')
+    if not os.path.exists(dir_path):
+        raise FileNotFoundError(f'{dir_path} not found!')
+    if output_dir is not None and not os.path.exists(output_dir):
+        raise FileNotFoundError(f'{output_dir} not found!')
+    if num_processes < 0 or num_processes > os.cpu_count():
+        raise ValueError(f'num_processes should be in the range of (0, 1] or (1, {os.cpu_count()}]!')
     
     satellite_file_infos = _get_satellite_file_infos(dir_path, info_filename)
     
