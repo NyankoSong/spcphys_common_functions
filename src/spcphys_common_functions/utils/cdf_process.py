@@ -6,7 +6,7 @@ import cdflib
 import numpy as np
 import pandas as pd
 
-from .preprocess import _get_boundary
+from .preprocess import _get_boundary, _npdt64_to_dt
 from . import config
 from .utils import check_parameters
 
@@ -27,7 +27,7 @@ def _recursion_traversal_dir(path:str) -> List[str]:
             satellite_path = _recursion_traversal_dir(file_path)
             satellite_paths += satellite_path
         else:
-            if file_path.endswith('.cdf'):
+            if file_path.endswith('.cdf') or file_path.endswith('.csv'):
                 satellite_paths.append('/'.join(file_path.split('/')[:-1]) + '/')
                 break
     satellite_paths = list(set(satellite_paths))
@@ -62,12 +62,14 @@ def _get_satellite_file_infos(dir_path:str, info_filename: str|None=None):
                 satellite_info['INFO']['timeres'] = info.iloc[:, 2].tolist()
                 satellite_info['INFO']['varname'] = [s.split(' ') for s in info.iloc[:, 3].tolist()]
                 satellite_info['INFO']['condition'] = [_get_boundary(sub_s) for sub_s in [s.split(' ') for s in info.iloc[:, 4].tolist()]]
-                
+        
+        satellite_file_infos[satellite_path.split('/')[-2]] = satellite_info
+        
     return satellite_file_infos
 
 
 def _convert_epoches(epoch_slice):
-    return cdflib.cdfepoch.to_datetime(epoch_slice).astype('O')
+    return _npdt64_to_dt(cdflib.cdfepoch.to_datetime(epoch_slice))
 
 
 def _chunks(data, n):
@@ -139,7 +141,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     if output_dir is not None and not os.path.exists(output_dir):
         raise FileNotFoundError(f'{output_dir} not found!')
     if num_processes < 0 or num_processes > os.cpu_count():
-        raise ValueError(f'num_processes should be in the range of (0, 1] or (1, {os.cpu_count()}]!')
+        raise ValueError(f'num_processes should be in the range of (0, 1) or [1, {os.cpu_count()})!')
     
     satellite_file_infos = _get_satellite_file_infos(dir_path, info_filename)
     
@@ -163,14 +165,14 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
             data_dict[dataset]['TIMERES'] = timeres
             date_flag = True
             for varname in varnames:
-                print('Processing {}...'.format(varname))
+                print(f'Processing {varname}...')
                 data_dict[dataset][varname] = dict()
                 var_tmp = None
                 date_tmp = None
                 err_flag = False
                 dataset_cdfs = [cdf for cdf in satellite_info['CDFs'] if cdf.startswith(startswith)]
                 for cdf_i, cdf in enumerate(dataset_cdfs):
-                    print(f'\r({cdf_i+1}/{len(dataset_cdfs)}) Reading {cdf}...', end='')
+                    print(f'({cdf_i+1}/{len(dataset_cdfs)}) Reading {cdf}...')
                     cdf_path = os.path.join(satellite_info['PATH'], cdf)
                     cdf_file = cdflib.CDF(cdf_path)
                     try:
@@ -195,12 +197,12 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                             var_tmp = cdf_var if var_tmp is None else np.concatenate((var_tmp, cdf_var), axis=0)
                             
                             if date_flag:
-                                print('\r({}/{}) Encoding epochs, this might take a long time...'.format(cdf_i+1, len(dataset_cdfs)), end='')
+                                print(f'({cdf_i+1}/{len(dataset_cdfs)}) Encoding epochs, this might take a long time...')
                                 epoch_varname = [zvarname for zvarname in cdf_file._get_varnames()[1] if 'EPOCH' in zvarname.upper()][0]
                                 if num_processes == 1:
-                                    cdf_date = cdflib.cdfepoch.to_datetime(cdf_file.varget(epoch_varname)).astype('O') # This is TOO SLOW
+                                    cdf_date = _convert_epoches(cdf_file.varget(epoch_varname)) # This is TOO SLOW
                                 else:
-                                    cdf_date = _parallel_convert_epoches(cdf_file.varget(epoch_varname))
+                                    cdf_date = _parallel_convert_epoches(cdf_file.varget(epoch_varname), num_processes)
                                 
                                 date_tmp = cdf_date if date_tmp is None else np.concatenate((date_tmp, cdf_date), axis=0)
                 if err_flag:

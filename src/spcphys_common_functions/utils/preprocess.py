@@ -24,7 +24,7 @@ def _check_condition(condition: str) -> float:
 
 def _get_boundary(boundary: str|List[str|float]|Tuple[str|float]|None=None):
     
-    if boundary is None or (isinstance(boundary, str) and boundary.lower == 'none'):
+    if boundary is None or (isinstance(boundary, str) and boundary.lower == 'none') or boundary[0].lower() == 'none':
         boundary = [-1E30, 1E30]
     else:
         for i, b in enumerate(boundary):
@@ -74,9 +74,17 @@ def process_nan(data: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple
     return data
 
 
-def _npdt64_to_dt(npdt64: np.ndarray) -> List[datetime]:
+# def _npdt64_to_dt(npdt64: np.ndarray) -> List[datetime]:
+#     '''
+#     Convert numpy datetime64 to datetime.
+#     '''
+    
+#     return [pd.to_datetime(date).to_pydatetime() for date in npdt64]
+
+
+def _npdt64_to_dt(npdt64: np.ndarray) -> np.ndarray:
     '''
     Convert numpy datetime64 to datetime.
     '''
     
-    return [pd.to_datetime(date).to_pydatetime() for date in npdt64]
+    return np.array([pd.to_datetime(date).to_pydatetime() for date in npdt64])
