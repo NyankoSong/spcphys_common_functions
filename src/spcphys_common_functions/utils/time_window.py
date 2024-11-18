@@ -34,6 +34,8 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     else:
         if len(align_to) > len(time):
             warnings.warn('The length of align_to is greater than the length of time.')
+            if window_size is not None and  not isinstance(window_size, timedelta):
+                raise ValueError('window_size should be a timedelta when align_to is provided.')
     
     if align_to is None:
         if isinstance(window_size, int):
@@ -47,7 +49,11 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
         else:
             raise ValueError('window_size and step should be either int or timedelta.')
     else:
-        time_window_ranges = [(align_to[i], align_to[i+1]) for i in range(len(align_to) - 1)]
+        if window_size is None:
+            time_window_ranges = [(align_to[i], align_to[i+1]) if i < len(align_to) - 1 else (align_to[i], align_to[i] + (align_to[i] - align_to[i-1])) for i in range(len(align_to))]
+        else:
+            time_window_ranges = [(align_to[i], align_to[i] + window_size) for i in range(len(align_to))]
+            
         time_window_indices = [_time_indices(time, time_window_range) for time_window_range in time_window_ranges]
         
     return time_window_ranges, time_window_indices

@@ -242,10 +242,7 @@ def plot_vdf_1d_t(axes: plt.Axes, time: np.ndarray|List[datetime], pdf_t: u.Quan
     v_grid_index.remove(target_v_unit)
     
     v_grid_t = v_grid_t.to(u.km/u.s).to_value()
-    if not pdf_1D_t.unit.is_dimensionless():
-        pdf_1D_t = np.mean(pdf_t, axis=(v_grid_index[0] + 1, v_grid_index[1] + 1)).to_value()
-    else:
-        pdf_1D_t = np.sum(pdf_t, axis=(v_grid_index[0] + 1, v_grid_index[1] + 1)).to_value()
+    pdf_1D_t = np.sum(pdf_t, axis=(v_grid_index[0] + 1, v_grid_index[1] + 1)).to_value()
     pdf_1D_t_max_index = np.argmax(pdf_1D_t, axis=1)
     
     if color_norm is None:
@@ -259,13 +256,7 @@ def plot_vdf_1d_t(axes: plt.Axes, time: np.ndarray|List[datetime], pdf_t: u.Quan
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
         for i in range(pdf_1D_t.shape[0]):
-            if i == pdf_1D_t.shape[0] - 1:
-                d_date = (time[i] - time[i-1])/4
-            elif i == 0:
-                d_date = (time[i+1] - time[i])/4
-            else:
-                d_date = (time[i+1] - time[i-1])/8
-            quadmesh = axes.pcolormesh([time[i] - d_date, time[i] + d_date], v_grid_t[i, target_v_unit, :], pdf_1D_t[[i, i], :].T, cmap='jet', norm=color_norm, shading='auto')
+            quadmesh = axes.pcolormesh([time[i], time[i] + (time[i+1] - time[i])/2 if i < pdf_1D_t.shape[0] - 1 else time[i] + (time[i] - time[i-1])/2], v_grid_t[i, target_v_unit, :], pdf_1D_t[[i, i], :].T, cmap='jet', norm=color_norm, shading='auto')
 
         if core_line is not None:
             axes.plot(time, np.array([v_grid_t[i, target_v_unit, pdf_1D_t_max_index[i]] for i in range(len(time))]).reshape(-1), core_line, linewidth=1)
