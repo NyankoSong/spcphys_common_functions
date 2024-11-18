@@ -30,7 +30,7 @@ def es_cohen(x1: np.ndarray|u.Quantity, x2:np.ndarray|u.Quantity, conf_interval:
         raise ValueError("log_scale and skewed cannot be True at the same time.")
     if not 0 < conf_interval < 1:
         raise ValueError("conf_interval must be a float between 0 and 1.")
-    
+     
     if skewed:
         x_total = np.concatenate((x1, x2))
         ranks = np.argsort(x_total)

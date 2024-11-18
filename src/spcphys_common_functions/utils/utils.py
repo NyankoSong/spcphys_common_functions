@@ -1,4 +1,5 @@
 import collections
+import os
 import functools
 import inspect
 from typing import Union, get_origin, get_args
@@ -85,3 +86,16 @@ def check_parameters(func):
 
     return wrapper
 
+
+def _determine_processes(num_processes) -> int:
+    if num_processes is None:
+        num_processes = int(os.cpu_count() * 0.5)
+    elif num_processes < 1 and num_processes > 0:
+        num_processes = int(os.cpu_count() * num_processes)
+    elif num_processes > 1:
+        num_processes = int(num_processes)
+        
+    if num_processes < 1:
+        num_processes = 1
+        
+    return num_processes

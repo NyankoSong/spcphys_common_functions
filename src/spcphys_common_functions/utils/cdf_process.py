@@ -1,4 +1,5 @@
 from typing import List
+import warnings
 from multiprocessing import Pool
 import pickle
 import os
@@ -8,7 +9,7 @@ import pandas as pd
 
 from .preprocess import _get_boundary, _npdt64_to_dt
 from . import config
-from .utils import check_parameters
+from .utils import check_parameters, _determine_processes
 
 def _recursion_traversal_dir(path:str) -> List[str]:
     
@@ -79,15 +80,7 @@ def _chunks(data, n):
 
 def _parallel_convert_epoches(epoch, num_processes=None):
     
-    if num_processes is None:
-        num_processes = int(os.cpu_count() * 0.9)
-    elif num_processes < 1 and num_processes > 0:
-        num_processes = int(os.cpu_count() * num_processes)
-    elif num_processes > 1:
-        num_processes = int(num_processes)
-    
-    if num_processes < 1:
-        num_processes = 1
+    num_processes = _determine_processes(num_processes)
         
     if len(epoch) < num_processes:
         num_processes = len(epoch)
@@ -99,7 +92,7 @@ def _parallel_convert_epoches(epoch, num_processes=None):
     return np.concatenate(results)
 
 @check_parameters
-def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1):
+def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1, epoch_varname_default: List[str]|str='epoch'):
     
     '''
     Combine all satellite data into a single file for each satellite. 
@@ -143,6 +136,9 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     if num_processes < 0 or num_processes > os.cpu_count():
         raise ValueError(f'num_processes should be in the range of (0, 1) or [1, {os.cpu_count()})!')
     
+    if isinstance(epoch_varname_default, str):
+        epoch_varname_default = [epoch_varname_default]
+    
     satellite_file_infos = _get_satellite_file_infos(dir_path, info_filename)
     
     for satellite_name, satellite_info in satellite_file_infos.items():
@@ -151,7 +147,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
         data_file_name = satellite_name + '_data.pkl'
         output_file = os.path.join(dir_path, data_file_name)
         if os.path.exists(output_file):
-            print(f'{data_file_name} already exists in {dir_path}, skip this satellite!')
+            print(f'{data_file_name} already exists in {dir_path}, skip this directory!')
             continue
         
         data_dict = dict()
@@ -178,8 +174,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                     try:
                         cdf_var = cdf_file.varget(varname)
                     except Exception as e:
-                        print(f'Error when reading {varname} from {cdf}: {str(e)}')
-                        print(f'Delete {dataset} from the data dict.')
+                        warnings.warn(f'Error when reading {varname} from {cdf}: {str(e)}\nDataset {dataset} will be deleted from the data dict.')
                         err_flag = True
                         break
                     else:
@@ -189,7 +184,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                         try:
                             cdf_var = cdf_var.astype(float)
                         except Exception as e:
-                            print(f'{varname} can not be forcefully converted to float: {str(e)}')
+                            warnings.warn(f'{varname} can not be forcefully converted to float: {str(e)}')
                             if cdf_var is not None:
                                 var_tmp = cdf_var
                         else:
@@ -198,7 +193,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                             
                             if date_flag:
                                 print(f'({cdf_i+1}/{len(dataset_cdfs)}) Encoding epochs, this might take a long time...')
-                                epoch_varname = [zvarname for zvarname in cdf_file._get_varnames()[1] if 'EPOCH' in zvarname.upper()][0]
+                                epoch_varname = [zvarname for zvarname in cdf_file.cdf_info().zVariables for epoch_default in epoch_varname_default if epoch_default.lower() in zvarname.lower()][0]
                                 if num_processes == 1:
                                     cdf_date = _convert_epoches(cdf_file.varget(epoch_varname)) # This is TOO SLOW
                                 else:
@@ -217,7 +212,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                     if len(var_tmp) == len(sorted_indices):
                         data_dict[dataset][varname] = var_tmp[sorted_indices]
                     else:
-                        print(f'Length of {varname} are not the same as other variables, so it is not sorted.')
+                        warnings.warn(f'Length of {varname} are not the same as other variables, so it is not sorted.')
                         data_dict[dataset][varname] = var_tmp
         
         print(f'Saving data to {data_file_name}, this might use lots of RAM...')
@@ -229,7 +224,71 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
         print(f'{data_file_name} saved to {dir_path}!')
 
 
-# if __name__ == '__main__':
-#     dir_path = '/mnt/hc320/shares/mengsy/Documents/cdf_read_new/'
-#     info_filename = 'info.csv'
-#     process_satellite_data(dir_path, info_filename)
+@check_parameters
+def generate_cdf_info_csv(dir_path:str, info_filename:str='info.csv', epoch_varname_default: List[str]|str='epoch', ignore_varname: List[str]|str|None =None) -> dict:
+    """
+    Generate a CSV file containing information about CDF files in the specified directory.
+
+    :param dir_path: str, the root directory of the satellite data.
+    :param info_filename: str, the name of the info file to be generated. Default is 'info.csv'.
+    :param epoch_varname_default: List[str] | str, the default name(s) of the epoch variable. Default is 'epoch'. This is identified by if the epoch_varname_default is in the variable name instead of the exact match.
+    :param ignore_varname: List[str] | str | None, the variable name(s) to be ignored. Default is None. This is identified by if the ignore_varname is not in the variable name instead of the exact match.
+    
+    :return: dict, a dictionary containing information about the satellite files.
+    """
+    
+    if not os.path.exists(dir_path):
+        raise FileNotFoundError(f'{dir_path} not found!')
+    
+    if isinstance(epoch_varname_default, str):
+        epoch_varname_default = [epoch_varname_default.lower()]
+    elif isinstance(epoch_varname_default, list):
+        epoch_varname_default = [epoch_default.lower() for epoch_default in epoch_varname_default]
+    if isinstance(ignore_varname, str):
+        ignore_varname = [ignore_varname.lower()]
+    elif isinstance(ignore_varname, list):
+        ignore_varname = [varname.lower() for varname in ignore_varname]
+    
+    satellite_file_infos = _get_satellite_file_infos(dir_path, info_filename)
+    satellite_info_dict = {}
+    for satellite_name, satellite_info in satellite_file_infos.items():
+        output_file = os.path.join(satellite_info['PATH'], info_filename)
+        if os.path.exists(output_file):
+            warnings.warn(f'{info_filename} already exists in {satellite_info["PATH"]}, skip this directory!')
+            continue
+        
+        satellite_info_dict[satellite_name] = {}
+        for cdf_filename in satellite_info['CDFs']:
+            cdf_file = cdflib.CDF(os.path.join(satellite_info['PATH'], cdf_filename))
+            dataset_name = ''
+            for cdf_filename_parts in cdf_filename.split('_'):
+                if not cdf_filename_parts.isdigit():
+                    dataset_name += cdf_filename_parts + '_'
+                else:
+                    dataset_name = dataset_name[:-1]
+                    break
+            cdf_varnames = cdf_file.cdf_info().zVariables
+            epoch_varname = [zvarname for zvarname in cdf_varnames for epoch_default in epoch_varname_default if epoch_default in zvarname.lower()]
+            if len(epoch_varname) == 0:
+                warnings.warn(f'No epoch variable found in {cdf_filename}, skip this file!')
+                continue
+            cdf_varnames.remove(epoch_varname[0])
+            if ignore_varname is not None:
+                cdf_varnames = [zvarname for zvarname in cdf_varnames for ignored_name in ignore_varname if ignored_name not in zvarname.lower()]
+            if dataset_name not in satellite_info_dict[satellite_name]:
+                satellite_info_dict[satellite_name][dataset_name] = cdf_varnames
+            else:
+                if set(cdf_varnames) & set(satellite_info_dict[satellite_name][dataset_name]) != set(satellite_info_dict[satellite_name][dataset_name]):
+                    warnings.warn(f'Variable names in {cdf_filename} are not the same as other files in the same dataset!\n{cdf_filename} has {cdf_varnames}, while others have {satellite_info_dict[satellite_name][dataset_name]}')
+                    satellite_info_dict[satellite_name][dataset_name] = list(set(satellite_info_dict[satellite_name][dataset_name]) | set(cdf_varnames))
+                    
+        result = pd.DataFrame(columns=['startswith', 'dataset', 'timeres', 'varname', 'condition'])
+        for dataset_name, varnames in satellite_info_dict[satellite_name].items():
+            result = pd.concat([result, pd.DataFrame([{'startswith': dataset_name, 'dataset': dataset_name.upper(), 'timeres': '-1', 'varname': ' '.join(varnames), 'condition': 'none'}])], ignore_index=True)
+            
+        result.to_csv(output_file, index=False)
+        
+    return satellite_info_dict
+
+                    
+    

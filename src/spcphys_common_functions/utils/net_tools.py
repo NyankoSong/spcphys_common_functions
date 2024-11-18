@@ -45,10 +45,10 @@ async def _fetch_file(semaphore, dataset, varname, start_time, chunk_end_time, s
                 else:
                     warnings.warn(f'Failed to fetch {dataset}: HTTP {http_status}')
             except Exception as e:
-                warnings.warn(f'Attempt {attempt} failed with error: {str(e)}')
+                warnings.warn(f'Attempt {attempt} failed with error: {str(e)}\nIf the error shows "Connection Aborted" or "ConnectTimeoutError" repeatedly, your IP might have been banned by CDAWeb. Try again later.')
             if attempt < retries:
                 await asyncio.sleep(delay)
-                warnings.warn(f'Retrying to fetch {filename} ({attempt}/{retries})...')
+                warnings.warn(f'Retrying to fetch {dataset} ({attempt}/{retries})...')
         warnings.warn(f'Failed to fetch {dataset} after {retries} attempts')
         
         
@@ -72,6 +72,9 @@ def fetch_cdf_from_cdaweb(cdf_info: dict|str, time_range: List[datetime]|Tuple[d
                       - If a string, the same path is used for all satellites.
                       - If a dictionary, it maps satellite names to their respective save paths.
     :param info_filename: Optional; a string specifying the filename of the info file when `cdf_info` is a directory.
+    :param retries: Optional; an integer specifying the number of retries for each file download. Defaults to 3.
+    :param delay: Optional; an integer specifying the delay in seconds between retries. Defaults to 2.
+    :param max_concurrent: Optional; an integer specifying the maximum number of concurrent downloads. Defaults to 3.
     
     :return file_info_list: A list of tuples containing dataset, variable name, start time, end time, and save path for each file.
     """
