@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from bisect import bisect_left
 import numpy as np
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 def _time_indices(time: datetime, time_range: List[datetime]|Tuple[datetime]) -> np.ndarray:

@@ -2,8 +2,7 @@
 
 import numpy as np
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 @check_parameters

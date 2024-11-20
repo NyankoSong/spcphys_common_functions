@@ -5,8 +5,7 @@ import numpy as np
 from scipy import stats
 from astropy import units as u
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
     
 
 @check_parameters

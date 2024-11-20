@@ -13,8 +13,7 @@ from cdasws import CdasWs
 cdas = CdasWs()
 
 from .cdf_process import _get_satellite_file_infos
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 async def _fetch_file(semaphore, dataset, varname, start_time, chunk_end_time, save_path, retries, delay):

@@ -10,8 +10,7 @@ from matplotlib.collections import QuadMesh
 from scipy.signal import convolve2d
 from scipy import stats
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 def _determine_bins(x, bins, scale):

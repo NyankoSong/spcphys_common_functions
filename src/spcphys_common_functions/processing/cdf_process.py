@@ -8,8 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .preprocess import _get_boundary, _npdt64_to_dt
-from . import config
-from .utils import check_parameters, _determine_processes
+from ..utils.utils import check_parameters, _determine_processes
 
 def _recursion_traversal_dir(path:str) -> List[str]:
     

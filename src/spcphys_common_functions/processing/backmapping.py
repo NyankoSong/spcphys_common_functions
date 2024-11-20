@@ -6,8 +6,7 @@ from astropy.coordinates import SkyCoord, HeliocentricTrueEcliptic
 from sunpy.coordinates import HeliographicCarrington
 from sunpy.sun.constants import sidereal_rotation_rate
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 @check_parameters

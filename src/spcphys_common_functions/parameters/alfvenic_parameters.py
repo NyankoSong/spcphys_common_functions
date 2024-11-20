@@ -4,9 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.constants import mu0, m_p
 
-from . import config
-from .utils import check_parameters
-from .time_window import _time_indices
+from ..utils.utils import check_parameters
+from ..processing.time_window import _time_indices
 
 
 @check_parameters
@@ -85,19 +84,15 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     :param b_date: List of datetime objects for magnetic field data.
     :param b: Magnetic field data in shape (time, 3).
     
-    :return r3: Correlation coefficient between velocity and magnetic field.
-    :return residual_energy: Residual energy.
-    :return cross_helicity: Cross helicity.
-    :return alfven_ratio: Alfven ratio.
-    :return compressibility: Compressibility. 
+    :return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility}: Dictionary of Alfvenic parameters.
     '''
     
     if not v.unit.is_equivalent(u.m/u.s):
-        raise ValueError("v must be a quantity with units of velocity (m/s).")
+        raise ValueError("v must be a quantity with unit equivalent to velocity (m/s).")
     if not n.unit.is_equivalent(u.m**-3):
-        raise ValueError("n must be a quantity with units of number density (m^-3).")
+        raise ValueError("n must be a quantity with unit equivalent to number density (m^-3).")
     if not b.unit.is_equivalent(u.T):
-        raise ValueError("b must be a quantity with units of magnetic field (T).")
+        raise ValueError("b must be a quantity with unit equivalent to magnetic field (T).")
     if v.shape[1] != 3 or b.shape[1] != 3:
         raise ValueError("v and b must have 3 columns.")
     if v.shape[0] != n.shape[0] or len(p_date) != n.shape[0]:

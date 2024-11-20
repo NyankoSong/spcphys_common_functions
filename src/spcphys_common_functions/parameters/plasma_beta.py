@@ -5,8 +5,7 @@ import pandas as pd
 from typing import List
 from datetime import datetime
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 @check_parameters

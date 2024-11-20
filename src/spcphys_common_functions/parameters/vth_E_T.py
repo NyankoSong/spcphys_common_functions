@@ -3,8 +3,7 @@
 from astropy import units as u
 from astropy.constants import k_B, m_p
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 @check_parameters

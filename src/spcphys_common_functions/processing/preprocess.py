@@ -7,8 +7,7 @@ from astropy import units as u
 import pandas as pd
 import xarray
 
-from . import config
-from .utils import check_parameters
+from ..utils.utils import check_parameters
 
 
 def _check_condition(condition: str) -> float:

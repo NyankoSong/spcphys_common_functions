@@ -11,8 +11,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.collections import QuadMesh
 
-from . import config
-from .utils import check_parameters, _determine_processes
+from ..utils.utils import check_parameters, _determine_processes
 
 
 @check_parameters
