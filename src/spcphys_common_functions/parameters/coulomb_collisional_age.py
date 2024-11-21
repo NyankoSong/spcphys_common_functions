@@ -1,3 +1,8 @@
+'''
+TRACY P J, KASPER J C, ZURBUCHEN T H, et al., 2015. THERMALIZATION OF HEAVY IONS IN THE SOLAR WIND[J/OL]. The Astrophysical Journal, 812(2): 170. DOI:10.1088/0004-637X/812/2/170.
+
+'''
+
 import numpy as np
 from astropy.constants import e, m_p, au, eps0, u as u_const
 from scipy import integrate

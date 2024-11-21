@@ -1,3 +1,9 @@
+'''
+YAO S, HE J S, TU C Y, et al., 2013. SMALL-SCALE PRESSURE-BALANCED STRUCTURES DRIVEN BY MIRROR-MODE WAVES IN THE SOLAR WIND[J/OL]. The Astrophysical Journal, 776(2): 94. DOI:10.1088/0004-637X/776/2/94.
+WU H, TU C, WANG X, et al., 2021. Magnetic and Velocity Fluctuations in the Near-Sun Region from 0.1−0.3 au Observed by Parker Solar Probe[J/OL]. The Astrophysical Journal, 922(2): 92. DOI:10.3847/1538-4357/ac3331.
+
+'''
+
 from typing import List, Tuple
 from datetime import datetime
 import numpy as np
@@ -6,6 +12,7 @@ from astropy.constants import mu0, m_p
 
 from ..utils.utils import check_parameters
 from ..processing.time_window import _time_indices
+from ..processing.preprocess import multi_dimensional_interpolate
 
 
 @check_parameters
@@ -40,37 +47,6 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
         return (calc_dx(b) / bottom).si
     else:
         return (b / bottom).si
-    
-    
-@check_parameters
-def multi_dimensional_interpolate(x: List[datetime]|np.ndarray|u.Quantity, xp: List[datetime]|np.ndarray|u.Quantity, yp: np.ndarray|u.Quantity, **interp_kwargs) -> np.ndarray|u.Quantity:
-    '''
-    Perform multi-dimensional interpolation on the given data.
-
-    :param x: Array of x-coordinates at which to evaluate the interpolated values.
-    :param xp: Array of x-coordinates of the data points.
-    :param yp: Array of y-coordinates of the data points. Must be a Quantity with the same number of rows as xp.
-    :param interp_kwargs: Additional keyword arguments to pass to the numpy.interp function.
-    
-    :return y: Interpolated values at the x, with the same number of columns as yp.
-    '''
-    
-    if yp.shape[0] != xp.shape[0]:
-        raise ValueError(f"xp and yp must have the same number of rows. (But got xp.shape={xp.shape} and yp.shape={yp.shape})")
-    
-    if isinstance(x[0], datetime):
-        x = np.array([i.timestamp() for i in x])
-    if isinstance(xp[0], datetime):
-        xp = np.array([i.timestamp() for i in xp])
-        
-    y = np.zeros((x.shape[0], yp.shape[1]))
-    for i, col in enumerate(yp.T):
-        y[:, i] = np.interp(x, xp, col, **interp_kwargs)
-        
-    if isinstance(yp, u.Quantity):
-        return y * yp.unit
-    else:
-        return y
 
 
 @check_parameters
@@ -154,63 +130,3 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
         r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i] = r3_i.si, residual_energy_i.si, cross_helicity_i.si, alfven_ratio_i.si, compressibility_i.si
     
     return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility}
-
-
-@check_parameters
-def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: u.Quantity|np.ndarray, z: u.Quantity|np.ndarray|None =None) ->Tuple[u.Quantity|np.ndarray]:
-    
-    """
-    Convert a vector from Cartesian coordinates to spherical coordinates.
-
-    :param v: The vector to be converted. Shape should be (N, 3), where N is the number of vectors.
-    :param r: The radial component of the vector. Shape should be (N, 3) or (3,).
-    :param z: The z-component of the vector. Shape should be (N, 3) or (3,). If None, the function will only compute the magnitude and angle between v and r. Default is None.
-    
-    :return: If z is None, returns the magnitude and angle between v and r. Otherwise, returns the magnitude, azimuth, and elevation.
-    """
-    
-    if type(v) != type(r):
-        raise TypeError("v and r must have the same type.")
-    if isinstance(v, u.Quantity) and not v.unit.is_equivalent(r.unit):
-        raise ValueError("v and r must have the same units.")
-    if z is not None:
-        if type(v) != type(z):
-            raise TypeError("v and z must have the same type.")
-        if isinstance(v, u.Quantity) and not v.unit.is_equivalent(z.unit):
-            raise ValueError("v and z must have the same units.")
-        
-    if len(r.shape) == 1 or r.shape[0] == 1:
-        r = np.tile(r, (v.shape[0], 1))
-    r = r / np.tile(np.linalg.norm(r, axis=1), (3, 1)).T
-    
-    v_mag = np.linalg.norm(v, axis=1)
-    
-    if z is None:
-        theta = np.arccos(np.einsum('ij,ij->i', v, r) / v_mag)
-        
-        if isinstance(v, u.Quantity):
-            theta = theta.to(u.deg)
-        else:
-            theta = np.rad2deg(theta)
-            
-        return v_mag, theta
-    
-    else:
-        if len(z.shape) == 1 or z.shape[0] == 1:
-            z = np.tile(z, (v.shape[0], 1))
-        z = z / np.tile(np.linalg.norm(z, axis=1), (3, 1)).T
-        
-        y = np.cross(z, r)
-        
-        v_r, v_y, v_z = np.einsum('ij,ij->i', v, r), np.einsum('ij,ij->i', v, y), np.einsum('ij,ij->i', v, z)
-        azimuth = np.arctan2(v_y, v_r)
-        elevation = np.arcsin(v_z / v_mag)
-        
-        if isinstance(v, u.Quantity):
-            azimuth = azimuth.to(u.deg)
-            elevation = elevation.to(u.deg)
-        else:
-            azimuth = np.rad2deg(azimuth)
-            elevation = np.rad2deg(elevation)
-            
-        return v_mag, azimuth, elevation

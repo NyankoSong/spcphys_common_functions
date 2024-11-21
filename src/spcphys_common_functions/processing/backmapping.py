@@ -1,3 +1,7 @@
+'''
+BALE S D, BADMAN S T, BONNELL J W, et al., 2019. Highly structured slow solar wind emerging from an equatorial coronal hole[J/OL]. Nature, 576(7786): 237-242. DOI:10.1038/s41586-019-1818-7.
+'''
+
 from datetime import timedelta
 import numpy as np
 from astropy import stats as astats

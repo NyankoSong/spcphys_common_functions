@@ -7,7 +7,7 @@ import cdflib
 import numpy as np
 import pandas as pd
 
-from .preprocess import _get_boundary, _npdt64_to_dt
+from .preprocess import _get_boundary, npdt64_to_dt
 from ..utils.utils import check_parameters, _determine_processes
 
 def _recursion_traversal_dir(path:str) -> List[str]:
@@ -69,7 +69,7 @@ def _get_satellite_file_infos(dir_path:str, info_filename: str|None=None):
 
 
 def _convert_epoches(epoch_slice):
-    return _npdt64_to_dt(cdflib.cdfepoch.to_datetime(epoch_slice))
+    return npdt64_to_dt(cdflib.cdfepoch.to_datetime(epoch_slice))
 
 
 def _chunks(data, n):

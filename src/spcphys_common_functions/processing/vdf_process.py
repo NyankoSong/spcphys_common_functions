@@ -1,3 +1,7 @@
+'''
+OWEN C J, BRUNO R, LIVI S, et al., 2020. The Solar Orbiter Solar Wind Analyser (SWA) suite[J/OL]. Astronomy & Astrophysics, 642: A16. DOI:10.1051/0004-6361/201937259.
+'''
+
 import warnings
 from typing import List, Tuple
 from multiprocessing import Pool
@@ -12,6 +16,52 @@ from matplotlib.colors import LogNorm, Normalize
 from matplotlib.collections import QuadMesh
 
 from ..utils.utils import check_parameters, _determine_processes
+from .time_window import slide_time_window
+
+
+def generate_vdf_cart_unit(vdf_time: List[datetime]|np.ndarray, imf_time: List[datetime]|np.ndarray, imf: u.Quantity, vp_time: List[datetime]|np.ndarray|None =None, vp: u.Quantity|None =None) -> np.ndarray:
+    
+    '''
+    This function generates the base vectors of the new coordinate system.
+    
+    :param vdf_time: The time array of VDF.
+    :param imf_time: The time array of IMF.
+    :param imf: The IMF data in shape (imf_time, 3).
+    :param vp_time: The time array of velocity. Default is None.
+    :param vp: The velocity data in shape (vp_time, 3). Default is None.
+    
+    :return v_unit_new: The base vectors of the new coordinate system in shape (time, 3, 3), where the last dimension is [e_ix, e_iy, e_iz].
+    :return e_b: The IMF unit vector.
+    '''
+    
+    if not imf.unit.is_equivalent(u.T):
+        warnings.warn("IMF does not have units equivalent to T. Are you sure to not use magnetic field?", UserWarning)
+    if imf.shape[1] != 3 or len(imf.shape) != 2 or imf.shape[0] != len(imf_time):
+        raise ValueError("IMF must be a 2-dimensional array with shape (imf_time, 3).")
+    if vp is not None:
+        if not vp.unit.is_equivalent(u.m/u.s):
+            warnings.warn("vp does not have units equivalent to m/s. Are you sure to not use velocity?", UserWarning)
+        if vp.shape[1] != 3 or len(vp.shape) != 2 or vp.shape[0] != len(vp_time):
+            raise ValueError("vp must be a 2-dimensional array with shape (vp_time, 3).")
+        
+    
+    _, imf_indices_align_to_vdf = slide_time_window(imf_time, align_to=vdf_time)
+    imf_vec_mean = np.array([np.mean(imf[imf_indices_align_to_vdf[i]], axis=0) for i in range(len(imf_indices_align_to_vdf))])
+    
+    e_b = imf_vec_mean / np.tile(np.linalg.norm(imf_vec_mean, axis=1), (3, 1)).T
+    
+    if vp_time is not None and vp is not None:
+        _, vp_indices_align_to_vdf = slide_time_window(vp_time, align_to=vdf_time)
+        vp_vec_mean = np.array([np.mean(vp[vp_indices_align_to_vdf[i]], axis=0) for i in range(len(vp_indices_align_to_vdf))])
+        
+        e_v = vp_vec_mean / np.tile(np.linalg.norm(vp_vec_mean, axis=1), (3, 1)).T
+    else:
+        e_v = np.tile(np.array([1, 0, 0]), (len(vdf_time), 1))
+        
+    e_3 = np.cross(e_v, e_b)
+    e_2 = np.cross(e_3, e_v)
+    
+    return np.array([e_v, e_2, e_3]).transpose(1, 0, 2), e_b
 
 
 @check_parameters
@@ -19,7 +69,7 @@ def vdf_sph_to_cart(azimuth: u.Quantity,
              elevation: u.Quantity,
              energy: u.Quantity,
              vdf: u.Quantity,
-             v_unit_new: np.ndarray|None=None,
+             v_unit_new: np.ndarray,
              ) -> Tuple[u.Quantity, u.Quantity]:
     '''
     This function calculates the 3D scatters of VDF in the new coordinate system. (Only tested for SolO data)
@@ -38,7 +88,7 @@ def vdf_sph_to_cart(azimuth: u.Quantity,
         raise ValueError("Azimuth, elevation, and energy must be 1-dimensional arrays.")
     if vdf.ndim != 4 or vdf.shape[1] != len(azimuth) or vdf.shape[2] != len(elevation) or vdf.shape[3] != len(energy):
         raise ValueError("VDF must be a 4-dimensional array with shape (time, azimuth, elevation, energy).")
-    if v_unit_new is not None and v_unit_new.shape != (vdf.shape[0], 3, 3):
+    if v_unit_new.shape != (vdf.shape[0], 3, 3):
         raise ValueError("v_unit_new must have shape (time, 3, 3).")
     if not azimuth.unit.is_equivalent(u.deg) or not elevation.unit.is_equivalent(u.deg) or not energy.unit.is_equivalent(u.J):
         raise ValueError("Azimuth, elevation, and energy must have units equivalent to deg, deg, and J.")
@@ -46,9 +96,6 @@ def vdf_sph_to_cart(azimuth: u.Quantity,
         warnings.warn("VDF does not have units equivalent to s^3/m^6. Is this phase space density instead of counts?", UserWarning)
     
     energy = energy.si
-    
-    if v_unit_new is None:
-        v_unit_new = np.tile(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).reshape(1, 3, 3), (vdf.shape[0], 1, 1))
     
     v = np.sqrt(2*energy / m_p).si
     vdf_vec_t = np.zeros((vdf.shape[0], len(azimuth)*len(elevation)*len(energy), 3)) * v.unit
@@ -172,8 +219,10 @@ def vdf_core(pdf_t: u.Quantity|np.ndarray, v_grid_t: u.Quantity|np.ndarray):
     return v_t_max if isinstance(v_grid_t, np.ndarray) else v_t_max * v_grid_t.unit
 
 
-# 如果坐标系单位矢量z的N分量（e_z[-1]）小于0，那么对磁场的y分量取反，理由未知，逻辑来自Fortran程序
-def _plot_arrow(axes: plt.Axes, mag_vector_3d: np.ndarray, point_3d: np.ndarray, v_units: np.ndarray):
+def _plot_arrow(axes: plt.Axes, mag_vector_3d: np.ndarray, point_3d: np.ndarray, v_units: np.ndarray, **arrow_kwargs):
+    '''
+    如果坐标系单位矢量z的N分量（e_z[-1]）小于0，那么对磁场的y分量取反，理由未知，逻辑来自Fortran程序
+    '''
     
     v_unit_index = [0, 1]
     mag_vector = np.zeros(2)
@@ -220,18 +269,16 @@ def _plot_arrow(axes: plt.Axes, mag_vector_3d: np.ndarray, point_3d: np.ndarray,
     head_size = (x_lim[1] - x_lim[0])/30
     
     if mag_vector[0] > 0:
-        axes.arrow(x_0, y_0, x_1 - x_0, y_1 - y_0, head_width=head_size, head_length=head_size*1.2, shape="full", fc='w', ec='w', lw=2)
-        axes.arrow(x_0, y_0, x_1 - x_0, y_1 - y_0, head_width=head_size, head_length=head_size, shape="full", fc='k', ec='k', lw=1)
+        axes.arrow(x_0, y_0, x_1 - x_0, y_1 - y_0, head_width=head_size, head_length=head_size, **arrow_kwargs)
     else:
-        axes.arrow(x_1, y_1, x_0 - x_1, y_0 - y_1, head_width=head_size, head_length=head_size*1.2, shape="full", fc='w', ec='w', lw=2)
-        axes.arrow(x_1, y_1, x_0 - x_1, y_0 - y_1, head_width=head_size, head_length=head_size, shape="full", fc='k', ec='k', lw=1)
+        axes.arrow(x_1, y_1, x_0 - x_1, y_0 - y_1, head_width=head_size, head_length=head_size, **arrow_kwargs)
 
 
 @check_parameters
 def plot_vdf_2d(axes: plt.Axes, pdf: u.Quantity|np.ndarray, v_grid: u.Quantity, compress_v_unit: int =2,
-                core_marker: bool|dict =False, imf_vector: u.Quantity|None =None, v_unit: np.ndarray|None =None,
+                core_marker: bool|dict =False, imf_vector: u.Quantity|np.ndarray|None =None, v_unit: np.ndarray|None =None,
                 clip_lower_percentage: float =0, color_norm: Normalize|LogNorm|None =None, color_levels: List[float]|None =None, cax: plt.Axes|None =None,
-                pcolormesh_kwargs: dict|None =None, contour_kwargs: bool|dict =True) -> QuadMesh:
+                pcolormesh_kwargs: dict|None =None, contour_kwargs: bool|dict =True, arrow_kwargs: dict|None =None) -> QuadMesh:
     
     '''
     Plot the 2D VDF.
@@ -249,6 +296,7 @@ def plot_vdf_2d(axes: plt.Axes, pdf: u.Quantity|np.ndarray, v_grid: u.Quantity, 
     :param cax: The color bar axis. Default is None.
     :param pcolormesh_kwargs: The keyword arguments for the pcolormesh function. Default is None, which means {'cmap': 'jet', 'shading': 'auto'}.
     :param contour_kwargs: The keyword arguments for the contour function. Default is True, which means {'colors':'k'}.
+    :param arrow_kwargs: The keyword arguments for the arrow function. Default is None, which means {'shape': 'full', 'fc': 'k', 'ec': 'k', 'lw': 1}.
     
     :return quadmesh: The quadmesh of the plot.
     '''
@@ -262,6 +310,8 @@ def plot_vdf_2d(axes: plt.Axes, pdf: u.Quantity|np.ndarray, v_grid: u.Quantity, 
         pcolormesh_kwargs = {'cmap': 'jet', 'shading': 'auto'}
     if contour_kwargs is True:
         contour_kwargs = {'colors':'k'}
+    if arrow_kwargs is None:
+        arrow_kwargs = {'shape': 'full', 'fc': 'k', 'ec': 'k', 'lw': 1}
     
     v_grid_index = [i for i in range(len(pdf.shape))]
     v_grid_index.remove(compress_v_unit)
@@ -295,7 +345,7 @@ def plot_vdf_2d(axes: plt.Axes, pdf: u.Quantity|np.ndarray, v_grid: u.Quantity, 
             axes.plot(core_pos[index[0]], core_pos[index[1]], **core_marker)
             
     if imf_vector is not None and v_unit is not None:
-        _plot_arrow(axes, imf_vector.to_value(), core_pos, v_unit)
+        _plot_arrow(axes, imf_vector.to_value() if isinstance(imf_vector, u.Quantity) else imf_vector, core_pos, v_unit, **arrow_kwargs)
         
     axes.grid('both', alpha=0.5)
     
