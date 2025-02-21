@@ -124,3 +124,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# other folders
+temp_file/
+.csv
+.cdf
+.pkl
