@@ -159,6 +159,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
             data_dict[dataset] = dict()
             data_dict[dataset]['TIMERES'] = timeres
             date_flag = True
+            cdf_dates_length = []
             for varname in varnames:
                 print(f'Processing {varname}...')
                 data_dict[dataset][varname] = dict()
@@ -187,9 +188,6 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                             if cdf_var is not None:
                                 var_tmp = cdf_var
                         else:
-                            cdf_var[(cdf_var < condition[0]) | (cdf_var > condition[1])] = np.nan
-                            var_tmp = cdf_var if var_tmp is None else np.concatenate((var_tmp, cdf_var), axis=0)
-                            
                             if date_flag:
                                 print(f'({cdf_i+1}/{len(dataset_cdfs)}) Encoding epochs, this might take a long time...')
                                 epoch_varname = [zvarname for zvarname in cdf_file.cdf_info().zVariables for epoch_default in epoch_varname_default if epoch_default.lower() in zvarname.lower()][0]
@@ -198,7 +196,16 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                                 else:
                                     cdf_date = _parallel_convert_epoches(cdf_file.varget(epoch_varname), num_processes)
                                 
+                                cdf_dates_length.append(len(cdf_date))
                                 date_tmp = cdf_date if date_tmp is None else np.concatenate((date_tmp, cdf_date), axis=0)
+                                
+                            cdf_var[(cdf_var < condition[0]) | (cdf_var > condition[1])] = np.nan
+                            if var_tmp is None:
+                                var_tmp = cdf_var # if var_tmp is None else np.concatenate((var_tmp, cdf_var), axis=0)
+                            elif cdf_var.shape[0] != cdf_dates_length[cdf_i]:
+                                pass
+                            else:
+                                var_tmp = np.concatenate((var_tmp, cdf_var), axis=0)
                 if err_flag:
                     data_dict[dataset].pop(varname)
                     break

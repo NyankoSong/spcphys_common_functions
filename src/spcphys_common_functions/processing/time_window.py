@@ -1,7 +1,7 @@
 from typing import List, Tuple
 import warnings
 from datetime import datetime, timedelta
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 import numpy as np
 
 from ..utils.utils import check_parameters
@@ -28,6 +28,9 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     :return time_window_ranges: List of tuples representing the start and end times of each window.
     :return time_window_indices: List of numpy arrays containing the indices of the elements in each window.
     """
+    
+    if window_size is None and align_to is None:
+        raise ValueError('Either window_size or align_to should be provided.')
     
     if align_to is None:
         if type(window_size) != type(step) and window_size is not None:
@@ -56,7 +59,7 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
         time_window_indices = [_time_indices(time, time_window_range) for time_window_range in time_window_ranges]
         
     start_index = bisect_left([time_window_range[0] for time_window_range in time_window_ranges], start_time) if start_time is not None else 0
-    end_index = bisect_left([time_window_range[1] for time_window_range in time_window_ranges], end_time) if end_time is not None else len(time_window_ranges)
+    end_index = bisect_right([time_window_range[1] for time_window_range in time_window_ranges], end_time) if end_time is not None else len(time_window_ranges)
         
     return time_window_ranges[start_index:end_index], time_window_indices[start_index:end_index]
     

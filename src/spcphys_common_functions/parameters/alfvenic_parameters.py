@@ -54,6 +54,8 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     '''
     Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
     
+    TODO: 1、此处假设了磁场数据分辨率高于质子数据；2、是否应当用插值的方法统一采样率？
+    
     :param p_date: List of datetime objects for proton velocity data.
     :param v: Proton velocity data in shape (time, 3).
     :param n: Proton number density data in shape (time).
@@ -62,7 +64,7 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     :param least_data_in_window: Least number of data points in each time window. Default is 20.
     :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function.
     
-    :return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility}: Dictionary of Alfvenic parameters.
+    :return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA':vA}: Dictionary of Alfvenic parameters.
     '''
     
     if not v.unit.is_equivalent(u.m/u.s):
@@ -82,8 +84,15 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
         slide_time_window_kwargs['start_time'] = p_date[0]
     if 'end_time' not in slide_time_window_kwargs:
         slide_time_window_kwargs['end_time'] = p_date[-1]
+    if 'window_size' not in slide_time_window_kwargs:
+        slide_time_window_kwargs['window_size'] = slide_time_window_kwargs['end_time'] - slide_time_window_kwargs['start_time']
+    if 'step' not in slide_time_window_kwargs:
+        slide_time_window_kwargs['step'] = slide_time_window_kwargs['window_size']
     time_windows, p_time_window_indices = slide_time_window(p_date, **slide_time_window_kwargs)
-    _, b_time_window_indices = slide_time_window(b_date, align_to=[t[0] for t in time_windows], **slide_time_window_kwargs)
+    if 'align_to' not in slide_time_window_kwargs:
+        _, b_time_window_indices = slide_time_window(b_date, align_to=[t[0] for t in time_windows], **slide_time_window_kwargs)
+    else:
+        _, b_time_window_indices = slide_time_window(b_date, **slide_time_window_kwargs)
     
     if isinstance(p_date, list):
         p_date = np.array(p_date)
@@ -103,6 +112,7 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     cross_helicity = np.zeros(num_window) * u.dimensionless_unscaled
     alfven_ratio = np.zeros(num_window) * u.dimensionless_unscaled
     compressibility = np.zeros(num_window) * u.dimensionless_unscaled
+    vA = np.zeros(num_window) * u.m/u.s
     
     num_valid_p_points = np.zeros(num_window)
     num_valid_b_points = np.zeros(num_window)
@@ -110,15 +120,15 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     
     for i, (p_window_indices, b_window_indices) in enumerate(zip(p_time_window_indices, b_time_window_indices)):
         
-        if len(p_window_indices) < least_data_in_window or len(b_window_indices) < least_data_in_window:
-            r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i] = np.nan, np.nan, np.nan, np.nan, np.nan
-            continue
-        
         v_window = v[p_window_indices]
         n_window = n[p_window_indices]
         b_window = b[b_window_indices]
         
-        num_valid_p_points[i], num_valid_b_points = np.sum(np.isfinite(v_window).all(axis=1)), np.sum(np.isfinite(b_window).all(axis=1))
+        num_valid_p_points[i], num_valid_b_points[i] = np.sum(np.isfinite(v_window).all(axis=1)), np.sum(np.isfinite(b_window).all(axis=1))
+        
+        if num_valid_p_points[i] < least_data_in_window or num_valid_b_points[i] < least_data_in_window:
+            r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+            continue
         
         dv = calc_dx(v_window) #dV
         dvA = multi_dimensional_interpolate(p_date[p_window_indices], b_date[b_window_indices], calc_va(b_window, n_window, dva=True)) # dV_A
@@ -143,9 +153,12 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
         residual_energy_i = (dv2_mean - dvA2_mean) / (dv2_mean + dvA2_mean) # Wu2021, R
         cross_helicity_i = 2 * dv_dvA_mean / (dv2_mean + dvA2_mean)
         alfven_ratio_i = dv2_mean / dvA2_mean
-        compressibility_i = np.nanmean(dn**2) * np.nanmean(b_magnitude**2) / (np.nanmean(n_window)**2 * db_magnitude2_mean)
+        compressibility_i = np.nanmean(dn**2) * np.nanmean(b_magnitude)**2 / (np.nanmean(n_window)**2 * db_magnitude2_mean)
+        vA_i = np.nanmean(np.linalg.norm(calc_va(b_window, n_window, dva=False), axis=1))
     
-        r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i] = r3_i.si, residual_energy_i.si, cross_helicity_i.si, alfven_ratio_i.si, compressibility_i.si
+        r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = r3_i.si, residual_energy_i.si, cross_helicity_i.si, alfven_ratio_i.si, compressibility_i.si, vA_i.si
     
-    return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 
+    return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
             'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
+    # return {'time': [t[0] for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
+    #         'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
