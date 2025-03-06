@@ -1,3 +1,13 @@
-astropy==6.1.3
-cdflib==0.0.0
-setuptools==69.2.0
+aiohttp>=3.10.10
+astropy>=7.0.1
+cdasws>=1.8.2
+cdflib>=1.3.1
+matplotlib>=3.10.1
+nest_asyncio>=1.6.0
+numpy>=2.2.3
+pandas>=2.2.3
+scipy>=1.15.2
+sunpy>=5.1.4
+tqdm>=4.67.0
+xarray>=2024.6.0
+
