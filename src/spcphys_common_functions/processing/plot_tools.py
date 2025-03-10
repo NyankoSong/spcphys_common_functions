@@ -260,56 +260,7 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         axes.set_yscale('log')
         
     return quadmesh
-    
 
-# def _auto_downsample(axes: plt.Axes, x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, max_dens: int =1000):
-#     """
-#     Downsamples the data points to ensure the density of points on the plot does not exceed a specified maximum density.
-
-#     :param axes: The matplotlib axes object where the data will be plotted.
-#     :param x: The x-coordinates of the data points.
-#     :param y: The y-coordinates of the data points.
-#     :param max_dens: The maximum allowed number of points per inch on the plot.
-    
-#     :return x: The downsampled x.
-#     :return y: The downsampled y.
-#     """
-
-#     examine_size = 10 # axes_width / examine_size
-    
-#     x = np.asarray(x) if isinstance(x, list) else x
-    
-#     nan_mask = np.isnan(y) if len(y.shape) == 1 else np.isnan(y).all(axis=1)
-#     y_nan = y[nan_mask]
-#     y_non_nan = y[~nan_mask]
-#     x_non_nan = x[~nan_mask]
-    
-#     axes_width = axes.get_position().width * axes.get_figure().get_size_inches()[0]
-    
-#     hists, bin_edges = np.histogram(x_non_nan, bins=int(axes_width)*examine_size)
-#     high_density_bins = np.where(hists > max_dens/examine_size)[0]
-    
-#     if len(high_density_bins) == 0:
-#         return x, y
-    
-#     low_density_mask = np.ones(len(x_non_nan), dtype=bool)
-    
-#     downsampled_indices = []
-#     for bin_index in high_density_bins:
-#         bin_mask = (x_non_nan >= bin_edges[bin_index]) & (x_non_nan < bin_edges[bin_index + 1])
-#         indices = np.flatnonzero(bin_mask)
-#         low_density_mask[indices] = False
-#         downsampled_indices.extend(np.linspace(indices[0], indices[-1], int(max_dens/examine_size), dtype=int))
-    
-#     non_nan_indices = np.concatenate([np.flatnonzero(low_density_mask), downsampled_indices]).astype(int)
-#     non_nan_indices = np.sort(non_nan_indices)  # Sort final indices to maintain order
-    
-#     final_x_unsorted = np.concatenate([x_non_nan[non_nan_indices], x[nan_mask]])
-#     final_indices = np.argsort(final_x_unsorted)
-#     final_x = final_x_unsorted[final_indices]
-#     final_y = np.concatenate([y_non_nan[non_nan_indices], y_nan])[final_indices]
-    
-#     return final_x, final_y
 
 def _auto_downsample(axes: plt.Axes, x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, max_dens: int = 1000):
     """

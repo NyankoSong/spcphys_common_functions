@@ -7,12 +7,13 @@ WU H, TU C, WANG X, et al., 2021. Magnetic and Velocity Fluctuations in the Near
 from typing import List, Tuple
 from datetime import datetime
 import numpy as np
+import pandas as pd
 from astropy import units as u
 from astropy.constants import mu0, m_p
 
 from ..utils.utils import check_parameters
 from ..processing.time_window import _time_indices, slide_time_window
-from ..processing.preprocess import multi_dimensional_interpolate
+# from ..processing.preprocess import multi_dimensional_interpolate
 
 
 @check_parameters
@@ -131,7 +132,9 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
             continue
         
         dv = calc_dx(v_window) #dV
-        dvA = multi_dimensional_interpolate(p_date[p_window_indices], b_date[b_window_indices], calc_va(b_window, n_window, dva=True)) # dV_A
+        # dvA = multi_dimensional_interpolate(p_date[p_window_indices], b_date[b_window_indices], calc_va(b_window, n_window, dva=True)) # dV_A
+        dvA_b = calc_va(b_window, n_window, dva=True)
+        dvA = pd.DataFrame(dvA_b, index=b_date[b_window_indices]).reindex(np.concatenate((p_date[p_window_indices], b_date[b_window_indices]))).sort_index().interpolate().loc[p_date[p_window_indices], :].values
         
         # dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
         # dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
