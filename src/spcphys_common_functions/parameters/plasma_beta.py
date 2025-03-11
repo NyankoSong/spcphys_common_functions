@@ -81,7 +81,8 @@ def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[dat
     pth = pressure_thermal(n, T)
     pb = pressure_magnetic(b)
     
-    pb = pd.DataFrame(pb, index=b_date).reindex(np.concatenate((p_date, b_date))).sort_index().interpolate().loc[p_date, :].values # 插值对齐
+    pb_interp_df = pd.DataFrame(pb, index=b_date).reindex(np.concatenate((p_date, b_date))).sort_index().interpolate(method='time').loc[p_date, :]
+    pb = pb_interp_df.loc[~pb_interp_df.index.duplicated(keep='first')].values * pb.unit
     
     return pth / pb
 
