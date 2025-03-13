@@ -79,8 +79,8 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     if len(b_date) != b.shape[0]:
         raise ValueError("b_date and b must have the same number of rows.")
     
-    valid_p_indices = np.isfinite(np.concatenate((v.to_value(), n[:, np.newaxis].to_value()), axis=1)).any(axis=1)
-    valid_b_indices = np.isfinite(b.to_value()).any(axis=1)
+    valid_p_indices = np.isfinite(np.concatenate((v.to_value(), n[:, np.newaxis].to_value()), axis=1)).all(axis=1)
+    valid_b_indices = np.isfinite(b.to_value()).all(axis=1)
     num_valid_p_points, num_valid_b_points = np.sum(valid_p_indices), np.sum(valid_b_indices)
     
     if num_valid_p_points < least_data_in_window or num_valid_b_points < least_data_in_window:
