@@ -82,7 +82,7 @@ def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[dat
     pb = pressure_magnetic(b)
     
     pb_interp_df = pd.DataFrame(pb, index=b_date).reindex(np.concatenate((p_date, b_date))).sort_index().interpolate(method='time').loc[p_date, :]
-    pb = pb_interp_df.loc[~pb_interp_df.index.duplicated(keep='first')].values * pb.unit
+    pb = pb_interp_df.loc[~pb_interp_df.index.duplicated(keep='first')].values.flatten() * pb.unit
     
     return pth / pb
 

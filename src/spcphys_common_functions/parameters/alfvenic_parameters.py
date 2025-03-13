@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from astropy import units as u
 from astropy.constants import mu0, m_p
+from scipy import stats as sstats
 
 from ..utils.utils import check_parameters
 from ..processing.time_window import _time_indices, slide_time_window
@@ -51,21 +52,18 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
 
 
 @check_parameters
-def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20, **slide_time_window_kwargs) -> dict:
+def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20):
     '''
     Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
-    
-    TODO: 1、此处假设了磁场数据分辨率高于质子数据；2、是否应当用插值的方法统一采样率？
     
     :param p_date: List of datetime objects for proton velocity data.
     :param v: Proton velocity data in shape (time, 3).
     :param n: Proton number density data in shape (time).
     :param b_date: List of datetime objects for magnetic field data.
     :param b: Magnetic field data in shape (time, 3).
-    :param least_data_in_window: Least number of data points in each time window. Default is 20.
-    :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function.
+    :param least_data_in_window: Least number of valid data points. Default is 20.
     
-    :return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA':vA}: Dictionary of Alfvenic parameters.
+    :return {'r3': r3, 'p3': p3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA':vA}: Dictionary of Alfvenic parameters.
     '''
     
     if not v.unit.is_equivalent(u.m/u.s):
@@ -81,6 +79,84 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     if len(b_date) != b.shape[0]:
         raise ValueError("b_date and b must have the same number of rows.")
     
+    valid_p_indices = np.isfinite(np.concatenate((v.to_value(), n[:, np.newaxis].to_value()), axis=1)).any(axis=1)
+    valid_b_indices = np.isfinite(b.to_value()).any(axis=1)
+    num_valid_p_points, num_valid_b_points = np.sum(valid_p_indices), np.sum(valid_b_indices)
+    
+    if num_valid_p_points < least_data_in_window or num_valid_b_points < least_data_in_window:
+        return {'time': p_date[0] + (p_date[-1] - p_date[0]) / 2, 'r3': np.nan, 'p3': np.nan, 
+                'residual_energy': np.nan, 'cross_helicity': np.nan, 
+                'alfven_ratio': np.nan, 'compressibility': np.nan, 
+                'vA': np.nan,'time_window': [p_date[0], p_date[1]], 'num_valid_p_points': num_valid_p_points, 
+                'num_valid_b_points': num_valid_b_points}
+    
+    if isinstance(p_date, list):
+        p_date = np.array(p_date)
+    if isinstance(b_date, list):
+        b_date = np.array(b_date)
+    if isinstance(least_data_in_window, float):
+        least_data_in_window = int(least_data_in_window)
+
+    # 剔除掉无效的数据部分，避免插值后导致有效磁场数据多于有效质子数据
+    p_date = p_date[valid_p_indices]
+    b_date = b_date[valid_b_indices]
+
+    v = v[valid_p_indices].si
+    n = n[valid_p_indices].si
+    b = b[valid_b_indices].si
+    
+    dv = calc_dx(v) #dV
+    # dvA = multi_dimensional_interpolate(p_date, b_date, calc_va(b, n, dva=True)) # dV_A
+    dvA_b = calc_va(b, n, dva=True)
+    dvA_interp_df = pd.DataFrame(dvA_b, index=b_date).reindex(np.concatenate((p_date, b_date))).sort_index().interpolate(method='time').loc[p_date, :]
+    dvA = dvA_interp_df.loc[~dvA_interp_df.index.duplicated(keep='first')].values * dvA_b.unit
+    
+    # dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
+    # dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
+    # dv_dvA_mean = np.trace(np.dot(dv.T, dvA)) / len(dv) # <dV * dV_A>
+    
+    dv2_mean = np.nanmean(np.nansum(dv**2, axis=1))
+    dvA2_mean = np.nanmean(np.nansum(dvA**2, axis=1))
+    dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv, dvA))
+    
+    dn = calc_dx(n)
+    
+    b_magnitude = np.linalg.norm(b, axis=1)
+    # 可压缩系数的磁场扰动是先做差、再取模
+    db = calc_dx(b)
+    # db_magnitude2_mean = np.nansum(db**2) / len(db)
+    db_magnitude2_mean = np.nanmean(np.nansum(db**2, axis=1))
+    
+    r3_i = dv_dvA_mean / np.sqrt(dv2_mean * dvA2_mean) # Wu2021, Cvb
+    p3_i = (1 - sstats.t.cdf(np.abs(r3_i) * np.sqrt((num_valid_p_points - 2) / (1 - r3_i**2)), df=num_valid_p_points - 2)) * 2 * u.dimensionless_unscaled
+    residual_energy_i = (dv2_mean - dvA2_mean) / (dv2_mean + dvA2_mean) # Wu2021, R
+    cross_helicity_i = 2 * dv_dvA_mean / (dv2_mean + dvA2_mean)
+    alfven_ratio_i = dv2_mean / dvA2_mean
+    compressibility_i = np.nanmean(dn**2) * np.nanmean(b_magnitude)**2 / (np.nanmean(n)**2 * db_magnitude2_mean)
+    vA_i = np.nanmean(np.linalg.norm(calc_va(b, n, dva=False), axis=1))
+
+    return {'time': p_date[-1] - p_date[0], 'r3': r3_i.si, 'p3': p3_i.si, 
+            'residual_energy': residual_energy_i.si, 'cross_helicity': cross_helicity_i.si, 
+            'alfven_ratio': alfven_ratio_i.si, 'compressibility': compressibility_i.si, 
+            'vA': vA_i.si,'time_window': [p_date[0], p_date[1]], 'num_valid_p_points': num_valid_p_points, 
+            'num_valid_b_points': num_valid_b_points}
+
+@check_parameters
+def calc_alfven_t(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20, **slide_time_window_kwargs) -> dict:
+    '''
+    Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
+    
+    :param p_date: List or numpy array of datetime objects for proton velocity data.
+    :param v: Proton velocity data in shape (time, 3).
+    :param n: Proton number density data in shape (time).
+    :param b_date: List or numpy array of datetime objects for magnetic field data.
+    :param b: Magnetic field data in shape (time, 3).
+    :param least_data_in_window: Least number of valid data points in each time window. Default is 20.
+    :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function.
+    
+    :return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA':vA}: Dictionary of Alfvenic parameters.
+    '''
+    
     if 'start_time' not in slide_time_window_kwargs:
         slide_time_window_kwargs['start_time'] = p_date[0]
     if 'end_time' not in slide_time_window_kwargs:
@@ -94,21 +170,11 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
         _, b_time_window_indices = slide_time_window(b_date, align_to=[t[0] for t in time_windows], **slide_time_window_kwargs)
     else:
         _, b_time_window_indices = slide_time_window(b_date, **slide_time_window_kwargs)
-    
-    if isinstance(p_date, list):
-        p_date = np.array(p_date)
-    if isinstance(b_date, list):
-        b_date = np.array(b_date)
-    if isinstance(least_data_in_window, float):
-        least_data_in_window = int(least_data_in_window)
-        
-    v = v.si
-    n = n.si
-    b = b.si
-    
+
     num_window = len(time_windows)
     
     r3 = np.zeros(num_window) * u.dimensionless_unscaled
+    p3 = np.zeros(num_window) * u.dimensionless_unscaled
     residual_energy = np.zeros(num_window) * u.dimensionless_unscaled
     cross_helicity = np.zeros(num_window) * u.dimensionless_unscaled
     alfven_ratio = np.zeros(num_window) * u.dimensionless_unscaled
@@ -117,52 +183,20 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     
     num_valid_p_points = np.zeros(num_window)
     num_valid_b_points = np.zeros(num_window)
-
     
     for i, (p_window_indices, b_window_indices) in enumerate(zip(p_time_window_indices, b_time_window_indices)):
+
+        alfven_params_window = calc_alfven(p_date=p_date[p_window_indices], 
+                                           v=v[p_window_indices], 
+                                           n=n[p_window_indices], 
+                                           b_date=b_date[b_window_indices], 
+                                           b=b[b_window_indices], 
+                                           least_data_in_window=least_data_in_window)
         
-        v_window = v[p_window_indices]
-        n_window = n[p_window_indices]
-        b_window = b[b_window_indices]
-        
-        num_valid_p_points[i], num_valid_b_points[i] = np.sum(np.isfinite(v_window).all(axis=1)), np.sum(np.isfinite(b_window).all(axis=1))
-        
-        if num_valid_p_points[i] < least_data_in_window or num_valid_b_points[i] < least_data_in_window:
-            r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
-            continue
-        
-        dv = calc_dx(v_window) #dV
-        # dvA = multi_dimensional_interpolate(p_date[p_window_indices], b_date[b_window_indices], calc_va(b_window, n_window, dva=True)) # dV_A
-        dvA_b = calc_va(b_window, n_window, dva=True)
-        dvA_interp_df = pd.DataFrame(dvA_b, index=b_date[b_window_indices]).reindex(np.concatenate((p_date[p_window_indices], b_date[b_window_indices]))).sort_index().interpolate(method='time').loc[p_date[p_window_indices], :]
-        dvA = dvA_interp_df.loc[~dvA_interp_df.index.duplicated(keep='first')].values * dvA_b.unit
-        
-        # dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
-        # dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
-        # dv_dvA_mean = np.trace(np.dot(dv.T, dvA)) / len(dv) # <dV * dV_A>
-        
-        dv2_mean = np.nanmean(np.nansum(dv**2, axis=1))
-        dvA2_mean = np.nanmean(np.nansum(dvA**2, axis=1))
-        dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv, dvA))
-        
-        dn = calc_dx(n_window)
-        
-        b_magnitude = np.linalg.norm(b_window, axis=1)
-        # 可压缩系数的磁场扰动是先做差、再取模
-        db = calc_dx(b_window)
-        # db_magnitude2_mean = np.nansum(db**2) / len(db)
-        db_magnitude2_mean = np.nanmean(np.nansum(db**2, axis=1))
-        
-        r3_i = dv_dvA_mean / np.sqrt(dv2_mean * dvA2_mean) # Wu2021, Cvb
-        residual_energy_i = (dv2_mean - dvA2_mean) / (dv2_mean + dvA2_mean) # Wu2021, R
-        cross_helicity_i = 2 * dv_dvA_mean / (dv2_mean + dvA2_mean)
-        alfven_ratio_i = dv2_mean / dvA2_mean
-        compressibility_i = np.nanmean(dn**2) * np.nanmean(b_magnitude)**2 / (np.nanmean(n_window)**2 * db_magnitude2_mean)
-        vA_i = np.nanmean(np.linalg.norm(calc_va(b_window, n_window, dva=False), axis=1))
+        num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
+        r3[i], p3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
     
-        r3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = r3_i.si, residual_energy_i.si, cross_helicity_i.si, alfven_ratio_i.si, compressibility_i.si, vA_i.si
-    
-    return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
+    return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'p3': p3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
             'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
     # return {'time': [t[0] for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
     #         'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
