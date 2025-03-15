@@ -14,7 +14,7 @@ from scipy import stats as sstats
 
 from ..utils.utils import check_parameters
 from ..processing.time_window import _time_indices, slide_time_window
-# from ..processing.preprocess import multi_dimensional_interpolate
+from ..processing.preprocess import interpolate
 
 
 @check_parameters
@@ -97,7 +97,7 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     if isinstance(least_data_in_window, float):
         least_data_in_window = int(least_data_in_window)
 
-    # 剔除掉无效的数据部分，避免插值后导致有效磁场数据多于有效质子数据
+    # Delete invalid data parts to avoid more valid magnetic field data than valid proton data after interpolation
     p_date = p_date[valid_p_indices]
     b_date = b_date[valid_b_indices]
 
@@ -106,23 +106,20 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     b = b[valid_b_indices].si
     
     dv = calc_dx(v) #dV
-    # dvA = multi_dimensional_interpolate(p_date, b_date, calc_va(b, n, dva=True)) # dV_A
-    dvA_b = calc_va(b, n, dva=True)
-    dvA_interp_df = pd.DataFrame(dvA_b, index=b_date).reindex(np.concatenate((p_date, b_date))).sort_index().interpolate(method='time').loc[p_date, :]
-    dvA = dvA_interp_df.loc[~dvA_interp_df.index.duplicated(keep='first')].values * dvA_b.unit
+    dvA = interpolate(p_date, b_date, calc_va(b, n, dva=True), vector_norm_interp=True) #dV_A
     
     # dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
     # dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
     # dv_dvA_mean = np.trace(np.dot(dv.T, dvA)) / len(dv) # <dV * dV_A>
     
-    dv2_mean = np.nanmean(np.nansum(dv**2, axis=1))
-    dvA2_mean = np.nanmean(np.nansum(dvA**2, axis=1))
-    dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv, dvA))
+    dv2_mean = np.nanmean(np.nansum(dv**2, axis=1)) # <dV^2>
+    dvA2_mean = np.nanmean(np.nansum(dvA**2, axis=1)) # <dV_A^2>
+    dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv, dvA)) # <dV * dV_A>
     
     dn = calc_dx(n)
     
     b_magnitude = np.linalg.norm(b, axis=1)
-    # 可压缩系数的磁场扰动是先做差、再取模
+    # Compressibility of magnetic field perturbation is calculated by subtracting first and then taking the modulus
     db = calc_dx(b)
     # db_magnitude2_mean = np.nansum(db**2) / len(db)
     db_magnitude2_mean = np.nanmean(np.nansum(db**2, axis=1))

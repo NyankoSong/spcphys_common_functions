@@ -110,3 +110,42 @@ def npdt64_to_dt(npdt64: np.ndarray) -> np.ndarray:
 #         return y * yp.unit
 #     else:
 #         return y
+
+
+@check_parameters
+def interpolate(x: List[datetime]|np.ndarray, xp: List[datetime]|np.ndarray, yp: np.ndarray|u.Quantity, vector_norm_interp: bool =False) -> np.ndarray|u.Quantity:
+    '''
+    Perform interpolation on the given time series data.
+    
+    :param x: Array of datetime at which to evaluate the interpolated values.
+    :param xp: Array of datetime of the data points.
+    :param yp: Array of y-coordinates of the data points in shape (t,) or (t, dim).
+    :param vector_norm_interp: Whether to interpolate the vector norm of the data points if yp is a vector time series. Default is False.
+    
+    :return y: Interpolated values at the x.
+    '''
+    
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(xp, list):
+        xp = np.array(xp)
+        
+    if len(yp.shape) > 1 and yp.shape[1] > 1 and vector_norm_interp:
+        yp_norm = np.linalg.norm(yp, axis=1, keepdims=True)
+        y_interp_df = pd.DataFrame(np.concatenate((yp, yp_norm), axis=1), index=xp).reindex(np.concatenate((x, xp))).sort_index().interpolate(method='time').loc[x, :]
+        y_interp_df.loc[y_interp_df.index > xp[-1], :] = np.nan
+        y = y_interp_df.loc[~y_interp_df.index.duplicated(keep='first')].values
+        y = y[:, :-1] / np.linalg.norm(y[:, :-1], axis=1, keepdims=True) * y[:, -1][:, None]
+    else:
+        y_interp_df = pd.DataFrame(yp, index=xp).reindex(np.concatenate((x, xp))).sort_index().interpolate(method='time').loc[x, :]
+        y_interp_df.loc[y_interp_df.index > xp[-1], :] = np.nan
+        y = y_interp_df.loc[~y_interp_df.index.duplicated(keep='first')].values
+            
+    if isinstance(yp, u.Quantity):
+        y = y * yp.unit
+    if len(yp.shape) == 1:
+        y = y.flatten()
+        
+    return y
+        
+    
