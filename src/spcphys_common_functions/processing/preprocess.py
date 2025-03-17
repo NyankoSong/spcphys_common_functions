@@ -147,5 +147,3 @@ def interpolate(x: List[datetime]|np.ndarray, xp: List[datetime]|np.ndarray, yp:
         y = y.flatten()
         
     return y
-        
-    
