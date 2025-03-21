@@ -136,13 +136,21 @@ def interpolate(x: List[datetime]|np.ndarray, xp: List[datetime]|np.ndarray, yp:
         y_interp_df.loc[y_interp_df.index > xp[-1], :] = np.nan
         y = y_interp_df.loc[~y_interp_df.index.duplicated(keep='first')].values
         y = y[:, :-1] / np.linalg.norm(y[:, :-1], axis=1, keepdims=True) * y[:, -1][:, None]
+        if isinstance(yp, u.Quantity):
+            y = y * yp.unit
     else:
-        y_interp_df = pd.DataFrame(yp, index=xp).reindex(np.concatenate((x, xp))).sort_index().interpolate(method='time').loc[x, :]
-        y_interp_df.loc[y_interp_df.index > xp[-1], :] = np.nan
-        y = y_interp_df.loc[~y_interp_df.index.duplicated(keep='first')].values
+        if isinstance(yp, u.Quantity) and yp.unit.is_equivalent(u.deg):
+            y_interp_df = pd.DataFrame(np.exp(1j * yp.to(u.rad).value), index=xp).reindex(np.concatenate((x, xp))).sort_index().interpolate(method='time').loc[x, :]
+            y_interp_df.loc[y_interp_df.index > xp[-1], :] = np.nan
+            y = (np.angle(y_interp_df.loc[~y_interp_df.index.duplicated(keep='first')].values, deg=True) + 360) % 360 * u.deg
+            y = y.to(yp.unit)
+        else:
+            y_interp_df = pd.DataFrame(yp, index=xp).reindex(np.concatenate((x, xp))).sort_index().interpolate(method='time').loc[x, :]
+            y_interp_df.loc[y_interp_df.index > xp[-1], :] = np.nan
+            y = y_interp_df.loc[~y_interp_df.index.duplicated(keep='first')].values
+            if isinstance(yp, u.Quantity):
+                y = y * yp.unit
             
-    if isinstance(yp, u.Quantity):
-        y = y * yp.unit
     if len(yp.shape) == 1:
         y = y.flatten()
         

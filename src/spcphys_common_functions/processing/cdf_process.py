@@ -189,10 +189,10 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                         else:
                             if date_flag:
                                 print(f'({cdf_i+1}/{len(dataset_cdfs)}) Encoding epochs, this might take a long time...')
-                                if epochname == '':
-                                    epoch_varname = [zvarname for zvarname in cdf_file.cdf_info().zVariables if epochname.lower() in zvarname.lower()][0]
-                                else:
+                                if len(epochname) < 2 or epochname.lower() == 'none':
                                     epoch_varname = [zvarname for zvarname in cdf_file.cdf_info().zVariables for epoch_default in epoch_varname_default if epoch_default.lower() in zvarname.lower()][0]
+                                else:
+                                    epoch_varname = [zvarname for zvarname in cdf_file.cdf_info().zVariables if epochname.lower() in zvarname.lower()][0]
                                 if num_processes == 1:
                                     cdf_date = _convert_epoches(cdf_file.varget(epoch_varname)) # This is TOO SLOW
                                 else:

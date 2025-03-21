@@ -146,7 +146,8 @@ def dual_spacecraft_obs_diff(pos_sat1: SkyCoord|HeliographicCarrington, pos_sat2
     target_sc_date_timestamp = [t.timestamp() for t in pos_sat2.obstime.value]
     
     def _target_sc_lon_interp_func(target_timestamp):
-        return (np.angle(np.interp(target_timestamp, target_sc_date_timestamp, np.exp(1j * pos_sat2.lon.to(u.rad).value)), deg=True) + 360) % 360 * u.deg
+        # return (np.angle(np.interp(target_timestamp, target_sc_date_timestamp, np.exp(1j * pos_sat2.lon.to(u.rad).value)), deg=True) + 360) % 360 * u.deg
+        return interpolate(target_timestamp, target_sc_date_timestamp, pos_sat2.lon)
 
     t_back_lower_boundary = (pos_sat1.radius.min() - pos_sat2.radius.max()) / np.nanmax(v_r)
     t_back_upper_boundary = (pos_sat1.radius.max() - pos_sat2.radius.min()) / np.nanmin(v_r)
