@@ -23,7 +23,7 @@ def _check_condition(condition: str) -> float:
 
 def _get_boundary(boundary: str|List[str|float]|Tuple[str|float]|None=None):
     
-    if boundary is None or (isinstance(boundary, str) and boundary.lower == 'none') or boundary[0].lower() == 'none':
+    if boundary is None or (isinstance(boundary, str) and boundary.lower() == 'none') or boundary[0].lower() == 'none' or len(boundary) < 2:
         boundary = [-1E30, 1E30]
     else:
         for i, b in enumerate(boundary):

@@ -365,7 +365,7 @@ def plot(x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, axes: plt.Axes
 
 
 def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u.Quantity|List[np.ndarray|u.Quantity], z: np.ndarray|u.Quantity|List[np.ndarray|u.Quantity],
-                   width: List[timedelta]|np.ndarray|timedelta|None=None, **pcolormesh_kwargs) -> QuadMesh:
+                   width: List[timedelta]|np.ndarray|timedelta|None=None, norm: str|LogNorm|Normalize ='linear', **pcolormesh_kwargs) -> QuadMesh:
     
     '''
     Plot a 1D mesh plot with time as the x-axis.
@@ -398,11 +398,25 @@ def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u
         if len(y.shape) < 2:
             y = np.tile(y, (t.shape[0], 1))
             
+    if norm == 'linear':
+        norm = Normalize(vmin=np.nanmin(z), vmax=np.nanmax(z))
+    elif norm == 'log':
+        norm = LogNorm(vmin=np.nanmin(z[z > 0]), vmax=np.nanmax(z))
+            
+    if 'norm' not in pcolormesh_kwargs:
+        pcolormesh_kwargs['norm'] = norm
+            
     if width is None:
         for i in range(t.shape[0]):
-            quadmesh = axes.pcolormesh([t[i], t[i] + (t[i+1] - t[i])/2 if i < t.shape[0] - 1 else t[i] + (t[i] - t[i-1])/2], y[i], np.vstack(([z[i], z[i]])).T, **pcolormesh_kwargs)
+            yi_valid_indices = np.isfinite(y[i])
+            if yi_valid_indices.sum() < 2:
+                continue
+            quadmesh = axes.pcolormesh([t[i], t[i] + (t[i+1] - t[i])/2 if i < t.shape[0] - 1 else t[i] + (t[i] - t[i-1])/2], y[i, yi_valid_indices], np.vstack(([z[i, yi_valid_indices], z[i, yi_valid_indices]])).T, **pcolormesh_kwargs)
     else:
         for i in range(t.shape[0]):
-            quadmesh = axes.pcolormesh([t[i], t[i] + width[i]/2], y[i], np.vstack(([z[i], z[i]])).T, **pcolormesh_kwargs)
+            yi_valid_indices = np.isfinite(y[i])
+            if yi_valid_indices.sum() < 2:
+                continue
+            quadmesh = axes.pcolormesh([t[i], t[i] + width[i]/2], y[i, yi_valid_indices], np.vstack(([z[i, yi_valid_indices], z[i, yi_valid_indices]])).T, **pcolormesh_kwargs)
             
     return quadmesh
