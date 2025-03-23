@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>spcphys_common_functions.parameters.coulomb_collisional_age &mdash; spcphys_common_functions  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            spcphys_common_functions
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">spcphys_common_functions</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">spcphys_common_functions.parameters.coulomb_collisional_age</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for spcphys_common_functions.parameters.coulomb_collisional_age</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">TRACY P J, KASPER J C, ZURBUCHEN T H, et al., 2015. THERMALIZATION OF HEAVY IONS IN THE SOLAR WIND[J/OL]. The Astrophysical Journal, 812(2): 170. DOI:10.1088/0004-637X/812/2/170.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.constants</span> <span class="kn">import</span> <span class="n">e</span><span class="p">,</span> <span class="n">m_p</span><span class="p">,</span> <span class="n">au</span><span class="p">,</span> <span class="n">eps0</span><span class="p">,</span> <span class="n">u</span> <span class="k">as</span> <span class="n">u_const</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">integrate</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+
+<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
+<span class="kn">from</span> <span class="nn">.vth_E_T</span> <span class="kn">import</span> <span class="n">T_to_E</span><span class="p">,</span> <span class="n">T_to_vth</span>
+
+
+<div class="viewcode-block" id="calc_Ac">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.coulomb_collisional_age.calc_Ac">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">calc_Ac</span><span class="p">(</span><span class="n">v_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+            <span class="n">T_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+            <span class="n">n_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+            <span class="n">v_i</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+            <span class="n">T_i</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+            <span class="n">n_i</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+            <span class="n">charge_number_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">mass_number_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">m_i</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">charge_number_j</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">mass_number_j</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">m_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">distance</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span> <span class="o">=</span> <span class="n">au</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate Coulomb collisional age, reproduced according to the algorithm of Tracy et al. (2015)</span>
+<span class="sd">    </span>
+<span class="sd">    :param v_j: Field particle velocity, m/s</span>
+<span class="sd">    :param T_j: Field particle Temperature, K</span>
+<span class="sd">    :param n_j: Field particle number density, m^-3</span>
+<span class="sd">    :param v_i: Test particle velocity, m/s</span>
+<span class="sd">    :param T_i: Test particle Temperature, K</span>
+<span class="sd">    :param n_i: Test particle number density, m^-3</span>
+<span class="sd">    :param charge_number_i: Test particle charge number</span>
+<span class="sd">    :param mass_number_i: Test particle mass number</span>
+<span class="sd">    :param m_i: Test particle mass, kg, default None, calculated from mass_number_i with atomic mass constant</span>
+<span class="sd">    :param charge_number_j: Field particle charge number, default 1, proton</span>
+<span class="sd">    :param mass_number_j: Field particle mass number, default 1, proton</span>
+<span class="sd">    :param m_j: Field particle mass, kg, default None, calculated from mass_number_j with atomic mass constant</span>
+<span class="sd">    :param distance: heliocentric distance, AU, default 1 AU</span>
+<span class="sd">    </span>
+<span class="sd">    :return Ac: Coulomb Collisional Age</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">v_j</span><span class="p">,</span> <span class="n">v_i</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">T_j</span><span class="p">,</span> <span class="n">T_i</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;T_j and T_i must be quantities with units of temperature (K).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**-</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">n_j</span><span class="p">,</span> <span class="n">n_i</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_j and n_i must be quantities with units of number density (m^-3).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">distance</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">au</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;distance must be a quantity with units of astronomical units (AU).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">charge_number_i</span><span class="p">,</span> <span class="n">mass_number_i</span><span class="p">,</span> <span class="n">charge_number_j</span><span class="p">,</span> <span class="n">mass_number_j</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;charge_number_i, mass_number_i, charge_number_j, mass_number_j, and n_vth must be positive integers.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">m_i</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="p">)</span> <span class="ow">or</span> <span class="n">m_i</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;m_i must be a positive quantity with units of mass (kg) or None.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_j</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">m_j</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="p">)</span> <span class="ow">or</span> <span class="n">m_j</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;m_j must be a positive quantity with units of mass (kg) or None.&quot;</span><span class="p">)</span>
+    
+    <span class="n">v_j</span> <span class="o">=</span> <span class="n">v_j</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">v_i</span> <span class="o">=</span> <span class="n">v_i</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">T_j</span> <span class="o">=</span> <span class="n">T_j</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">T_i</span> <span class="o">=</span> <span class="n">T_i</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">n_j</span> <span class="o">=</span> <span class="n">n_j</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">n_i</span> <span class="o">=</span> <span class="n">n_i</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">if</span> <span class="n">m_i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">m_i</span> <span class="o">=</span> <span class="n">m_i</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">if</span> <span class="n">m_j</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">m_j</span> <span class="o">=</span> <span class="n">m_j</span><span class="o">.</span><span class="n">si</span>
+    
+    <span class="n">q_e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">q_j</span> <span class="o">=</span> <span class="o">-</span> <span class="n">charge_number_j</span> <span class="o">*</span> <span class="n">q_e</span>
+    <span class="n">q_i</span> <span class="o">=</span> <span class="o">-</span> <span class="n">charge_number_i</span> <span class="o">*</span> <span class="n">q_e</span>
+    
+    <span class="n">mass_number_to_mass</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m_p</span> <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">m</span> <span class="o">*</span> <span class="n">u_const</span>
+    <span class="k">if</span> <span class="n">m_i</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">m_i</span> <span class="o">=</span> <span class="n">mass_number_to_mass</span><span class="p">(</span><span class="n">mass_number_i</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_j</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">m_j</span> <span class="o">=</span> <span class="n">mass_number_to_mass</span><span class="p">(</span><span class="n">mass_number_j</span><span class="p">)</span>
+    
+    <span class="n">n_vth</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># most probable speed</span>
+    <span class="n">Te_j</span> <span class="o">=</span> <span class="n">T_to_E</span><span class="p">(</span><span class="n">T_j</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">eV</span><span class="p">)</span> <span class="c1"># in eV</span>
+    <span class="n">Te_i</span> <span class="o">=</span> <span class="n">T_to_E</span><span class="p">(</span><span class="n">T_i</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">eV</span><span class="p">)</span> <span class="c1"># in eV</span>
+    <span class="n">vth2_j</span> <span class="o">=</span> <span class="n">T_to_vth</span><span class="p">(</span><span class="n">T_j</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="n">m_j</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n_vth</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">vth2_i</span> <span class="o">=</span> <span class="n">T_to_vth</span><span class="p">(</span><span class="n">T_i</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="n">m_i</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n_vth</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    
+    <span class="n">ln_lambda</span> <span class="o">=</span> <span class="mf">29.9</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(((</span><span class="n">charge_number_i</span><span class="o">*</span><span class="n">charge_number_j</span><span class="o">*</span><span class="p">(</span><span class="n">mass_number_i</span> <span class="o">+</span> <span class="n">mass_number_j</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mass_number_i</span><span class="o">*</span><span class="n">Te_j</span> <span class="o">+</span> <span class="n">mass_number_j</span><span class="o">*</span><span class="n">Te_i</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n_i</span><span class="o">*</span><span class="n">charge_number_i</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">Te_i</span> <span class="o">+</span> <span class="n">n_j</span><span class="o">*</span><span class="n">charge_number_j</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">Te_j</span><span class="p">))</span><span class="o">.</span><span class="n">to_value</span><span class="p">())</span> <span class="c1"># 无量纲化</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v_i</span> <span class="o">-</span> <span class="n">v_j</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vth2_i</span> <span class="o">+</span> <span class="n">vth2_j</span><span class="p">)</span>
+    <span class="n">phi_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">xi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nu_th</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">eps0</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">q_i</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">q_j</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ln_lambda</span> <span class="o">*</span> <span class="n">n_j</span> <span class="o">/</span> <span class="p">(</span><span class="n">m_i</span> <span class="o">*</span> <span class="n">m_j</span> <span class="o">*</span> <span class="p">(</span><span class="n">vth2_i</span> <span class="o">+</span> <span class="n">vth2_j</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi_x</span> <span class="o">/</span> <span class="n">x</span><span class="p">))</span>
+    <span class="n">t_travel</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">v_j</span>
+    <span class="n">Ac</span> <span class="o">=</span> <span class="n">nu_th</span> <span class="o">*</span> <span class="n">t_travel</span>
+    
+    <span class="k">return</span> <span class="n">Ac</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">to_value</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#     # Example parameters for oxygen ion (O) and proton (H)</span>
+<span class="c1">#     v_j = 400 * u.km / u.s</span>
+<span class="c1">#     T_j = 1e6 * u.K</span>
+<span class="c1">#     n_j = 20 / u.cm**3</span>
+<span class="c1">#     v_i = 500 * u.km / u.s</span>
+<span class="c1">#     T_i = 1e7 * u.K</span>
+<span class="c1">#     n_i = 0.02 / u.cm**3</span>
+<span class="c1">#     charge_number_i = 6  # Oxygen ion</span>
+<span class="c1">#     mass_number_i = 16  # Oxygen ion</span>
+<span class="c1">#     # charge_number_j = 1  # Proton, default field particle</span>
+<span class="c1">#     # mass_number_j = 1  # Proton, default field particle</span>
+<span class="c1">#     distance = 1 * au</span>
+
+<span class="c1">#     # Call the function</span>
+<span class="c1">#     result = calc_Ac(v_j, T_j, n_j, v_i, T_i, n_i, charge_number_i, mass_number_i, distance=distance, </span>
+<span class="c1">#                                     #  charge_number_j=charge_number_j, mass_number_j=mass_number_j</span>
+<span class="c1">#                                      )</span>
+
+<span class="c1">#     print(f&#39;v_j = {v_j}, T_j = {T_j}, n_j = {n_j}, v_i = {v_i}, T_i = {T_i}, n_i = {n_i}, charge_number_i = {charge_number_i}, mass_number_i = {mass_number_i}, distance = {distance}&#39;)</span>
+<span class="c1">#     print(f&#39;Ac = {result}&#39;)</span>
+    
+<span class="c1">#     pass</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, NyankoSong.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

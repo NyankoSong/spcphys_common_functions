@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>spcphys_common_functions.parameters package &mdash; spcphys_common_functions  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            spcphys_common_functions
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">spcphys_common_functions.parameters package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters.alfvenic_parameters">spcphys_common_functions.parameters.alfvenic_parameters module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven"><code class="docutils literal notranslate"><span class="pre">calc_alfven()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven_t"><code class="docutils literal notranslate"><span class="pre">calc_alfven_t()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_dx"><code class="docutils literal notranslate"><span class="pre">calc_dx()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_va"><code class="docutils literal notranslate"><span class="pre">calc_va()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters.coulomb_collisional_age">spcphys_common_functions.parameters.coulomb_collisional_age module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.coulomb_collisional_age.calc_Ac"><code class="docutils literal notranslate"><span class="pre">calc_Ac()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters.effectsize">spcphys_common_functions.parameters.effectsize module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.effectsize.es_cohen"><code class="docutils literal notranslate"><span class="pre">es_cohen()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters.minimum_variance">spcphys_common_functions.parameters.minimum_variance module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.minimum_variance.min_var"><code class="docutils literal notranslate"><span class="pre">min_var()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters.plasma_beta">spcphys_common_functions.parameters.plasma_beta module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.plasma_beta.calc_beta"><code class="docutils literal notranslate"><span class="pre">calc_beta()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.plasma_beta.pressure_magnetic"><code class="docutils literal notranslate"><span class="pre">pressure_magnetic()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.plasma_beta.pressure_thermal"><code class="docutils literal notranslate"><span class="pre">pressure_thermal()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters.vth_E_T">spcphys_common_functions.parameters.vth_E_T module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.vth_E_T.E_to_T"><code class="docutils literal notranslate"><span class="pre">E_to_T()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.vth_E_T.E_to_vth"><code class="docutils literal notranslate"><span class="pre">E_to_vth()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.vth_E_T.T_to_E"><code class="docutils literal notranslate"><span class="pre">T_to_E()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.vth_E_T.T_to_vth"><code class="docutils literal notranslate"><span class="pre">T_to_vth()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.vth_E_T.vth_to_E"><code class="docutils literal notranslate"><span class="pre">vth_to_E()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.parameters.vth_E_T.vth_to_T"><code class="docutils literal notranslate"><span class="pre">vth_to_T()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.parameters">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">spcphys_common_functions</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">spcphys_common_functions.parameters package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/spcphys_common_functions.parameters.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spcphys-common-functions-parameters-package">
+<h1>spcphys_common_functions.parameters package<a class="headerlink" href="#spcphys-common-functions-parameters-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-spcphys_common_functions.parameters.alfvenic_parameters">
+<span id="spcphys-common-functions-parameters-alfvenic-parameters-module"></span><h2>spcphys_common_functions.parameters.alfvenic_parameters module<a class="headerlink" href="#module-spcphys_common_functions.parameters.alfvenic_parameters" title="Link to this heading"></a></h2>
+<p>YAO S, HE J S, TU C Y, et al., 2013. SMALL-SCALE PRESSURE-BALANCED STRUCTURES DRIVEN BY MIRROR-MODE WAVES IN THE SOLAR WIND[J/OL]. The Astrophysical Journal, 776(2): 94. DOI:10.1088/0004-637X/776/2/94.
+WU H, TU C, WANG X, et al., 2021. Magnetic and Velocity Fluctuations in the Near-Sun Region from 0.1−0.3 au Observed by Parker Solar Probe[J/OL]. The Astrophysical Journal, 922(2): 92. DOI:10.3847/1538-4357/ac3331.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.alfvenic_parameters.</span></span><span class="sig-name descname"><span class="pre">calc_alfven</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">least_data_in_window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/alfvenic_parameters.html#calc_alfven"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven" title="Link to this definition"></a></dt>
+<dd><p>Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_date</strong> – List of datetime objects for proton velocity data.</p></li>
+<li><p><strong>v</strong> – Proton velocity data in shape (time, 3).</p></li>
+<li><p><strong>n</strong> – Proton number density data in shape (time).</p></li>
+<li><p><strong>b_date</strong> – List of datetime objects for magnetic field data.</p></li>
+<li><p><strong>b</strong> – Magnetic field data in shape (time, 3).</p></li>
+<li><p><strong>least_data_in_window</strong> – Least number of valid data points. Default is 20.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return {‘r3’<span class="colon">:</span></dt>
+<dd class="field-even"><p>r3, ‘p3’: p3, ‘residual_energy’: residual_energy, ‘cross_helicity’: cross_helicity, ‘alfven_ratio’: alfven_ratio, ‘compressibility’: compressibility, ‘vA’:vA}: Dictionary of Alfvenic parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven_t">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.alfvenic_parameters.</span></span><span class="sig-name descname"><span class="pre">calc_alfven_t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">least_data_in_window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">slide_time_window_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/alfvenic_parameters.html#calc_alfven_t"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven_t" title="Link to this definition"></a></dt>
+<dd><p>Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_date</strong> – List or numpy array of datetime objects for proton velocity data.</p></li>
+<li><p><strong>v</strong> – Proton velocity data in shape (time, 3).</p></li>
+<li><p><strong>n</strong> – Proton number density data in shape (time).</p></li>
+<li><p><strong>b_date</strong> – List or numpy array of datetime objects for magnetic field data.</p></li>
+<li><p><strong>b</strong> – Magnetic field data in shape (time, 3).</p></li>
+<li><p><strong>least_data_in_window</strong> – Least number of valid data points in each time window. Default is 20.</p></li>
+<li><p><strong>slide_time_window_kwargs</strong> – Additional keyword arguments to pass to the slide_time_window function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return {‘r3’<span class="colon">:</span></dt>
+<dd class="field-even"><p>r3, ‘residual_energy’: residual_energy, ‘cross_helicity’: cross_helicity, ‘alfven_ratio’: alfven_ratio, ‘compressibility’: compressibility, ‘vA’:vA}: Dictionary of Alfvenic parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.alfvenic_parameters.calc_dx">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.alfvenic_parameters.</span></span><span class="sig-name descname"><span class="pre">calc_dx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mean_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/alfvenic_parameters.html#calc_dx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_dx" title="Link to this definition"></a></dt>
+<dd><p>Remove the mean value from the input array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Input array.</p></li>
+<li><p><strong>axis</strong> – Axis along which to calculate the mean value. Default is 0.</p></li>
+<li><p><strong>mean_kwargs</strong> – Additional keyword arguments to pass to the numpy.nanmean function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array with the mean value removed, as an astropy Quantity.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.alfvenic_parameters.calc_va">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.alfvenic_parameters.</span></span><span class="sig-name descname"><span class="pre">calc_va</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dva</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/alfvenic_parameters.html#calc_va"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.alfvenic_parameters.calc_va" title="Link to this definition"></a></dt>
+<dd><p>Calculate the Alfven velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> – Magnetic field data in shape (time, 3).</p></li>
+<li><p><strong>n</strong> – Proton number density data in shape (time).</p></li>
+<li><p><strong>dva</strong> – Whether to remove mean value from magnetic field data. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return va/dva<span class="colon">:</span></dt>
+<dd class="field-even"><p>Alfven velocity or Alfven velocity with mean value removed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.parameters.coulomb_collisional_age">
+<span id="spcphys-common-functions-parameters-coulomb-collisional-age-module"></span><h2>spcphys_common_functions.parameters.coulomb_collisional_age module<a class="headerlink" href="#module-spcphys_common_functions.parameters.coulomb_collisional_age" title="Link to this heading"></a></h2>
+<p>TRACY P J, KASPER J C, ZURBUCHEN T H, et al., 2015. THERMALIZATION OF HEAVY IONS IN THE SOLAR WIND[J/OL]. The Astrophysical Journal, 812(2): 170. DOI:10.1088/0004-637X/812/2/170.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.coulomb_collisional_age.calc_Ac">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.coulomb_collisional_age.</span></span><span class="sig-name descname"><span class="pre">calc_Ac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v_j:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T_j:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_j:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_i:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T_i:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_i:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_number_i:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass_number_i:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_i:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_number_j:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass_number_j:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_j:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">=</span> <span class="pre">&lt;&lt;class</span> <span class="pre">'astropy.constants.iau2015.IAU2015'&gt;</span> <span class="pre">name='Astronomical</span> <span class="pre">Unit'</span> <span class="pre">value=149597870700.0</span> <span class="pre">uncertainty=0.0</span> <span class="pre">unit='m'</span> <span class="pre">reference='IAU</span> <span class="pre">2012</span> <span class="pre">Resolution</span> <span class="pre">B2'&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/coulomb_collisional_age.html#calc_Ac"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.coulomb_collisional_age.calc_Ac" title="Link to this definition"></a></dt>
+<dd><p>Calculate Coulomb collisional age, reproduced according to the algorithm of Tracy et al. (2015)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v_j</strong> – Field particle velocity, m/s</p></li>
+<li><p><strong>T_j</strong> – Field particle Temperature, K</p></li>
+<li><p><strong>n_j</strong> – Field particle number density, m^-3</p></li>
+<li><p><strong>v_i</strong> – Test particle velocity, m/s</p></li>
+<li><p><strong>T_i</strong> – Test particle Temperature, K</p></li>
+<li><p><strong>n_i</strong> – Test particle number density, m^-3</p></li>
+<li><p><strong>charge_number_i</strong> – Test particle charge number</p></li>
+<li><p><strong>mass_number_i</strong> – Test particle mass number</p></li>
+<li><p><strong>m_i</strong> – Test particle mass, kg, default None, calculated from mass_number_i with atomic mass constant</p></li>
+<li><p><strong>charge_number_j</strong> – Field particle charge number, default 1, proton</p></li>
+<li><p><strong>mass_number_j</strong> – Field particle mass number, default 1, proton</p></li>
+<li><p><strong>m_j</strong> – Field particle mass, kg, default None, calculated from mass_number_j with atomic mass constant</p></li>
+<li><p><strong>distance</strong> – heliocentric distance, AU, default 1 AU</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return Ac<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coulomb Collisional Age</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.parameters.effectsize">
+<span id="spcphys-common-functions-parameters-effectsize-module"></span><h2>spcphys_common_functions.parameters.effectsize module<a class="headerlink" href="#module-spcphys_common_functions.parameters.effectsize" title="Link to this heading"></a></h2>
+<p>Modified from <a class="reference external" href="https://github.com/nbashir97/effectsize">https://github.com/nbashir97/effectsize</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.effectsize.es_cohen">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.effectsize.</span></span><span class="sig-name descname"><span class="pre">es_cohen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skewed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/effectsize.html#es_cohen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.effectsize.es_cohen" title="Link to this definition"></a></dt>
+<dd><p>Calculate Cohen’s d (Hedges’ g) effect size and confidence interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x1</strong> – Data array 1.</p></li>
+<li><p><strong>x2</strong> – Data array 2.</p></li>
+<li><p><strong>conf_interval</strong> – Confidence interval, default 0.99.</p></li>
+<li><p><strong>log_scale</strong> – If True, apply log scale to the data.</p></li>
+<li><p><strong>skewed</strong> – If True, apply rank-based transformation to the data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return es<span class="colon">:</span></dt>
+<dd class="field-even"><p>Cohen’s d effect size.</p>
+</dd>
+<dt class="field-odd">Return ci<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Confidence interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.parameters.minimum_variance">
+<span id="spcphys-common-functions-parameters-minimum-variance-module"></span><h2>spcphys_common_functions.parameters.minimum_variance module<a class="headerlink" href="#module-spcphys_common_functions.parameters.minimum_variance" title="Link to this heading"></a></h2>
+<p>Modified from <a class="reference external" href="https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py">https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.minimum_variance.min_var">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.minimum_variance.</span></span><span class="sig-name descname"><span class="pre">min_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/minimum_variance.html#min_var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.minimum_variance.min_var" title="Link to this definition"></a></dt>
+<dd><p>This program computes the principal variance directions and variances of a
+vector quantity as well as the associated eigenvalues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – Vxyz, an (npoints, ndim) array of data(ie Nx3)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>vrot</em> – an array of (npoints, ndim) containing the rotated data in the new coordinate system, ijk.
+Vi(maximum direction)=vrot[0,:]
+Vj(intermediate direction)=vrot[1,:]
+Vk(minimum variance direction)=Vrot[2,:]</p></li>
+<li><p><em>v</em> – an (ndim,ndim) array containing the principal axes vectors
+Maximum variance direction eigenvector, Vi=v[<em>,0]
+Intermediate variance direction, Vj=v[</em>,1] (descending order)</p></li>
+<li><p><em>w</em> – the eigenvalues of the computation</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.parameters.plasma_beta">
+<span id="spcphys-common-functions-parameters-plasma-beta-module"></span><h2>spcphys_common_functions.parameters.plasma_beta module<a class="headerlink" href="#module-spcphys_common_functions.parameters.plasma_beta" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.plasma_beta.calc_beta">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.plasma_beta.</span></span><span class="sig-name descname"><span class="pre">calc_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/plasma_beta.html#calc_beta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.plasma_beta.calc_beta" title="Link to this definition"></a></dt>
+<dd><p>Calculate plasma beta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_date</strong> – List of datetime objects for proton number density data.</p></li>
+<li><p><strong>n</strong> – Proton number density data in shape (time).</p></li>
+<li><p><strong>b_date</strong> – List of datetime objects for magnetic field data.</p></li>
+<li><p><strong>b</strong> – Magnetic field data in shape (time, 3).</p></li>
+<li><p><strong>T</strong> – Proton temperature data in shape (time).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return beta<span class="colon">:</span></dt>
+<dd class="field-even"><p>Plasma beta.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.plasma_beta.pressure_magnetic">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.plasma_beta.</span></span><span class="sig-name descname"><span class="pre">pressure_magnetic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/plasma_beta.html#pressure_magnetic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.plasma_beta.pressure_magnetic" title="Link to this definition"></a></dt>
+<dd><p>Calculate magnetic pressure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>b</strong> – Magnetic field data in shape (time, 3).</p>
+</dd>
+<dt class="field-even">Return pb<span class="colon">:</span></dt>
+<dd class="field-even"><p>Magnetic pressure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.plasma_beta.pressure_thermal">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.plasma_beta.</span></span><span class="sig-name descname"><span class="pre">pressure_thermal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/plasma_beta.html#pressure_thermal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.plasma_beta.pressure_thermal" title="Link to this definition"></a></dt>
+<dd><p>Calculate thermal pressure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – Proton number density data in shape (time).</p></li>
+<li><p><strong>T</strong> – Proton temperature data in shape (time).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return pth<span class="colon">:</span></dt>
+<dd class="field-even"><p>Thermal pressure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.parameters.vth_E_T">
+<span id="spcphys-common-functions-parameters-vth-e-t-module"></span><h2>spcphys_common_functions.parameters.vth_E_T module<a class="headerlink" href="#module-spcphys_common_functions.parameters.vth_E_T" title="Link to this heading"></a></h2>
+<p>Transformations between thermal velocity, energy, and temperature.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.vth_E_T.E_to_T">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.vth_E_T.</span></span><span class="sig-name descname"><span class="pre">E_to_T</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/vth_E_T.html#E_to_T"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.vth_E_T.E_to_T" title="Link to this definition"></a></dt>
+<dd><p>Calculate temperature from energy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>E</strong> – Energy with units (e.g., E * u.J).</p>
+</dd>
+<dt class="field-even">Return T<span class="colon">:</span></dt>
+<dd class="field-even"><p>Temperature with units (e.g., T * u.K).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.vth_E_T.E_to_vth">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.vth_E_T.</span></span><span class="sig-name descname"><span class="pre">E_to_vth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">=</span> <span class="pre">&lt;&lt;class</span> <span class="pre">'astropy.constants.codata2018.CODATA2018'&gt;</span> <span class="pre">name='Proton</span> <span class="pre">mass'</span> <span class="pre">value=1.67262192369e-27</span> <span class="pre">uncertainty=5.1e-37</span> <span class="pre">unit='kg'</span> <span class="pre">reference='CODATA</span> <span class="pre">2018'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/vth_E_T.html#E_to_vth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.vth_E_T.E_to_vth" title="Link to this definition"></a></dt>
+<dd><p>Calculate thermal velocity from energy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E</strong> – Energy with units (e.g., E * u.J).</p></li>
+<li><p><strong>mass</strong> – Mass with units (e.g., mass * u.kg). Default is proton mass.</p></li>
+<li><p><strong>n</strong> – Factor determining the type of thermal velocity.
+n=2 for most probable speed (Default),
+n=3 for root mean square speed,
+n=8/π for mean speed,
+n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return vth<span class="colon">:</span></dt>
+<dd class="field-even"><p>Thermal velocity with units (e.g., vth * u.m/u.s).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.vth_E_T.T_to_E">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.vth_E_T.</span></span><span class="sig-name descname"><span class="pre">T_to_E</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/vth_E_T.html#T_to_E"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.vth_E_T.T_to_E" title="Link to this definition"></a></dt>
+<dd><p>Calculate energy from temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – Temperature with units (e.g., T * u.K).</p>
+</dd>
+<dt class="field-even">Return E<span class="colon">:</span></dt>
+<dd class="field-even"><p>Energy with units (e.g., E * u.J).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.vth_E_T.T_to_vth">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.vth_E_T.</span></span><span class="sig-name descname"><span class="pre">T_to_vth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">=</span> <span class="pre">&lt;&lt;class</span> <span class="pre">'astropy.constants.codata2018.CODATA2018'&gt;</span> <span class="pre">name='Proton</span> <span class="pre">mass'</span> <span class="pre">value=1.67262192369e-27</span> <span class="pre">uncertainty=5.1e-37</span> <span class="pre">unit='kg'</span> <span class="pre">reference='CODATA</span> <span class="pre">2018'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/vth_E_T.html#T_to_vth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.vth_E_T.T_to_vth" title="Link to this definition"></a></dt>
+<dd><p>Calculate thermal velocity from temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – Temperature with units (e.g., T * u.K).</p></li>
+<li><p><strong>mass</strong> – Mass with units (e.g., mass * u.kg). Default is proton mass.</p></li>
+<li><p><strong>n</strong> – Factor determining the type of thermal velocity.
+n=2 for most probable speed (Default),
+n=3 for root mean square speed,
+n=8/π for mean speed,
+n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return vth<span class="colon">:</span></dt>
+<dd class="field-even"><p>Thermal velocity with units (e.g., vth * u.m/u.s).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.vth_E_T.vth_to_E">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.vth_E_T.</span></span><span class="sig-name descname"><span class="pre">vth_to_E</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vth:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">=</span> <span class="pre">&lt;&lt;class</span> <span class="pre">'astropy.constants.codata2018.CODATA2018'&gt;</span> <span class="pre">name='Proton</span> <span class="pre">mass'</span> <span class="pre">value=1.67262192369e-27</span> <span class="pre">uncertainty=5.1e-37</span> <span class="pre">unit='kg'</span> <span class="pre">reference='CODATA</span> <span class="pre">2018'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/vth_E_T.html#vth_to_E"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.vth_E_T.vth_to_E" title="Link to this definition"></a></dt>
+<dd><p>Calculate energy from thermal velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vth</strong> – Thermal velocity with units (e.g., vth * u.m/u.s).</p></li>
+<li><p><strong>mass</strong> – Mass with units (e.g., mass * u.kg). Default is proton mass.</p></li>
+<li><p><strong>n</strong> – Factor determining the type of thermal velocity.
+n=2 for most probable speed (Default),
+n=3 for root mean square speed,
+n=8/π for mean speed,
+n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return E<span class="colon">:</span></dt>
+<dd class="field-even"><p>Energy with units (e.g., E * u.J).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.parameters.vth_E_T.vth_to_T">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.parameters.vth_E_T.</span></span><span class="sig-name descname"><span class="pre">vth_to_T</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vth:</span> <span class="pre">~astropy.units.quantity.Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass:</span> <span class="pre">~astropy.units.quantity.Quantity</span> <span class="pre">=</span> <span class="pre">&lt;&lt;class</span> <span class="pre">'astropy.constants.codata2018.CODATA2018'&gt;</span> <span class="pre">name='Proton</span> <span class="pre">mass'</span> <span class="pre">value=1.67262192369e-27</span> <span class="pre">uncertainty=5.1e-37</span> <span class="pre">unit='kg'</span> <span class="pre">reference='CODATA</span> <span class="pre">2018'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/parameters/vth_E_T.html#vth_to_T"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.parameters.vth_E_T.vth_to_T" title="Link to this definition"></a></dt>
+<dd><p>Calculate temperature from thermal velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vth</strong> – Thermal velocity with units (e.g., vth * u.m/u.s).</p></li>
+<li><p><strong>mass</strong> – Mass with units (e.g., mass * u.kg). Default is proton mass.</p></li>
+<li><p><strong>n</strong> – Factor determining the type of thermal velocity.
+n=2 for most probable speed (Default),
+n=3 for root mean square speed,
+n=8/π for mean speed,
+n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return T<span class="colon">:</span></dt>
+<dd class="field-even"><p>Temperature with units (e.g., T * u.K).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.parameters">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-spcphys_common_functions.parameters" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, NyankoSong.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

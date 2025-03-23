@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>spcphys_common_functions.processing.backmapping &mdash; spcphys_common_functions  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            spcphys_common_functions
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">spcphys_common_functions</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">spcphys_common_functions.processing.backmapping</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for spcphys_common_functions.processing.backmapping</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">BALE S D, BADMAN S T, BONNELL J W, et al., 2019. Highly structured slow solar wind emerging from an equatorial coronal hole[J/OL]. Nature, 576(7786): 237-242. DOI:10.1038/s41586-019-1818-7.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">stats</span> <span class="k">as</span> <span class="n">astats</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span> <span class="nn">sunpy.coordinates</span> <span class="kn">import</span> <span class="n">HeliographicCarrington</span>
+<span class="kn">from</span> <span class="nn">sunpy.sun.constants</span> <span class="kn">import</span> <span class="n">sidereal_rotation_rate</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span><span class="p">,</span> <span class="n">Bounds</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span><span class="p">,</span> <span class="n">_determine_processes</span>
+<span class="kn">from</span> <span class="nn">..processing.preprocess</span> <span class="kn">import</span> <span class="n">interpolate</span>
+
+
+<div class="viewcode-block" id="most_probable_x">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.backmapping.most_probable_x">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">most_probable_x</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">bins</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="nb">str</span><span class="o">|</span><span class="nb">int</span><span class="o">=</span><span class="s1">&#39;freedman&#39;</span><span class="p">,</span> <span class="n">least_length</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the most probable value in the input array.</span>
+
+<span class="sd">    :param x: Input one-dimensional array or quantity.</span>
+<span class="sd">    :param bins: Binning method for the histogram, default is &#39;freedman&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    :return x_mp: The most probable value in the input array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input x must be one-dimensional.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">least_length</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;least_length must be greater than 4.&#39;</span><span class="p">)</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">least_length</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Input x has less than </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">least_length</span><span class="p">)</span><span class="si">}</span><span class="s1"> data points.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="n">var_hist</span><span class="p">,</span> <span class="n">hist_bins</span> <span class="o">=</span> <span class="n">astats</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_value</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">)</span>
+    <span class="n">var_hist_max_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">var_hist</span><span class="p">)</span>
+    <span class="n">x_mp</span> <span class="o">=</span> <span class="n">hist_bins</span><span class="p">[</span><span class="n">var_hist_max_ind</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">hist_bins</span><span class="p">[</span><span class="n">var_hist_max_ind</span><span class="p">]</span> <span class="o">-</span> <span class="n">hist_bins</span><span class="p">[</span><span class="n">var_hist_max_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+    
+    <span class="k">return</span> <span class="n">x_mp</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">x_mp</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">unit</span></div>
+
+    
+    
+<div class="viewcode-block" id="ballistic_backmapping">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.backmapping.ballistic_backmapping">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">ballistic_backmapping</span><span class="p">(</span><span class="n">pos_insitu</span><span class="p">:</span> <span class="n">SkyCoord</span><span class="o">|</span><span class="n">HeliographicCarrington</span><span class="p">,</span> <span class="n">v_r</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">r_target</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_travel</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SkyCoord</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the target position for ballistic backmapping.</span>
+<span class="sd">    Either the target radius or the travel time must be specified.</span>
+
+<span class="sd">    :param pos_insitu: Current position, should be able to transform to HeliographicCarrington.</span>
+<span class="sd">    :param v_r: Radial velocity, must have velocity units (u.m/u.s).</span>
+<span class="sd">    :param r_target: Target radius, default is None.</span>
+<span class="sd">    :param t_travel: Travel time, must have time units (u.s), default is None.</span>
+<span class="sd">    </span>
+<span class="sd">    :return pos_target: Target position in heliographic Carrington coordinates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">r_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_travel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">r_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_travel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either r_target or t_travel must be specified.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">v_r</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Radial velocity v_r must have units of velocity (u.m/u.s)&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_travel</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">t_travel</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Travel time t_travel must have units of time (u.s)&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pos_insitu</span><span class="p">,</span> <span class="n">SkyCoord</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pos_insitu</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">HeliographicCarrington</span><span class="p">:</span>
+            <span class="n">pos_insitu</span> <span class="o">=</span> <span class="n">pos_insitu</span><span class="o">.</span><span class="n">transform_to</span><span class="p">(</span><span class="n">HeliographicCarrington</span><span class="p">)</span>
+        
+    <span class="n">v_r</span> <span class="o">=</span> <span class="n">v_r</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">r_target</span> <span class="o">=</span> <span class="n">r_target</span><span class="o">.</span><span class="n">si</span> <span class="k">if</span> <span class="n">r_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">r_target</span>
+    <span class="n">t_travel</span> <span class="o">=</span> <span class="n">t_travel</span><span class="o">.</span><span class="n">si</span> <span class="k">if</span> <span class="n">t_travel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_travel</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">t_travel</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span> <span class="k">if</span> <span class="n">t_travel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">t_travel</span>
+        
+    <span class="k">if</span> <span class="n">t_travel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_travel</span> <span class="o">=</span> <span class="p">((</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="n">r_target</span><span class="p">)</span> <span class="o">/</span> <span class="n">v_r</span><span class="p">)</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">elif</span> <span class="n">r_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">r_target</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="n">v_r</span> <span class="o">*</span> <span class="n">t_travel</span><span class="p">)</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">r_target</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">r_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">r_target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">phi_target</span><span class="p">))</span>
+        
+    <span class="n">phi_target</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">lon</span> <span class="o">+</span> <span class="n">t_travel</span> <span class="o">*</span> <span class="n">sidereal_rotation_rate</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="mi">360</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="n">time_target</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">t_travel</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">obstime</span><span class="p">))]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">time_target</span> <span class="o">=</span> <span class="n">pos_insitu</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">t_travel</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">lon</span><span class="o">=</span><span class="n">phi_target</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="n">pos_insitu</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r_target</span><span class="p">,</span> <span class="n">obstime</span><span class="o">=</span><span class="n">time_target</span><span class="p">,</span> <span class="n">observer</span><span class="o">=</span><span class="s1">&#39;earth&#39;</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="n">HeliographicCarrington</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_radius_diff</span><span class="p">(</span><span class="n">t_back</span><span class="p">,</span> <span class="n">v_r</span><span class="p">,</span> <span class="n">pos_sat1</span><span class="p">,</span> <span class="n">r_sat2_interp_func</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">t_back</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pos_backmap</span> <span class="o">=</span> <span class="n">ballistic_backmapping</span><span class="p">(</span><span class="n">pos_insitu</span><span class="o">=</span><span class="n">pos_sat1</span><span class="p">,</span> <span class="n">v_r</span><span class="o">=</span><span class="n">v_r</span><span class="p">,</span> <span class="n">t_travel</span><span class="o">=</span><span class="n">t_back</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">pos_backmap</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="n">r_sat2_interp_func</span><span class="p">(</span><span class="n">pos_backmap</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">))</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_target_sc_r_interp_func</span><span class="p">(</span><span class="n">target_time</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">target_time</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span>
+
+<span class="c1"># def _optimize_t_back(base_sc_pos, base_sc_v_r, _target_sc_r_interp_func, t_back_bounds):</span>
+<span class="k">def</span> <span class="nf">_optimize_t_back</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">base_sc_pos</span><span class="p">,</span> <span class="n">base_sc_v_r</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">,</span> <span class="n">t_back_bounds</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="n">base_sc_obs_date</span> <span class="o">=</span> <span class="n">base_sc_pos</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span>
+    
+    <span class="n">target_sc_r_init</span> <span class="o">=</span> <span class="n">_target_sc_r_interp_func</span><span class="p">(</span><span class="n">base_sc_obs_date</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">)</span>
+    <span class="n">t_back_init</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_sc_pos</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="n">target_sc_r_init</span><span class="p">)</span> <span class="o">/</span> <span class="n">base_sc_v_r</span>
+    
+    <span class="k">if</span> <span class="n">t_back_init</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">to_value</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">t_back_bounds</span><span class="o">.</span><span class="n">lb</span> <span class="ow">or</span> <span class="n">t_back_init</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">to_value</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">t_back_bounds</span><span class="o">.</span><span class="n">ub</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">_radius_diff</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">t_back_init</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">to_value</span><span class="p">(),</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">base_sc_v_r</span><span class="p">,</span> <span class="n">base_sc_pos</span><span class="p">,</span> <span class="n">_target_sc_r_interp_func</span><span class="p">,</span> <span class="n">target_sc_date</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">),</span> <span class="n">bounds</span><span class="o">=</span><span class="n">t_back_bounds</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Nelder-Mead&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">success</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+
+<div class="viewcode-block" id="dual_spacecraft_obs_diff">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.backmapping.dual_spacecraft_obs_diff">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">dual_spacecraft_obs_diff</span><span class="p">(</span><span class="n">pos_sat1</span><span class="p">:</span> <span class="n">SkyCoord</span><span class="o">|</span><span class="n">HeliographicCarrington</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">:</span> <span class="n">SkyCoord</span><span class="o">|</span><span class="n">HeliographicCarrington</span><span class="p">,</span> <span class="n">v_r</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">num_processes</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the difference in the Carrington longitude and latitude between observations from two spacecraft.</span>
+<span class="sd">    This function assumes that the radial velocity is oberved by the first spacecraft,</span>
+<span class="sd">    and calculates the difference in the Carrington longitude and latitude between the parker spiral and the second spacecraft.</span>
+<span class="sd">    </span>
+<span class="sd">    :param pos_sat1: Position time series of the first spacecraft.</span>
+<span class="sd">    :param pos_sat2: Position time series of the second spacecraft.</span>
+<span class="sd">    :param v_r: Radial velocity time series or constant value, must have velocity units (u.m/u.s).</span>
+<span class="sd">    :param num_processes: Number of processes to use for parallel processing, default is 1.</span>
+<span class="sd">    </span>
+<span class="sd">    :return valid_indices: Successfully backmapped indices.</span>
+<span class="sd">    :return time_sat1: Time of the first spacecraft observation.</span>
+<span class="sd">    :return time_sat2: Time of the second spacecraft observation.</span>
+<span class="sd">    :return delta_phi: Difference in Carrington longitude at the radius of the second spacecraft.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">pos_sat1</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">HeliographicCarrington</span><span class="p">:</span>
+        <span class="n">pos_sat1</span> <span class="o">=</span> <span class="n">pos_sat1</span><span class="o">.</span><span class="n">transform_to</span><span class="p">(</span><span class="n">HeliographicCarrington</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">HeliographicCarrington</span><span class="p">:</span>
+        <span class="n">pos_sat2</span> <span class="o">=</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">transform_to</span><span class="p">(</span><span class="n">HeliographicCarrington</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">v_r</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Radial velocity v_r must have units of velocity (u.m/u.s)&#39;</span><span class="p">)</span>
+        
+    <span class="n">v_r</span> <span class="o">=</span> <span class="n">v_r</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v_r</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="n">v_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">v_r</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_sat1</span><span class="p">))</span>
+    <span class="n">t_back</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">v_r</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+    <span class="n">delta_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">v_r</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    
+    <span class="k">def</span> <span class="nf">_target_sc_lon_interp_func</span><span class="p">(</span><span class="n">target_time</span><span class="p">):</span>
+        <span class="c1"># return (np.angle(np.interp(target_timestamp, target_sc_date_timestamp, np.exp(1j * pos_sat2.lon.to(u.rad).value)), deg=True) + 360) % 360 * u.deg</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">interpolate</span><span class="p">(</span><span class="n">target_time</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">()</span> <span class="o">+</span> <span class="mi">360</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+
+    <span class="n">t_back_lower_boundary</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_sat1</span><span class="o">.</span><span class="n">radius</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">radius</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">v_r</span><span class="p">)</span>
+    <span class="n">t_back_upper_boundary</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_sat1</span><span class="o">.</span><span class="n">radius</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">radius</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">v_r</span><span class="p">)</span>
+    <span class="n">t_back_bounds</span> <span class="o">=</span> <span class="n">Bounds</span><span class="p">(</span><span class="n">t_back_lower_boundary</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">to_value</span><span class="p">(),</span> <span class="n">t_back_upper_boundary</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">to_value</span><span class="p">())</span>
+    
+    <span class="n">num_processes</span> <span class="o">=</span> <span class="n">_determine_processes</span><span class="p">(</span><span class="n">num_processes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_processes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">base_sc_pos</span><span class="p">,</span> <span class="n">base_sc_v_r</span><span class="p">)</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pos_sat1</span><span class="p">,</span> <span class="n">v_r</span><span class="p">)),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">v_r</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Backmapping&#39;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
+            <span class="n">t_back</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_optimize_t_back</span><span class="p">((</span><span class="n">base_sc_pos</span><span class="p">,</span> <span class="n">base_sc_v_r</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">,</span> <span class="n">t_back_bounds</span><span class="p">))</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">base_sc_pos</span><span class="p">,</span> <span class="n">base_sc_v_r</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">pos_sat2</span><span class="p">,</span> <span class="n">t_back_bounds</span><span class="p">)</span> <span class="k">for</span> <span class="n">base_sc_pos</span><span class="p">,</span> <span class="n">base_sc_v_r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos_sat1</span><span class="p">,</span> <span class="n">v_r</span><span class="p">)]</span>
+        <span class="k">with</span> <span class="n">Pool</span><span class="p">(</span><span class="n">num_processes</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+            <span class="n">t_back</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">_optimize_t_back</span><span class="p">,</span> <span class="n">args_list</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">v_r</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Backmapping&#39;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)))</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+    
+    <span class="n">failed_backmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">t_back</span><span class="p">)</span>
+    <span class="n">t_back</span><span class="p">[</span><span class="n">failed_backmap</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span>
+    <span class="n">pos_backmap</span> <span class="o">=</span> <span class="n">ballistic_backmapping</span><span class="p">(</span><span class="n">pos_insitu</span><span class="o">=</span><span class="n">pos_sat1</span><span class="p">,</span> <span class="n">v_r</span><span class="o">=</span><span class="n">v_r</span><span class="p">,</span> <span class="n">t_travel</span><span class="o">=</span><span class="n">t_back</span><span class="p">)</span>
+    <span class="n">time_sat1</span> <span class="o">=</span> <span class="n">pos_sat1</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="o">~</span><span class="n">failed_backmap</span><span class="p">]</span>
+    <span class="n">time_sat2</span> <span class="o">=</span> <span class="n">pos_backmap</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="o">~</span><span class="n">failed_backmap</span><span class="p">]</span>
+    <span class="n">delta_phi</span> <span class="o">=</span> <span class="p">((</span><span class="n">pos_backmap</span><span class="o">.</span><span class="n">lon</span> <span class="o">-</span> <span class="n">_target_sc_lon_interp_func</span><span class="p">(</span><span class="n">pos_backmap</span><span class="o">.</span><span class="n">obstime</span><span class="o">.</span><span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">()</span> <span class="o">+</span> <span class="mi">360</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="n">delta_phi</span><span class="p">[</span><span class="n">delta_phi</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">360</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+    <span class="n">delta_phi</span> <span class="o">=</span> <span class="n">delta_phi</span><span class="p">[</span><span class="o">~</span><span class="n">failed_backmap</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">failed_backmap</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to backmap </span><span class="si">{</span><span class="n">failed_backmap</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> data points.&#39;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t_back</span><span class="p">))[</span><span class="o">~</span><span class="n">failed_backmap</span><span class="p">],</span> <span class="n">time_sat1</span><span class="p">,</span> <span class="n">time_sat2</span><span class="p">,</span> <span class="n">delta_phi</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, NyankoSong.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,699 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>spcphys_common_functions.processing package &mdash; spcphys_common_functions  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            spcphys_common_functions
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">spcphys_common_functions.processing package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.backmapping">spcphys_common_functions.processing.backmapping module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.backmapping.ballistic_backmapping"><code class="docutils literal notranslate"><span class="pre">ballistic_backmapping()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.backmapping.dual_spacecraft_obs_diff"><code class="docutils literal notranslate"><span class="pre">dual_spacecraft_obs_diff()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.backmapping.most_probable_x"><code class="docutils literal notranslate"><span class="pre">most_probable_x()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.cdf_process">spcphys_common_functions.processing.cdf_process module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.cdf_process.generate_cdf_info_csv"><code class="docutils literal notranslate"><span class="pre">generate_cdf_info_csv()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.cdf_process.process_satellite_data"><code class="docutils literal notranslate"><span class="pre">process_satellite_data()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.net_tools">spcphys_common_functions.processing.net_tools module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.net_tools.fetch_cdf_from_cdaweb"><code class="docutils literal notranslate"><span class="pre">fetch_cdf_from_cdaweb()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.plot_tools">spcphys_common_functions.processing.plot_tools module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.plot_tools.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.plot_tools.plot_hist2d"><code class="docutils literal notranslate"><span class="pre">plot_hist2d()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.plot_tools.plot_mesh1d_ts"><code class="docutils literal notranslate"><span class="pre">plot_mesh1d_ts()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.preprocess">spcphys_common_functions.processing.preprocess module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.preprocess.find_argnan"><code class="docutils literal notranslate"><span class="pre">find_argnan()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.preprocess.interpolate"><code class="docutils literal notranslate"><span class="pre">interpolate()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.preprocess.npdt64_to_dt"><code class="docutils literal notranslate"><span class="pre">npdt64_to_dt()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.preprocess.process_nan"><code class="docutils literal notranslate"><span class="pre">process_nan()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.time_window">spcphys_common_functions.processing.time_window module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.time_window.slide_time_window"><code class="docutils literal notranslate"><span class="pre">slide_time_window()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.vdf_process">spcphys_common_functions.processing.vdf_process module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.generate_vdf_cart_unit"><code class="docutils literal notranslate"><span class="pre">generate_vdf_cart_unit()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.plot_vdf_1d_t"><code class="docutils literal notranslate"><span class="pre">plot_vdf_1d_t()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.plot_vdf_2d"><code class="docutils literal notranslate"><span class="pre">plot_vdf_2d()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.vdf_core"><code class="docutils literal notranslate"><span class="pre">vdf_core()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.vdf_griddata"><code class="docutils literal notranslate"><span class="pre">vdf_griddata()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.vdf_griddata_t"><code class="docutils literal notranslate"><span class="pre">vdf_griddata_t()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vdf_process.vdf_sph_to_cart"><code class="docutils literal notranslate"><span class="pre">vdf_sph_to_cart()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing.vec_cart_sph">spcphys_common_functions.processing.vec_cart_sph module</a><ul>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vec_cart_sph.vec_cart_to_sph"><code class="docutils literal notranslate"><span class="pre">vec_cart_to_sph()</span></code></a></li>
+<li><a class="reference internal" href="#spcphys_common_functions.processing.vec_cart_sph.vec_sph_to_cart"><code class="docutils literal notranslate"><span class="pre">vec_sph_to_cart()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-spcphys_common_functions.processing">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">spcphys_common_functions</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">spcphys_common_functions.processing package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/spcphys_common_functions.processing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spcphys-common-functions-processing-package">
+<h1>spcphys_common_functions.processing package<a class="headerlink" href="#spcphys-common-functions-processing-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-spcphys_common_functions.processing.backmapping">
+<span id="spcphys-common-functions-processing-backmapping-module"></span><h2>spcphys_common_functions.processing.backmapping module<a class="headerlink" href="#module-spcphys_common_functions.processing.backmapping" title="Link to this heading"></a></h2>
+<p>BALE S D, BADMAN S T, BONNELL J W, et al., 2019. Highly structured slow solar wind emerging from an equatorial coronal hole[J/OL]. Nature, 576(7786): 237-242. DOI:10.1038/s41586-019-1818-7.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.backmapping.ballistic_backmapping">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.backmapping.</span></span><span class="sig-name descname"><span class="pre">ballistic_backmapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_insitu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SkyCoord</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">HeliographicCarrington</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_travel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SkyCoord</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/backmapping.html#ballistic_backmapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.backmapping.ballistic_backmapping" title="Link to this definition"></a></dt>
+<dd><p>Calculate the target position for ballistic backmapping.
+Either the target radius or the travel time must be specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_insitu</strong> – Current position, should be able to transform to HeliographicCarrington.</p></li>
+<li><p><strong>v_r</strong> – Radial velocity, must have velocity units (u.m/u.s).</p></li>
+<li><p><strong>r_target</strong> – Target radius, default is None.</p></li>
+<li><p><strong>t_travel</strong> – Travel time, must have time units (u.s), default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return pos_target<span class="colon">:</span></dt>
+<dd class="field-even"><p>Target position in heliographic Carrington coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.backmapping.dual_spacecraft_obs_diff">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.backmapping.</span></span><span class="sig-name descname"><span class="pre">dual_spacecraft_obs_diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_sat1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SkyCoord</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">HeliographicCarrington</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_sat2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SkyCoord</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">HeliographicCarrington</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/backmapping.html#dual_spacecraft_obs_diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.backmapping.dual_spacecraft_obs_diff" title="Link to this definition"></a></dt>
+<dd><p>Calculate the difference in the Carrington longitude and latitude between observations from two spacecraft.
+This function assumes that the radial velocity is oberved by the first spacecraft,
+and calculates the difference in the Carrington longitude and latitude between the parker spiral and the second spacecraft.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_sat1</strong> – Position time series of the first spacecraft.</p></li>
+<li><p><strong>pos_sat2</strong> – Position time series of the second spacecraft.</p></li>
+<li><p><strong>v_r</strong> – Radial velocity time series or constant value, must have velocity units (u.m/u.s).</p></li>
+<li><p><strong>num_processes</strong> – Number of processes to use for parallel processing, default is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return valid_indices<span class="colon">:</span></dt>
+<dd class="field-even"><p>Successfully backmapped indices.</p>
+</dd>
+<dt class="field-odd">Return time_sat1<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Time of the first spacecraft observation.</p>
+</dd>
+<dt class="field-even">Return time_sat2<span class="colon">:</span></dt>
+<dd class="field-even"><p>Time of the second spacecraft observation.</p>
+</dd>
+<dt class="field-odd">Return delta_phi<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Difference in Carrington longitude at the radius of the second spacecraft.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.backmapping.most_probable_x">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.backmapping.</span></span><span class="sig-name descname"><span class="pre">most_probable_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'freedman'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">least_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/backmapping.html#most_probable_x"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.backmapping.most_probable_x" title="Link to this definition"></a></dt>
+<dd><p>Calculate the most probable value in the input array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Input one-dimensional array or quantity.</p></li>
+<li><p><strong>bins</strong> – Binning method for the histogram, default is ‘freedman’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return x_mp<span class="colon">:</span></dt>
+<dd class="field-even"><p>The most probable value in the input array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.cdf_process">
+<span id="spcphys-common-functions-processing-cdf-process-module"></span><h2>spcphys_common_functions.processing.cdf_process module<a class="headerlink" href="#module-spcphys_common_functions.processing.cdf_process" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.cdf_process.generate_cdf_info_csv">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.cdf_process.</span></span><span class="sig-name descname"><span class="pre">generate_cdf_info_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'info.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_varname_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'epoch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_varname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/cdf_process.html#generate_cdf_info_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.cdf_process.generate_cdf_info_csv" title="Link to this definition"></a></dt>
+<dd><p>Generate a CSV file containing information about CDF files in the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_path</strong> – str, the root directory of the satellite data.</p></li>
+<li><p><strong>info_filename</strong> – str, the name of the info file to be generated. Default is ‘info.csv’.</p></li>
+<li><p><strong>epoch_varname_default</strong> – List[str] | str, the default name(s) of the epoch variable. Default is ‘epoch’. This is identified by if the epoch_varname_default is in the variable name instead of the exact match.</p></li>
+<li><p><strong>ignore_varname</strong> – List[str] | str | None, the variable name(s) to be ignored. Default is None. This is identified by if the ignore_varname is not in the variable name instead of the exact match.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict, a dictionary containing information about the satellite files.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.cdf_process.process_satellite_data">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.cdf_process.</span></span><span class="sig-name descname"><span class="pre">process_satellite_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_processes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_varname_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'epoch'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/cdf_process.html#process_satellite_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.cdf_process.process_satellite_data" title="Link to this definition"></a></dt>
+<dd><p>Combine all satellite data into a single file for each satellite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_path</strong> – str, the root directory of the satellite data.</p></li>
+<li><p><strong>info_filename</strong> – str, the name of the info file.</p></li>
+<li><p><strong>output_dir</strong> – str, the output directory of the processed data.</p></li>
+<li><p><strong>num_processes</strong> – float|int, the number of processes used to convert epoches, 1 for single process, 0.9 for 90% of the cpu cores, etc.</p></li>
+</ul>
+</dd>
+</dl>
+<p>This function assumes that the satellite data is stored in the following structure:
+- dir_path</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>satellite1_name</dt><dd><ul>
+<li><p>cdf_files</p></li>
+<li><p>info_file</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>satellite2_name</dt><dd><ul>
+<li><p>cdf_files</p></li>
+<li><p>info_file</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>…</p>
+</div></blockquote>
+<p>if the info_filename is None, the function will search for the csv file in the satellite directory.
+Make sure that there is only one csv file in each satellite directory if the info_filename is not specified.
+The info file should be a csv file with the following structure:
+| startswith, | dataset, | epochname, | varname,                | condition,|
+<a href="#id1"><span class="problematic" id="id2">|-------------|</span></a>———-<a href="#id3"><span class="problematic" id="id4">|------------|</span></a>————————-<a href="#id5"><span class="problematic" id="id6">|-----------|</span></a>
+| startswith1,| dataset1,| epochname1,| varname11 varname12 …,| condition1|
+| startswith2,| dataset2,| epochname2,| varname21 varname22 …,| condition2|
+…</p>
+<p>startswith is the prefix of the cdf files, this is used to identify the cdf files that belong to the same dataset.
+dataset is the name of the dataset, this will be the key of the output data dict.
+epochname is the name of the epoch variable, this is used to convert the epoch variable to datetime.
+varname is the name of the variables in the dataset, and should be separated by space.
+condition should be a string with two elements separated by space, which are the lower and upper boundary of the variable.
+if the variable has no condition, use ‘none’ or ‘’ instead, this will set the boundary to [-1E30, 1E30].</p>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.net_tools">
+<span id="spcphys-common-functions-processing-net-tools-module"></span><h2>spcphys_common_functions.processing.net_tools module<a class="headerlink" href="#module-spcphys_common_functions.processing.net_tools" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.net_tools.fetch_cdf_from_cdaweb">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.net_tools.</span></span><span class="sig-name descname"><span class="pre">fetch_cdf_from_cdaweb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cdf_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_chunk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">datetime.timedelta(days=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/net_tools.html#fetch_cdf_from_cdaweb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.net_tools.fetch_cdf_from_cdaweb" title="Link to this definition"></a></dt>
+<dd><p>Fetch CDF files from CDAWeb based on provided dataset information and time range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cdf_info</strong> – A dictionary or string containing dataset and variable name information.
+- If a dictionary, it maps satellite names to their datasets and variable names. It should be in the format {satellite1: {dataset1: [varname1, varname2, …], dataset2: […], …}, satellite2: {…}, …} or {dataset1: [varname1, varname2, …], dataset2: […], …} if there is no need to differentiate between satellites.
+- If a string, it can be a directory path containing satellite info files or a CSV file with dataset and variable names. The CSV file should have columns ‘dataset’ and ‘varname’, detailed information can be found in cdf_process.process_satellite_data.</p></li>
+<li><p><strong>time_range</strong> – A list or tuple of two datetime objects specifying the start and end times for data retrieval.</p></li>
+<li><p><strong>time_chunk</strong> – Optional; a timedelta object specifying the time chunk size for data retrieval. Defaults to 30 days.</p></li>
+<li><p><strong>save_path</strong> – Optional; a string or dictionary specifying the path(s) to save the downloaded CDF files.
+- If None, defaults to the current working directory.
+- If a string, the same path is used for all satellites.
+- If a dictionary, it maps satellite names to their respective save paths.</p></li>
+<li><p><strong>info_filename</strong> – Optional; a string specifying the filename of the info file when <cite>cdf_info</cite> is a directory.</p></li>
+<li><p><strong>retries</strong> – Optional; an integer specifying the number of retries for each file download. Defaults to 3.</p></li>
+<li><p><strong>delay</strong> – Optional; an integer specifying the delay in seconds between retries. Defaults to 2.</p></li>
+<li><p><strong>max_concurrent</strong> – Optional; an integer specifying the maximum number of concurrent downloads. Defaults to 3.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return file_info_list<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of tuples containing dataset, variable name, start time, end time, and save path for each file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.plot_tools">
+<span id="spcphys-common-functions-processing-plot-tools-module"></span><h2>spcphys_common_functions.processing.plot_tools module<a class="headerlink" href="#module-spcphys_common_functions.processing.plot_tools" title="Link to this heading"></a></h2>
+<p>Module for plotting tools.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.plot_tools.plot">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.plot_tools.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_downsample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_dens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">plot_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/plot_tools.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.plot_tools.plot" title="Link to this definition"></a></dt>
+<dd><p>Plot x and y data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The x-axis data.</p></li>
+<li><p><strong>y</strong> – The y-axis data.</p></li>
+<li><p><strong>axes</strong> – The matplotlib axes to plot on. Default is None.</p></li>
+<li><p><strong>scale</strong> – The scale for the plot, can be ‘linear’ or ‘log’. Default is ‘linear’.</p></li>
+<li><p><strong>auto_downsample</strong> – Whether to automatically downsample the data. Default is True.</p></li>
+<li><p><strong>max_dens</strong> – The maximum number of data points per inch. Default is 1000.</p></li>
+<li><p><strong>plot_kwargs</strong> – Additional arguments for the plot function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.plot_tools.plot_hist2d">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.plot_tools.</span></span><span class="sig-name descname"><span class="pre">plot_hist2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">least_samples_per_cell</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scales</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_norm_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_norm_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'freedman'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_pcolormesh_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_smooth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_line_plot_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_std_errorbar_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_std_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_std_line_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QuadMesh</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/plot_tools.html#plot_hist2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.plot_tools.plot_hist2d" title="Link to this definition"></a></dt>
+<dd><p>Plot a 2D histogram. If z is provided, overplot z as color.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axes</strong> – The matplotlib axes to plot on.</p></li>
+<li><p><strong>x</strong> – The x-axis data, can be a numpy array or an astropy Quantity.</p></li>
+<li><p><strong>y</strong> – The y-axis data, can be a numpy array or an astropy Quantity.</p></li>
+<li><p><strong>z</strong> – The z-axis data, can be a numpy array or an astropy Quantity. Default is None.</p></li>
+<li><p><strong>least_samples_per_cell</strong> – The least number of samples per cell to plot, valid only when z is not None. Default is 0.</p></li>
+<li><p><strong>scales</strong> – The scales for the axes, can be ‘linear’ or ‘log’. Default is ‘linear’.</p></li>
+<li><p><strong>norm_type</strong> – The normalization type, can be ‘max’, ‘sum’, or None. Default is None.</p></li>
+<li><p><strong>color_norm_type</strong> – The color normalization type, can be ‘linear’ or ‘log’. Default is ‘linear’.</p></li>
+<li><p><strong>color_norm_range</strong> – The range for color normalization. Default is None.</p></li>
+<li><p><strong>bins</strong> – The bins for the histogram, can be an integer, numpy array, list, or a string (‘freedman’, ‘scott’, ‘knuth’, ‘blocks’). Default is ‘freedman’.</p></li>
+<li><p><strong>hist_pcolormesh_kwargs</strong> – Additional arguments for pcolormesh. Default is {‘cmap’:’jet’}.</p></li>
+<li><p><strong>contour_levels</strong> – The levels for contour plotting. Default is None.</p></li>
+<li><p><strong>contour_smooth</strong> – The smoothing parameter for contours. Default is None.</p></li>
+<li><p><strong>contour_kwargs</strong> – Additional arguments for contour plotting. Default is {}.</p></li>
+<li><p><strong>fit_line</strong> – Whether to fit a line to the data. Default is False.</p></li>
+<li><p><strong>fit_line_plot_kwargs</strong> – Arguments for plotting the fit line. Default is {‘color’:’k’, ‘linestyle’:’–’, ‘linewidth’:1}.</p></li>
+<li><p><strong>mean_std</strong> – Whether to plot mean and standard deviation. Default is False.</p></li>
+<li><p><strong>mean_std_errorbar_kwargs</strong> – Arguments for plotting error bars of mean and standard deviation. Default is {‘fmt’:’none’, ‘color’:’k’, ‘capsize’:2}.</p></li>
+<li><p><strong>separate</strong> – Whether to normalize separately along ‘x’ or ‘y’ axis. Default is None.</p></li>
+<li><p><strong>mean_std_line</strong> – Whether to plot a line for mean and standard deviation. Default is False.</p></li>
+<li><p><strong>mean_std_line_kwargs</strong> – Arguments for plotting the mean and standard deviation line. Default is {‘fmt’:’o’, ‘ms’:2, ‘color’:’k’, ‘capsize’:2, ‘linewidth’:1, ‘linestyle’:’-‘}.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return quadmesh<span class="colon">:</span></dt>
+<dd class="field-even"><p>The QuadMesh object of the 2D histogram.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.plot_tools.plot_mesh1d_ts">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.plot_tools.</span></span><span class="sig-name descname"><span class="pre">plot_mesh1d_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">timedelta</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">timedelta</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">LogNorm</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Normalize</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">pcolormesh_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QuadMesh</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/plot_tools.html#plot_mesh1d_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.plot_tools.plot_mesh1d_ts" title="Link to this definition"></a></dt>
+<dd><p>Plot a 1D mesh plot with time as the x-axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axes</strong> – The matplotlib axes to plot on.</p></li>
+<li><p><strong>t</strong> – The time data.</p></li>
+<li><p><strong>y</strong> – The y-axis data in shape (t, y) or (y,). Can be a list if length of y varies with time.</p></li>
+<li><p><strong>z</strong> – The z-axis data in shape (t, y). Can be a list if length of y varies with time.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.preprocess">
+<span id="spcphys-common-functions-processing-preprocess-module"></span><h2>spcphys_common_functions.processing.preprocess module<a class="headerlink" href="#module-spcphys_common_functions.processing.preprocess" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.preprocess.find_argnan">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.preprocess.</span></span><span class="sig-name descname"><span class="pre">find_argnan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/preprocess.html#find_argnan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.preprocess.find_argnan" title="Link to this definition"></a></dt>
+<dd><p>Find the indices of NaN values in the input array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Input array.</p></li>
+<li><p><strong>boundary</strong> – Boundary conditions for the input array. Default is [-1E30, 1E30].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Indices of NaN values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.preprocess.interpolate">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.preprocess.</span></span><span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_norm_interp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/preprocess.html#interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.preprocess.interpolate" title="Link to this definition"></a></dt>
+<dd><p>Perform interpolation on the given time series data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Array of datetime at which to evaluate the interpolated values.</p></li>
+<li><p><strong>xp</strong> – Array of datetime of the data points.</p></li>
+<li><p><strong>yp</strong> – Array of y-coordinates of the data points in shape (t,) or (t, dim).</p></li>
+<li><p><strong>vector_norm_interp</strong> – Whether to interpolate the vector norm of the data points if yp is a vector time series. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return y<span class="colon">:</span></dt>
+<dd class="field-even"><p>Interpolated values at the x.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.preprocess.npdt64_to_dt">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.preprocess.</span></span><span class="sig-name descname"><span class="pre">npdt64_to_dt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">npdt64</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/preprocess.html#npdt64_to_dt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.preprocess.npdt64_to_dt" title="Link to this definition"></a></dt>
+<dd><p>Convert numpy datetime64 to datetime.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.preprocess.process_nan">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.preprocess.</span></span><span class="sig-name descname"><span class="pre">process_nan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/preprocess.html#process_nan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.preprocess.process_nan" title="Link to this definition"></a></dt>
+<dd><p>Process NaN values in the input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – List of input data arrays.</p></li>
+<li><p><strong>boundary</strong> – Boundary conditions for the input data arrays. Default is [-1E30, 1E30].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of processed data arrays.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.time_window">
+<span id="spcphys-common-functions-processing-time-window-module"></span><h2>spcphys_common_functions.processing.time_window module<a class="headerlink" href="#module-spcphys_common_functions.processing.time_window" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.time_window.slide_time_window">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.time_window.</span></span><span class="sig-name descname"><span class="pre">slide_time_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_to</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/time_window.html#slide_time_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.time_window.slide_time_window" title="Link to this definition"></a></dt>
+<dd><p>Generate sliding time windows over a list of datetime objects.</p>
+<p>This function creates sliding windows of a specified size over a list of datetime objects. The windows can be defined by either a fixed number of elements (int) or a time duration (timedelta). The step size between windows can also be specified as either an integer or a timedelta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> – List of datetime objects to create windows from.</p></li>
+<li><p><strong>window_size</strong> – Size of each window, specified as either an integer (number of elements) or a timedelta (duration).</p></li>
+<li><p><strong>step</strong> – Step size between windows, specified as either an integer (number of elements) or a timedelta (duration)..</p></li>
+<li><p><strong>start_time</strong> – Optional start time for the windows. If not provided, the first element of the time list is used.</p></li>
+<li><p><strong>end_time</strong> – Optional end time for the windows. If not provided, the last element of the time list is used.</p></li>
+<li><p><strong>align_to</strong> – List of datetime objects to align the windows to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return time_window_ranges<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples representing the start and end times of each window.</p>
+</dd>
+<dt class="field-odd">Return time_window_indices<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of numpy arrays containing the indices of the elements in each window.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.vdf_process">
+<span id="spcphys-common-functions-processing-vdf-process-module"></span><h2>spcphys_common_functions.processing.vdf_process module<a class="headerlink" href="#module-spcphys_common_functions.processing.vdf_process" title="Link to this heading"></a></h2>
+<p>OWEN C J, BRUNO R, LIVI S, et al., 2020. The Solar Orbiter Solar Wind Analyser (SWA) suite[J/OL]. Astronomy &amp; Astrophysics, 642: A16. DOI:10.1051/0004-6361/201937259.
+DE MARCO R, BRUNO R, JAGARLAMUDI V K, et al., 2023. Innovative technique for separating proton core, proton beam, and alpha particles in solar wind 3D velocity distribution functions[J/OL]. Astronomy &amp; Astrophysics, 669: A108. DOI:10.1051/0004-6361/202243719.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.generate_vdf_cart_unit">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">generate_vdf_cart_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vdf_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imf_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vp_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#generate_vdf_cart_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.generate_vdf_cart_unit" title="Link to this definition"></a></dt>
+<dd><p>This function generates the base vectors of the new coordinate system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vdf_time</strong> – The time array of VDF.</p></li>
+<li><p><strong>imf_time</strong> – The time array of IMF.</p></li>
+<li><p><strong>imf</strong> – The IMF data in shape (imf_time, 3).</p></li>
+<li><p><strong>vp_time</strong> – The time array of velocity. Default is None.</p></li>
+<li><p><strong>vp</strong> – The velocity data in shape (vp_time, 3). Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return v_unit_new<span class="colon">:</span></dt>
+<dd class="field-even"><p>The base vectors of the new coordinate system in shape (time, 3, 3), where the last dimension is [e_ix, e_iy, e_iz].</p>
+</dd>
+<dt class="field-odd">Return e_b<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The IMF unit vector.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.plot_vdf_1d_t">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">plot_vdf_1d_t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_grid_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_v_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_lower_percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Normalize</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">LogNorm</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pcolormesh_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QuadMesh</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#plot_vdf_1d_t"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.plot_vdf_1d_t" title="Link to this definition"></a></dt>
+<dd><p>Plot 1D VDF time series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axes</strong> – The axis to plot.</p></li>
+<li><p><strong>time</strong> – The time array.</p></li>
+<li><p><strong>pdf_t</strong> – The 3D grid of VDF in shape (time, grid_size, grid_size, grid_size).</p></li>
+<li><p><strong>v_grid_t</strong> – The 3D grid of velocity in shape (time, 3, grid_size).</p></li>
+<li><p><strong>target_v_unit</strong> – The unit of velocity that will be plotted. Default is 0, which means the x-axis.</p></li>
+<li><p><strong>clip_lower_percentage</strong> – The percentage of the lower limit of the color normalization. Should be between 0 and 1. Default is 0.</p></li>
+<li><p><strong>color_norm</strong> – The color normalization. Default is None, which means the LogNorm will be used.</p></li>
+<li><p><strong>core_line</strong> – Whether to plot the core line. Could be a dictionary of the line properties. Default is False.</p></li>
+<li><p><strong>cax</strong> – The color bar axis. Default is None.</p></li>
+<li><p><strong>pcolormesh_kwargs</strong> – The keyword arguments for the pcolormesh function. Default is None, which means {‘cmap’: ‘jet’, ‘shading’: ‘auto’}.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return quadmesh<span class="colon">:</span></dt>
+<dd class="field-even"><p>The quadmesh of the plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.plot_vdf_2d">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">plot_vdf_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_v_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_marker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imf_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_lower_percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Normalize</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">LogNorm</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pcolormesh_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QuadMesh</span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#plot_vdf_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.plot_vdf_2d" title="Link to this definition"></a></dt>
+<dd><p>Plot the 2D VDF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axes</strong> – The axis to plot.</p></li>
+<li><p><strong>pdf</strong> – The 3D grid of VDF in shape (grid_size, grid_size, grid_size).</p></li>
+<li><p><strong>v_grid</strong> – The 3D grid of velocity in shape (3, grid_size).</p></li>
+<li><p><strong>compress_v_unit</strong> – The unit of velocity that will not be plotted. Default is 2, which means the z-axis.</p></li>
+<li><p><strong>core_marker</strong> – Whether to plot the core marker. Could be a dictionary of the marker properties. Default is False.</p></li>
+<li><p><strong>imf_vector</strong> – Whether to plot the IMF vector. Default is None.</p></li>
+<li><p><strong>v_units</strong> – The base vectors of the new coordinate system. This must be provided if <cite>imf_vector</cite> is not None. Default is None.</p></li>
+<li><p><strong>clip_lower_percentage</strong> – The percentage of the lower limit of the color normalization. Should be between 0 and 1. Default is 0.</p></li>
+<li><p><strong>color_norm</strong> – The color normalization. Default is None, which means the LogNorm will be used.</p></li>
+<li><p><strong>color_levels</strong> – The color levels. Default is None, which means the levels will be calculated automatically.</p></li>
+<li><p><strong>cax</strong> – The color bar axis. Default is None.</p></li>
+<li><p><strong>pcolormesh_kwargs</strong> – The keyword arguments for the pcolormesh function. Default is None, which means {‘cmap’: ‘jet’, ‘shading’: ‘auto’}.</p></li>
+<li><p><strong>contour_kwargs</strong> – The keyword arguments for the contour function. Default is True, which means {‘colors’:’k’}.</p></li>
+<li><p><strong>arrow_kwargs</strong> – The keyword arguments for the arrow function. Default is None, which means {‘shape’: ‘full’, ‘fc’: ‘k’, ‘ec’: ‘k’, ‘lw’: 1}.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return quadmesh<span class="colon">:</span></dt>
+<dd class="field-even"><p>The quadmesh of the plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.vdf_core">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">vdf_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_grid_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#vdf_core"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.vdf_core" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.vdf_griddata">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">vdf_griddata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vdf_vec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdf_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Quantity</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#vdf_griddata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.vdf_griddata" title="Link to this definition"></a></dt>
+<dd><p>This function interpolates the 3D scatters of VDF to a 3D grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vdf_vec</strong> – The 3D scatters of VDF in shape (azimuth*elevation*energy, 3).</p></li>
+<li><p><strong>vdf_value</strong> – The values of the 3D scatters of VDF in shape (azimuth*elevation*energy).</p></li>
+<li><p><strong>grid_lim</strong> – The limits of the grid in shape (3, 2). Default is None, which means the limits will be calculated automatically.</p></li>
+<li><p><strong>grid_size</strong> – The size of the grid.</p></li>
+<li><p><strong>device</strong> – The device to use. Default is ‘cpu’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return pdf_3d<span class="colon">:</span></dt>
+<dd class="field-even"><p>The 3D grid of VDF in shape (grid_size, grid_size, grid_size).</p>
+</dd>
+<dt class="field-odd">Return v_grid<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The 3D grid of velocity in shape (3, grid_size).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.vdf_griddata_t">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">vdf_griddata_t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vdf_vec_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdf_value_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiprocess</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Quantity</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#vdf_griddata_t"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.vdf_griddata_t" title="Link to this definition"></a></dt>
+<dd><p>This function packs the <cite>vdf_griddata</cite> function to calculate the 3D grid of VDFs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vdf_vec_t</strong> – The 3D scatters of VDF in the new coordinate system in shape (time, azimuth*elevation*energy, 3).</p></li>
+<li><p><strong>vdf_value_t</strong> – The values of the 3D scatters of VDF in shape (time, azimuth*elevation*energy).</p></li>
+<li><p><strong>grid_lim</strong> – The limits of the grid in shape (3, 2) or (t, 3, 2). Default is None, which means the limits will be calculated automatically.</p></li>
+<li><p><strong>grid_size</strong> – The size of the grid.</p></li>
+<li><p><strong>device</strong> – The device to use. Default is ‘cpu’.</p></li>
+<li><p><strong>multiprocess</strong> – Whether to use multiprocess. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return pdf_t<span class="colon">:</span></dt>
+<dd class="field-even"><p>The 3D grid of VDF in shape (time, grid_size, grid_size, grid_size).</p>
+</dd>
+<dt class="field-odd">Return v_grid_t<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The 3D grid of velocity in shape (time, 3, grid_size).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vdf_process.vdf_sph_to_cart">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vdf_process.</span></span><span class="sig-name descname"><span class="pre">vdf_sph_to_cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_unit_new</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Quantity</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Quantity</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vdf_process.html#vdf_sph_to_cart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vdf_process.vdf_sph_to_cart" title="Link to this definition"></a></dt>
+<dd><p>This function calculates the 3D scatters of VDF in the new coordinate system. (Only tested for SolO data)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>azimuth</strong> – Azimuth angles in degrees.</p></li>
+<li><p><strong>elevation</strong> – Elevation angles in degrees.</p></li>
+<li><p><strong>energy</strong> – Energy in J.</p></li>
+<li><p><strong>vdf</strong> – VDF data in shape (time, azimuth, elevation, energy).</p></li>
+<li><p><strong>v_unit_new</strong> – Base vectors of the new coordinate system in shape (time, 3, 3), where the last dimension is [e_ix, e_iy, e_iz]. Default is None, which means the original base vectors [[1,0,0],[0,1,0],[0,0,1]] is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return vdf_vec<span class="colon">:</span></dt>
+<dd class="field-even"><p>The 3D scatters of VDF in the new coordinate system in shape (time, azimuth*elevation*energy, 3).</p>
+</dd>
+<dt class="field-odd">Return vdf_value<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The values of the 3D scatters of VDF in shape (time, azimuth*elevation*energy).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing.vec_cart_sph">
+<span id="spcphys-common-functions-processing-vec-cart-sph-module"></span><h2>spcphys_common_functions.processing.vec_cart_sph module<a class="headerlink" href="#module-spcphys_common_functions.processing.vec_cart_sph" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vec_cart_sph.vec_cart_to_sph">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vec_cart_sph.</span></span><span class="sig-name descname"><span class="pre">vec_cart_to_sph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vec_cart_sph.html#vec_cart_to_sph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vec_cart_sph.vec_cart_to_sph" title="Link to this definition"></a></dt>
+<dd><p>Convert a vector from Cartesian coordinates to spherical coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> – The vector to be converted. Shape should be (N, 3), where N is the number of vectors.</p></li>
+<li><p><strong>r</strong> – The radial component of the vector. Shape should be (N, 3) or (3,).</p></li>
+<li><p><strong>z</strong> – The z-component of the vector. Shape should be (N, 3) or (3,). If None, the function will only compute the magnitude and angle between v and r. Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If z is None, returns the magnitude and angle between v and r. Otherwise, returns the magnitude, azimuth, and elevation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spcphys_common_functions.processing.vec_cart_sph.vec_sph_to_cart">
+<span class="sig-prename descclassname"><span class="pre">spcphys_common_functions.processing.vec_cart_sph.</span></span><span class="sig-name descname"><span class="pre">vec_sph_to_cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v_mag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Quantity</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/spcphys_common_functions/processing/vec_cart_sph.html#vec_sph_to_cart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spcphys_common_functions.processing.vec_cart_sph.vec_sph_to_cart" title="Link to this definition"></a></dt>
+<dd><p>Convert a vector from spherical coordinates to Cartesian coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v_mag</strong> – The magnitude of the vector. Shape should be (N,).</p></li>
+<li><p><strong>azimuth</strong> – The azimuth angle of the vector in degrees. Shape should be (N,).</p></li>
+<li><p><strong>elevation</strong> – The elevation angle of the vector in degrees. Shape should be (N,). If None, the function will assume the vector lies in the xy-plane. Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If elevation is None, returns the x and y components of the vector. Otherwise, returns the x, y, and z components.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-spcphys_common_functions.processing">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-spcphys_common_functions.processing" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, NyankoSong.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
