@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>spcphys_common_functions.parameters.vth_E_T &mdash; spcphys_common_functions  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            spcphys_common_functions
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">spcphys_common_functions</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">spcphys_common_functions.parameters.vth_E_T</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for spcphys_common_functions.parameters.vth_E_T</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;Transformations between thermal velocity, energy, and temperature.&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">astropy.constants</span> <span class="kn">import</span> <span class="n">k_B</span><span class="p">,</span> <span class="n">m_p</span>
+
+<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
+
+
+<div class="viewcode-block" id="T_to_vth">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.T_to_vth">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">T_to_vth</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate thermal velocity from temperature.</span>
+<span class="sd">    </span>
+<span class="sd">    :param T: Temperature with units (e.g., T * u.K).</span>
+<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
+<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">              n=3 for root mean square speed,</span>
+<span class="sd">              n=8/π for mean speed,</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
+<span class="sd">              </span>
+<span class="sd">    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Temperature T must have units of temperature (u.K)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mass</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mass must have units of mass (u.kg)&quot;</span><span class="p">)</span>
+    
+    <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">mass</span> <span class="o">=</span> <span class="n">mass</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">vth</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">k_B</span> <span class="o">*</span> <span class="n">T</span> <span class="o">/</span> <span class="n">mass</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+    <span class="k">return</span> <span class="n">vth</span><span class="o">.</span><span class="n">si</span></div>
+
+
+
+<div class="viewcode-block" id="vth_to_T">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.vth_to_T">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">vth_to_T</span><span class="p">(</span><span class="n">vth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate temperature from thermal velocity.</span>
+<span class="sd">    </span>
+<span class="sd">    :param vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
+<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
+<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">              n=3 for root mean square speed,</span>
+<span class="sd">              n=8/π for mean speed,</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
+<span class="sd">              </span>
+<span class="sd">    :return T: Temperature with units (e.g., T * u.K).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vth</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Thermal velocity vth must have units of velocity (u.m/u.s)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mass</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mass must have units of mass (u.kg)&quot;</span><span class="p">)</span>
+    
+    <span class="n">vth</span> <span class="o">=</span> <span class="n">vth</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">mass</span> <span class="o">=</span> <span class="n">mass</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">mass</span> <span class="o">*</span> <span class="n">vth</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">k_B</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">T</span><span class="o">.</span><span class="n">si</span></div>
+
+
+
+<div class="viewcode-block" id="E_to_T">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.E_to_T">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">E_to_T</span><span class="p">(</span><span class="n">E</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate temperature from energy.</span>
+<span class="sd">    </span>
+<span class="sd">    :param E: Energy with units (e.g., E * u.J).</span>
+<span class="sd">    </span>
+<span class="sd">    :return T: Temperature with units (e.g., T * u.K).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">E</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Energy E must have units of energy (u.J)&quot;</span><span class="p">)</span>
+    
+    <span class="n">E</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">E</span> <span class="o">/</span> <span class="n">k_B</span>
+    <span class="k">return</span> <span class="n">T</span><span class="o">.</span><span class="n">si</span></div>
+
+
+
+<div class="viewcode-block" id="T_to_E">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.T_to_E">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">T_to_E</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate energy from temperature.</span>
+<span class="sd">    </span>
+<span class="sd">    :param T: Temperature with units (e.g., T * u.K).</span>
+<span class="sd">    </span>
+<span class="sd">    :return E: Energy with units (e.g., E * u.J).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Temperature T must have units of temperature (u.K)&quot;</span><span class="p">)</span>
+    
+    <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">k_B</span> <span class="o">*</span> <span class="n">T</span>
+    <span class="k">return</span> <span class="n">E</span><span class="o">.</span><span class="n">si</span></div>
+
+
+
+<div class="viewcode-block" id="E_to_vth">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.E_to_vth">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">E_to_vth</span><span class="p">(</span><span class="n">E</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate thermal velocity from energy.</span>
+<span class="sd">    </span>
+<span class="sd">    :param E: Energy with units (e.g., E * u.J).</span>
+<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
+<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">              n=3 for root mean square speed,</span>
+<span class="sd">              n=8/π for mean speed,</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
+<span class="sd">              </span>
+<span class="sd">    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">E</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Energy E must have units of energy (u.J)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mass</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mass must have units of mass (u.kg)&quot;</span><span class="p">)</span>
+    
+    <span class="n">E</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">mass</span> <span class="o">=</span> <span class="n">mass</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">vth</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">E</span> <span class="o">/</span> <span class="n">mass</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+    <span class="k">return</span> <span class="n">vth</span><span class="o">.</span><span class="n">si</span></div>
+
+
+
+<div class="viewcode-block" id="vth_to_E">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.vth_to_E">[docs]</a>
+<span class="nd">@check_parameters</span>
+<span class="k">def</span> <span class="nf">vth_to_E</span><span class="p">(</span><span class="n">vth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate energy from thermal velocity.</span>
+<span class="sd">    </span>
+<span class="sd">    :param vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
+<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
+<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">              n=3 for root mean square speed,</span>
+<span class="sd">              n=8/π for mean speed,</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
+<span class="sd">              </span>
+<span class="sd">    :return E: Energy with units (e.g., E * u.J).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vth</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Thermal velocity vth must have units of velocity (u.m/u.s)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mass</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mass must have units of mass (u.kg)&quot;</span><span class="p">)</span>
+    
+    <span class="n">vth</span> <span class="o">=</span> <span class="n">vth</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">mass</span> <span class="o">=</span> <span class="n">mass</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="n">vth</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">E</span><span class="o">.</span><span class="n">si</span></div>
+
+
+
+
+
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#     T = 1e6 * u.K  # Temperature</span>
+<span class="c1">#     vth = 1e5 * u.m / u.s  # Thermal velocity</span>
+<span class="c1">#     E = 1e-17 * u.J  # Energy</span>
+
+<span class="c1">#     # Test T_to_vth</span>
+<span class="c1">#     vth_calculated = T_to_vth(T)</span>
+<span class="c1">#     print(f&quot;T_to_vth({T}) = {vth_calculated}&quot;)</span>
+
+<span class="c1">#     # Test vth_to_T</span>
+<span class="c1">#     T_calculated = vth_to_T(vth)</span>
+<span class="c1">#     print(f&quot;vth_to_T({vth}) = {T_calculated}&quot;)</span>
+
+<span class="c1">#     # Test E_to_T</span>
+<span class="c1">#     T_from_E = E_to_T(E)</span>
+<span class="c1">#     print(f&quot;E_to_T({E}) = {T_from_E}&quot;)</span>
+    
+<span class="c1">#     # Test T_to_E</span>
+<span class="c1">#     E_from_T = T_to_E(T)</span>
+<span class="c1">#     print(f&quot;T_to_E({T}) = {E_from_T}&quot;)</span>
+
+<span class="c1">#     # Test E_to_vth</span>
+<span class="c1">#     vth_from_E = E_to_vth(E)</span>
+<span class="c1">#     print(f&quot;E_to_vth({E}) = {vth_from_E}&quot;)</span>
+
+<span class="c1">#     # Test vth_to_E</span>
+<span class="c1">#     E_from_vth = vth_to_E(vth)</span>
+<span class="c1">#     print(f&quot;vth_to_E({vth}) = {E_from_vth}&quot;)</span>
+    
+<span class="c1">#     pass</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, NyankoSong.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
