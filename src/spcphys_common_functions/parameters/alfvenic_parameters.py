@@ -84,10 +84,10 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     num_valid_p_points, num_valid_b_points = np.sum(valid_p_indices), np.sum(valid_b_indices)
     
     if num_valid_p_points < least_data_in_window or num_valid_b_points < least_data_in_window:
-        return {'time': p_date[0] + (p_date[-1] - p_date[0]) / 2, 'r3': np.nan, 'p3': np.nan, 
+        return {'r3': np.nan, 'p3': np.nan,
                 'residual_energy': np.nan, 'cross_helicity': np.nan, 
                 'alfven_ratio': np.nan, 'compressibility': np.nan, 
-                'vA': np.nan,'time_window': [p_date[0], p_date[1]], 'num_valid_p_points': num_valid_p_points, 
+                'vA': np.nan, 'num_valid_p_points': num_valid_p_points, 
                 'num_valid_b_points': num_valid_b_points}
     
     if isinstance(p_date, list):
@@ -132,10 +132,10 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     compressibility_i = np.nanmean(dn**2) * np.nanmean(b_magnitude)**2 / (np.nanmean(n)**2 * db_magnitude2_mean)
     vA_i = np.nanmean(np.linalg.norm(calc_va(b, n, dva=False), axis=1))
 
-    return {'time': p_date[-1] - p_date[0], 'r3': r3_i.si, 'p3': p3_i.si, 
+    return {'r3': r3_i.si, 'p3': p3_i.si,
             'residual_energy': residual_energy_i.si, 'cross_helicity': cross_helicity_i.si, 
             'alfven_ratio': alfven_ratio_i.si, 'compressibility': compressibility_i.si, 
-            'vA': vA_i.si,'time_window': [p_date[0], p_date[1]], 'num_valid_p_points': num_valid_p_points, 
+            'vA': vA_i.si, 'num_valid_p_points': num_valid_p_points, 
             'num_valid_b_points': num_valid_b_points}
 
 @check_parameters
