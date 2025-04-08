@@ -20,13 +20,17 @@ from ..processing.preprocess import interpolate
 
 @check_parameters
 def most_probable_x(x: u.Quantity|np.ndarray, bins: np.ndarray|str|int='freedman', least_length: float|int =4) -> float|u.Quantity:
-    """
-    Calculate the most probable value in the input array.
+    """Calculate the most probable value in the input array.
 
     :param x: Input one-dimensional array or quantity.
-    :param bins: Binning method for the histogram, default is 'freedman'.
-    
-    :return x_mp: The most probable value in the input array.
+    :type x: astropy.units.Quantity or np.ndarray
+    :param bins: Binning method for the histogram, defaults to 'freedman'.
+    :type bins: np.ndarray or str or int
+    :param least_length: Minimum number of data points required, defaults to 4.
+    :type least_length: float or int
+    :raises ValueError: If input x is not one-dimensional or if least_length is less than 4.
+    :return: The most probable value in the input array.
+    :rtype: float or u.Quantity
     """
     
     if len(x.shape) > 1:
@@ -49,16 +53,23 @@ def most_probable_x(x: u.Quantity|np.ndarray, bins: np.ndarray|str|int='freedman
     
 @check_parameters
 def ballistic_backmapping(pos_insitu: SkyCoord|HeliographicCarrington, v_r: u.Quantity, r_target: u.Quantity|None =None, t_travel: timedelta|u.Quantity|None =None) -> SkyCoord:
-    """
-    Calculate the target position for ballistic backmapping.
+    """Calculate the target position for ballistic backmapping.
+    
     Either the target radius or the travel time must be specified.
 
     :param pos_insitu: Current position, should be able to transform to HeliographicCarrington.
-    :param v_r: Radial velocity, must have velocity units (u.m/u.s).
-    :param r_target: Target radius, default is None.
-    :param t_travel: Travel time, must have time units (u.s), default is None.
-    
-    :return pos_target: Target position in heliographic Carrington coordinates.
+    :type pos_insitu: SkyCoord or HeliographicCarrington
+    :param v_r: Radial velocity, must have velocity units.
+    :type v_r: astropy.units.Quantity
+    :param r_target: Target radius, defaults to None.
+    :type r_target: astropy.units.Quantity or None, optional
+    :param t_travel: Travel time, defaults to None.
+    :type t_travel: timedelta or u.Quantity or None, optional
+    :raises ValueError: If neither or both r_target and t_travel are specified.
+    :raises ValueError: If v_r does not have velocity units.
+    :raises ValueError: If t_travel does not have time units.
+    :return: Target position in heliographic Carrington coordinates.
+    :rtype: SkyCoord
     """
     
     if (r_target is None and t_travel is None) or (r_target is not None and t_travel is not None):
@@ -93,6 +104,23 @@ def ballistic_backmapping(pos_insitu: SkyCoord|HeliographicCarrington, v_r: u.Qu
 
 
 def _radius_diff(t_back, v_r, pos_sat1, r_sat2_interp_func, target_sc_date, pos_sat2):
+    """Calculate the difference in radius between the backmapped position and the target spacecraft.
+
+    :param t_back: Travel time for backmapping.
+    :type t_back: float or np.ndarray
+    :param v_r: Radial velocity.
+    :type v_r: astropy.units.Quantity
+    :param pos_sat1: Position of the first spacecraft.
+    :type pos_sat1: SkyCoord or HeliographicCarrington
+    :param r_sat2_interp_func: Function to interpolate the radius of the second spacecraft.
+    :type r_sat2_interp_func: function
+    :param target_sc_date: Observation date of the second spacecraft.
+    :type target_sc_date: datetime or np.ndarray of datetime
+    :param pos_sat2: Position of the second spacecraft.
+    :type pos_sat2: SkyCoord or HeliographicCarrington
+    :return: Absolute difference in radius.
+    :rtype: float
+    """
     if np.isnan(t_back):
         return np.inf
     try:
@@ -102,11 +130,30 @@ def _radius_diff(t_back, v_r, pos_sat1, r_sat2_interp_func, target_sc_date, pos_
     else:
         return np.abs((pos_backmap.radius - r_sat2_interp_func(pos_backmap.obstime.value, target_sc_date, pos_sat2)).si.value)
 
+
 def _target_sc_r_interp_func(target_time, target_sc_date, pos_sat2):
+    """Interpolate the radius of the second spacecraft at the given time.
+
+    :param target_time: Target time to interpolate for.
+    :type target_time: datetime or np.ndarray of datetime
+    :param target_sc_date: Time series of the second spacecraft.
+    :type target_sc_date: list or np.ndarray of datetime
+    :param pos_sat2: Position of the second spacecraft.
+    :type pos_sat2: SkyCoord or HeliographicCarrington
+    :return: Interpolated radius of the second spacecraft.
+    :rtype: astropy.units.Quantity
+    """
     return interpolate(target_time, target_sc_date, pos_sat2.radius)
 
-# def _optimize_t_back(base_sc_pos, base_sc_v_r, _target_sc_r_interp_func, t_back_bounds):
+
 def _optimize_t_back(args):
+    """Optimize backmapping time to match the radius of two spacecraft.
+
+    :param args: Tuple containing (base_sc_pos, base_sc_v_r, target_sc_date, pos_sat2, t_back_bounds).
+    :type args: tuple
+    :return: Optimized backmapping time or NaN if optimization fails.
+    :rtype: float
+    """
     base_sc_pos, base_sc_v_r, target_sc_date, pos_sat2, t_back_bounds = args
     base_sc_obs_date = base_sc_pos.obstime.value
     
@@ -122,21 +169,27 @@ def _optimize_t_back(args):
 
 @check_parameters
 def dual_spacecraft_obs_diff(pos_sat1: SkyCoord|HeliographicCarrington, pos_sat2: SkyCoord|HeliographicCarrington, v_r: u.Quantity, num_processes: float|int =1) -> Tuple[np.ndarray, np.ndarray, np.ndarray, u.Quantity]:
-    '''
-    Calculate the difference in the Carrington longitude and latitude between observations from two spacecraft.
+    """Calculate the difference in the Carrington longitude and latitude between observations from two spacecraft.
+    
     This function assumes that the radial velocity is oberved by the first spacecraft,
     and calculates the difference in the Carrington longitude and latitude between the parker spiral and the second spacecraft.
     
     :param pos_sat1: Position time series of the first spacecraft.
+    :type pos_sat1: SkyCoord or HeliographicCarrington
     :param pos_sat2: Position time series of the second spacecraft.
-    :param v_r: Radial velocity time series or constant value, must have velocity units (u.m/u.s).
-    :param num_processes: Number of processes to use for parallel processing, default is 1.
-    
-    :return valid_indices: Successfully backmapped indices.
-    :return time_sat1: Time of the first spacecraft observation.
-    :return time_sat2: Time of the second spacecraft observation.
-    :return delta_phi: Difference in Carrington longitude at the radius of the second spacecraft.
-    '''
+    :type pos_sat2: SkyCoord or HeliographicCarrington
+    :param v_r: Radial velocity time series or constant value, must have velocity units.
+    :type v_r: astropy.units.Quantity
+    :param num_processes: Number of processes to use for parallel processing, defaults to 1.
+    :type num_processes: float or int, optional
+    :raises ValueError: If v_r does not have velocity units.
+    :return: A tuple containing (valid_indices, time_sat1, time_sat2, delta_phi) where:
+             valid_indices are successfully backmapped indices,
+             time_sat1 is the time of the first spacecraft observation,
+             time_sat2 is the time of the second spacecraft observation,
+             delta_phi is the difference in Carrington longitude at the radius of the second spacecraft.
+    :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray, u.Quantity]
+    """
     
     if pos_sat1.frame is not HeliographicCarrington:
         pos_sat1 = pos_sat1.transform_to(HeliographicCarrington)

@@ -116,14 +116,26 @@ def vdf_sph_to_cart(azimuth: u.Quantity, elevation: u.Quantity, energy: u.Quanti
 
 def _imf_in_vdf(mag_vector_3d: np.ndarray, v_unit: np.ndarray):
     '''
-    如果坐标系单位矢量z的N分量（e_z[-1]）小于0，那么对磁场的y分量取反，理由未知，逻辑来自Fortran程序
+    Calculate the magnetic vector in the new coordinate system.
+    
+    If the N-component of z-axis unit vector (e_z[-1]) is less than 0,
+    the y and z components of the magnetic field will be reversed.
+    This logic is derived from a Fortran program with unknown reasoning.
+    
+    :param mag_vector_3d: The 3D magnetic vector.
+    :type mag_vector_3d: np.ndarray
+    :param v_unit: The base vectors of the coordinate system, shape (3,3).
+    :type v_unit: np.ndarray
+    
+    :return: The magnetic vector in the new coordinate system.
+    :rtype: np.ndarray
     '''
     mag_vector = np.zeros(3)
     mag_vector[0] = np.dot(mag_vector_3d, v_unit[0]) / np.linalg.norm(v_unit[0])
     mag_vector[1] = np.dot(mag_vector_3d, v_unit[1]) / np.linalg.norm(v_unit[1])
     mag_vector[2] = np.dot(mag_vector_3d, v_unit[2]) / np.linalg.norm(v_unit[2])
     
-    # 未知取反逻辑部分（存疑）：
+    # Logic for sign reversal (uncertain reasoning, from Fortran code):
     if v_unit[2, -1] < 0:
         mag_vector[1] = -mag_vector[1]
         mag_vector[2] = -mag_vector[2] # ?

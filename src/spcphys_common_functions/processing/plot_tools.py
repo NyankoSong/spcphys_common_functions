@@ -44,8 +44,8 @@ def _logarithmic_error(x):
     log_x_mean = np.nanmean(log_x, axis=0)
     unlog_x_mean = 10**log_x_mean
     log_x_std = np.nanstd(log_x, axis=0)
-    # log_x_err = np.abs(log_x_std/log_x_mean/2.303) # 废弃，此方法并不是这么用的，而是用于没有原始数据的观测数据，例如只提供了均值和标准差
-    # x_cap = [np.abs(x_mid - 10**(log_x_mean - log_x_err)),  np.abs(x_mid - 10**(log_x_mean + log_x_err))]
+    # This method is not used in this way, but is used for observational data without raw data,
+    # such as when only the mean and standard deviation are provided
     x_cap = [np.abs(unlog_x_mean - 10**(log_x_mean - log_x_std)),  np.abs(unlog_x_mean - 10**(log_x_mean + log_x_std))]
     return unlog_x_mean, log_x_std, x_cap
 

@@ -1,5 +1,3 @@
-
-
 from datetime import datetime
 from typing import List, Tuple
 import numpy as np
@@ -11,6 +9,15 @@ from ..utils.utils import check_parameters
 
 
 def _check_condition(condition: str) -> float:
+    """Convert string condition to float value.
+    
+    :param condition: String representation of a number or condition
+    :type condition: str
+    :return: Float value of the condition
+    :rtype: float
+    
+    Handles special cases like 'inf', '-inf', and scientific notation like '1E3'.
+    """
     
     if 'inf' in condition:
         return -np.inf if condition[0] == '-' else np.inf
@@ -22,6 +29,16 @@ def _check_condition(condition: str) -> float:
 
 
 def _get_boundary(boundary: str|List[str|float]|Tuple[str|float]|None=None):
+    """Process and normalize boundary conditions.
+    
+    :param boundary: Boundary conditions specification
+    :type boundary: str, List[str|float], Tuple[str|float], or None, optional
+    :return: Normalized boundary conditions as a list of two float values
+    :rtype: List[float]
+    
+    If boundary is None, 'none', or incomplete, returns default boundary [-1E30, 1E30].
+    Otherwise, converts string representations to float values.
+    """
     
     if boundary is None or (isinstance(boundary, str) and boundary.lower() == 'none') or boundary[0].lower() == 'none' or len(boundary) < 2:
         boundary = [-1E30, 1E30]
@@ -34,14 +51,15 @@ def _get_boundary(boundary: str|List[str|float]|Tuple[str|float]|None=None):
 
 
 def find_argnan(x: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple[str|float]|None=None) -> np.ndarray:
-    '''
-    Find the indices of NaN values in the input array.
+    """Find the indices of NaN values and out-of-bound values in the input array.
     
-    :param x: Input array.
-    :param boundary: Boundary conditions for the input array. Default is [-1E30, 1E30].
-    
-    :return: Indices of NaN values.
-    '''
+    :param x: Input array
+    :type x: numpy.ndarray or astropy.units.Quantity
+    :param boundary: Boundary conditions for the input array, defaults to [-1E30, 1E30]
+    :type boundary: str, List[str|float], Tuple[str|float], or None, optional
+    :return: Indices of NaN values or out-of-bound values
+    :rtype: numpy.ndarray
+    """
     
     boundary = _get_boundary(boundary)
     
@@ -49,14 +67,19 @@ def find_argnan(x: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple[st
 
 
 def process_nan(data: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple[str|float]|None=None, time: List[datetime]|np.ndarray|None=None, method:str|None=None) -> List[np.ndarray]:
-    '''
-    Process NaN values in the input data.
+    """Process NaN values in the input data.
     
-    :param data: List of input data arrays.
-    :param boundary: Boundary conditions for the input data arrays. Default is [-1E30, 1E30].
-    
-    :return: List of processed data arrays.
-    '''
+    :param data: Input data array
+    :type data: numpy.ndarray or astropy.units.Quantity
+    :param boundary: Boundary conditions for the input data array, defaults to [-1E30, 1E30]
+    :type boundary: str, List[str|float], Tuple[str|float], or None, optional
+    :param time: Array of datetime objects associated with the data, defaults to None
+    :type time: List[datetime] or numpy.ndarray or None, optional
+    :param method: Method for handling NaN values (e.g., 'drop', 'interpolate'), defaults to None
+    :type method: str or None, optional
+    :return: Processed data array with out-of-bound values replaced by NaN
+    :rtype: numpy.ndarray or astropy.units.Quantity
+    """
     
     boundary = _get_boundary(boundary)
     
@@ -74,25 +97,32 @@ def process_nan(data: np.ndarray|u.Quantity, boundary: str|List[str|float]|Tuple
 
 
 def npdt64_to_dt(npdt64: np.ndarray) -> np.ndarray:
-    '''
-    Convert numpy datetime64 to datetime.
-    '''
+    """Convert numpy datetime64 array to datetime array.
+    
+    :param npdt64: Input numpy datetime64 array
+    :type npdt64: numpy.ndarray
+    :return: Converted datetime array
+    :rtype: numpy.ndarray
+    """
     
     return np.array([pd.to_datetime(date).to_pydatetime() for date in npdt64])
 
 
 @check_parameters
 def interpolate(x: datetime|List[datetime]|np.ndarray, xp: List[datetime]|np.ndarray, yp: np.ndarray|u.Quantity, vector_norm_interp: bool =False) -> np.ndarray|u.Quantity:
-    '''
-    Perform interpolation on the given time series data.
+    """Interpolate values at specified datetime indices.
     
-    :param x: Array of datetime at which to evaluate the interpolated values.
-    :param xp: Array of datetime of the data points.
-    :param yp: Array of y-coordinates of the data points in shape (t,) or (t, dim).
-    :param vector_norm_interp: Whether to interpolate the vector norm of the data points if yp is a vector time series. Default is False.
-    
-    :return y: Interpolated values at the x.
-    '''
+    :param x: Datetime or list of datetime objects to interpolate
+    :type x: datetime or List[datetime] or numpy.ndarray
+    :param xp: Datetime or list of datetime objects for interpolation
+    :type xp: List[datetime] or numpy.ndarray
+    :param yp: Values to be interpolated, can be a 1D or 2D array
+    :type yp: numpy.ndarray or astropy.units.Quantity
+    :param vector_norm_interp: Flag for vector norm interpolation, defaults to False
+    :type vector_norm_interp: bool, optional
+    :return: Interpolated values
+    :rtype: numpy.ndarray or astropy.units.Quantity
+    """
     
     if isinstance(x, list):
         x = np.array(x)

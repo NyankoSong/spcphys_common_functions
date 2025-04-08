@@ -19,14 +19,16 @@ from ..processing.preprocess import interpolate
 
 @check_parameters
 def calc_dx(x: u.Quantity|np.ndarray, axis=0, **mean_kwargs) -> u.Quantity|np.ndarray:
-    '''
-    Remove the mean value from the input array.
+    '''Remove the mean value from the input array.
     
-    :param x: Input array.
-    :param axis: Axis along which to calculate the mean value. Default is 0.
-    :param mean_kwargs: Additional keyword arguments to pass to the numpy.nanmean function.
-
-    :return: Array with the mean value removed, as an astropy Quantity.
+    :param x: Input array
+    :type x: astropy.units.Quantity or numpy.ndarray
+    :param axis: Axis along which to calculate the mean value, defaults to 0
+    :type axis: int, optional
+    :param mean_kwargs: Additional keyword arguments to pass to the numpy.nanmean function
+    :type mean_kwargs: dict
+    :return: Array with the mean value removed
+    :rtype: astropy.units.Quantity or numpy.ndarray
     '''
     
     return x - np.nanmean(x, axis=axis, **mean_kwargs)
@@ -34,14 +36,16 @@ def calc_dx(x: u.Quantity|np.ndarray, axis=0, **mean_kwargs) -> u.Quantity|np.nd
 
 @check_parameters
 def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
-    '''
-    Calculate the Alfven velocity.
+    '''Calculate the Alfven velocity.
 
-    :param b: Magnetic field data in shape (time, 3).
-    :param n: Proton number density data in shape (time).
-    :param dva: Whether to remove mean value from magnetic field data. Default is False.
-    
-    :return va/dva: Alfven velocity or Alfven velocity with mean value removed.
+    :param b: Magnetic field data in shape (time, 3)
+    :type b: astropy.units.Quantity
+    :param n: Proton number density data in shape (time)
+    :type n: astropy.units.Quantity
+    :param dva: Whether to remove mean value from magnetic field data, defaults to False
+    :type dva: bool, optional
+    :return: Alfven velocity or Alfven velocity with mean value removed
+    :rtype: astropy.units.Quantity
     '''
     
     bottom = np.sqrt(mu0 * np.nanmean(n) * m_p)
@@ -53,17 +57,25 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
 
 @check_parameters
 def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20):
-    '''
-    Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
+    '''Calculate the Alfvenic parameters.
     
-    :param p_date: List of datetime objects for proton velocity data.
-    :param v: Proton velocity data in shape (time, 3).
-    :param n: Proton number density data in shape (time).
-    :param b_date: List of datetime objects for magnetic field data.
-    :param b: Magnetic field data in shape (time, 3).
-    :param least_data_in_window: Least number of valid data points. Default is 20.
+    :param p_date: List or array of datetime objects for proton velocity data
+    :type p_date: List[datetime] or numpy.ndarray
+    :param v: Proton velocity data in shape (time, 3)
+    :type v: astropy.units.Quantity
+    :param n: Proton number density data in shape (time)
+    :type n: astropy.units.Quantity
+    :param b_date: List or array of datetime objects for magnetic field data
+    :type b_date: List[datetime] or numpy.ndarray
+    :param b: Magnetic field data in shape (time, 3)
+    :type b: astropy.units.Quantity
+    :param least_data_in_window: Least number of valid data points, defaults to 20
+    :type least_data_in_window: int or float, optional
+    :return: Dictionary containing Alfvenic parameters (r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, num_valid_p_points, num_valid_b_points)
+    :rtype: dict
     
-    :return {'r3': r3, 'p3': p3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA':vA}: Dictionary of Alfvenic parameters.
+    This function calculates the correlation coefficient between velocity and magnetic field, 
+    residual energy, cross helicity, Alfven ratio, and compressibility.
     '''
     
     if not v.unit.is_equivalent(u.m/u.s):
@@ -140,18 +152,27 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
 
 @check_parameters
 def calc_alfven_t(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20, **slide_time_window_kwargs) -> dict:
-    '''
-    Calculate the Alfvenic parameters (corrlation coefficient between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, compressibility).
+    '''Calculate the Alfvenic parameters over time windows.
     
-    :param p_date: List or numpy array of datetime objects for proton velocity data.
-    :param v: Proton velocity data in shape (time, 3).
-    :param n: Proton number density data in shape (time).
-    :param b_date: List or numpy array of datetime objects for magnetic field data.
-    :param b: Magnetic field data in shape (time, 3).
-    :param least_data_in_window: Least number of valid data points in each time window. Default is 20.
-    :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function.
+    :param p_date: List or array of datetime objects for proton velocity data
+    :type p_date: List[datetime] or numpy.ndarray
+    :param v: Proton velocity data in shape (time, 3)
+    :type v: astropy.units.Quantity
+    :param n: Proton number density data in shape (time)
+    :type n: astropy.units.Quantity
+    :param b_date: List or array of datetime objects for magnetic field data
+    :type b_date: List[datetime] or numpy.ndarray
+    :param b: Magnetic field data in shape (time, 3)
+    :type b: astropy.units.Quantity
+    :param least_data_in_window: Least number of valid data points in each time window, defaults to 20
+    :type least_data_in_window: int or float, optional
+    :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function
+    :type slide_time_window_kwargs: dict
+    :return: Dictionary of Alfvenic parameters for each time window (time, r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, time_window, num_valid_p_points, num_valid_b_points)
+    :rtype: dict
     
-    :return {'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA':vA}: Dictionary of Alfvenic parameters.
+    This function calculates time-dependent Alfvenic parameters including correlation coefficient
+    between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, and compressibility.
     '''
     
     if 'start_time' not in slide_time_window_kwargs:
