@@ -8,11 +8,11 @@ from astropy.constants import e, m_p, au, eps0, u as u_const
 from scipy import integrate
 from astropy import units as u
 
-from ..utils.utils import check_parameters
+
 from .vth_E_T import T_to_E, T_to_vth
 
 
-@check_parameters
+
 def calc_Ac(v_j: u.Quantity,
             T_j: u.Quantity,
             n_j: u.Quantity,

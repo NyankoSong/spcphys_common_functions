@@ -2,10 +2,8 @@ from typing import Tuple
 from astropy import units as u
 import numpy as np
 
-from ..utils.utils import check_parameters
 
 
-@check_parameters
 def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: u.Quantity|np.ndarray, z: u.Quantity|np.ndarray|None =None) ->Tuple[u.Quantity|np.ndarray]:
     """Convert a vector from Cartesian coordinates to spherical coordinates.
 
@@ -45,7 +43,7 @@ def vec_cart_to_sph(v: u.Quantity|np.ndarray, r: u.Quantity|np.ndarray, z: u.Qua
         return v_mag, azimuth, elevation
     
     
-@check_parameters
+
 def vec_sph_to_cart(v_mag: u.Quantity|np.ndarray, azimuth: u.Quantity, elevation: u.Quantity|None = None) -> Tuple[u.Quantity|np.ndarray]:
     """Convert a vector from spherical coordinates to Cartesian coordinates.
 

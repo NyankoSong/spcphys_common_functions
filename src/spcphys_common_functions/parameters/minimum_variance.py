@@ -2,10 +2,10 @@
 
 import numpy as np
 
-from ..utils.utils import check_parameters
 
 
-@check_parameters
+
+
 def min_var(data: np.ndarray, verbose: bool=False):
     
     """

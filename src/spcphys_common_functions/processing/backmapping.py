@@ -14,11 +14,11 @@ from sunpy.sun.constants import sidereal_rotation_rate
 from scipy.optimize import minimize, Bounds
 from tqdm import tqdm
 
-from ..utils.utils import check_parameters, _determine_processes
+from ..utils.utils import _determine_processes
 from ..processing.preprocess import interpolate
 
 
-@check_parameters
+
 def most_probable_x(x: u.Quantity|np.ndarray, bins: np.ndarray|str|int='freedman', least_length: float|int =4) -> float|u.Quantity:
     """Calculate the most probable value in the input array.
 
@@ -55,7 +55,7 @@ def most_probable_x(x: u.Quantity|np.ndarray, bins: np.ndarray|str|int='freedman
     return x_mp if not isinstance(x, u.Quantity) else x_mp * x.unit
     
     
-@check_parameters
+
 def ballistic_backmapping(pos_insitu: SkyCoord|HeliographicCarrington, v_r: u.Quantity, r_target: u.Quantity|None =None, t_travel: timedelta|u.Quantity|None =None) -> SkyCoord:
     """Calculate the target position for ballistic backmapping.
     
@@ -171,7 +171,7 @@ def _optimize_t_back(args):
     return res.x[0] if res.success else np.nan
 
 
-@check_parameters
+
 def dual_spacecraft_obs_diff(pos_sat1: SkyCoord|HeliographicCarrington, pos_sat2: SkyCoord|HeliographicCarrington, v_r: u.Quantity, num_processes: float|int =1) -> Tuple[np.ndarray, np.ndarray, np.ndarray, u.Quantity]:
     """Calculate the difference in the Carrington longitude and latitude between observations from two spacecraft.
     

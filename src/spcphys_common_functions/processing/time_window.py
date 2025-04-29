@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from bisect import bisect_left, bisect_right
 import numpy as np
 
-from ..utils.utils import check_parameters
+
 
 
 def _time_indices(time: List[datetime] | np.ndarray, time_range: List[datetime]|Tuple[datetime]) -> np.ndarray:
@@ -20,7 +20,7 @@ def _time_indices(time: List[datetime] | np.ndarray, time_range: List[datetime]|
     return np.arange(bisect_left(time, time_range[0]), bisect_left(time, time_range[1]))
 
 
-@check_parameters
+
 def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|int =None, step: timedelta|int =None, start_time: datetime|None =None, end_time: datetime|None =None, align_to: List[datetime]|np.ndarray =None) -> Tuple[List[Tuple[datetime, datetime]], List[np.ndarray]]:
     """Generate sliding time windows over a list of datetime objects.
 

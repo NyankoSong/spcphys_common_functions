@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .preprocess import _get_boundary, npdt64_to_dt
-from ..utils.utils import check_parameters, _determine_processes
+from ..utils.utils import  _determine_processes
 
 def _recursion_traversal_dir(path:str) -> List[str]:
     
@@ -123,7 +123,7 @@ def _parallel_convert_epoches(epoch, num_processes=None):
     
     return np.concatenate(results)
 
-@check_parameters
+
 def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1, epoch_varname_default: List[str]|str='epoch'):
     
     """
@@ -289,7 +289,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
         print(f'{data_file_name} saved to {dir_path}!')
 
 
-@check_parameters
+
 def generate_cdf_info_csv(dir_path:str, info_filename:str='info.csv', epoch_varname_default: List[str]|str='epoch', ignore_varname: List[str]|str|None =None) -> dict:
     """
     Generate a CSV file containing information about CDF files in the specified directory.

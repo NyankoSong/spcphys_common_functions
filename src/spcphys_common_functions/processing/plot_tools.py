@@ -12,7 +12,7 @@ from matplotlib.collections import QuadMesh
 from scipy.signal import convolve2d
 from scipy import stats
 
-from ..utils.utils import check_parameters
+
 
 
 def _determine_bins(x, bins, scale):
@@ -79,7 +79,7 @@ def _mean_std_line_params(x, y, x_edges, scale):
     return np.array(unlog_y_means), np.array(y_caps).T
 
 
-@check_parameters
+
 def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quantity, z: np.ndarray|u.Quantity|None=None, least_samples_per_cell: int=1, scales: list|tuple|str='linear', norm_type: str|None=None,
                 color_norm_type: str='linear', color_norm_range: list|tuple|None=None, bins: int|np.ndarray|list|str='freedman', hist_pcolormesh_kwargs: dict|None=None,
                 contour_levels: list|np.ndarray|None=None, contour_smooth: int|float|None=None, contour_kwargs: dict|None=None,

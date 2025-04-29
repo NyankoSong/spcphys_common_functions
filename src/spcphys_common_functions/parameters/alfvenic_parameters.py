@@ -12,12 +12,12 @@ from astropy import units as u
 from astropy.constants import mu0, m_p
 from scipy import stats as sstats
 
-from ..utils.utils import check_parameters
-from ..processing.time_window import _time_indices, slide_time_window
+
+from ..processing.time_window import slide_time_window
 from ..processing.preprocess import interpolate
 
 
-@check_parameters
+
 def calc_dx(x: u.Quantity|np.ndarray, axis=0, **mean_kwargs) -> u.Quantity|np.ndarray:
     '''Remove the mean value from the input array.
     
@@ -34,7 +34,7 @@ def calc_dx(x: u.Quantity|np.ndarray, axis=0, **mean_kwargs) -> u.Quantity|np.nd
     return x - np.nanmean(x, axis=axis, **mean_kwargs)
 
 
-@check_parameters
+
 def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
     '''Calculate the Alfven velocity.
 
@@ -55,7 +55,7 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
         return (b / bottom).si
 
 
-@check_parameters
+
 def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20):
     '''Calculate the Alfvenic parameters.
     
@@ -150,7 +150,7 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
             'vA': vA_i.si, 'num_valid_p_points': num_valid_p_points, 
             'num_valid_b_points': num_valid_b_points}
 
-@check_parameters
+
 def calc_alfven_t(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20, **slide_time_window_kwargs) -> dict:
     '''Calculate the Alfvenic parameters over time windows.
     

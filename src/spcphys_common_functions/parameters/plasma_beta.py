@@ -5,11 +5,11 @@ import pandas as pd
 from typing import List
 from datetime import datetime
 
-from ..utils.utils import check_parameters
+
 from ..processing.preprocess import interpolate
 
 
-@check_parameters
+
 def pressure_thermal(n: u.Quantity, T: u.Quantity):    
     '''Calculate thermal pressure.
     
@@ -32,7 +32,7 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
     return (n * k_B * T).si
 
 
-@check_parameters
+
 def pressure_magnetic(b: u.Quantity):
     '''Calculate magnetic pressure.
     
@@ -50,7 +50,7 @@ def pressure_magnetic(b: u.Quantity):
     return (np.linalg.norm(b, axis=1)**2 / (2 * mu0)).si
 
 
-@check_parameters
+
 def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, T: u.Quantity):
     '''Calculate plasma beta.
     

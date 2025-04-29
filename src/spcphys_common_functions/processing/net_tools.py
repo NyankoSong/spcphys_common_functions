@@ -13,7 +13,7 @@ from cdasws import CdasWs
 cdas = CdasWs()
 
 from .cdf_process import _get_satellite_file_infos
-from ..utils.utils import check_parameters
+
 
 
 async def _fetch_file(semaphore, dataset, varname, start_time, chunk_end_time, save_path, retries, delay):
@@ -56,7 +56,7 @@ async def _fetch_files(semaphore, file_info_list, retries, delay):
     for task in tqdm.as_completed(tasks, total=len(tasks), desc="Downloading"):
         await task
 
-@check_parameters
+
 def fetch_cdf_from_cdaweb(cdf_info: dict|str, time_range: List[datetime]|Tuple[datetime], time_chunk: timedelta =timedelta(days=30), save_path: str|dict|None =None, info_filename: str|None =None, retries: int =3, delay: int =2, max_concurrent: int =3) -> List[Tuple[str, List[str], datetime, datetime, str]]:
     """
     Fetch CDF files from CDAWeb based on provided dataset information and time range.

@@ -3,10 +3,10 @@
 from astropy import units as u
 from astropy.constants import k_B, m_p
 
-from ..utils.utils import check_parameters
 
 
-@check_parameters
+
+
 def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''Calculate thermal velocity from temperature.
     
@@ -35,7 +35,7 @@ def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     return vth.si
 
 
-@check_parameters
+
 def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''Calculate temperature from thermal velocity.
     
@@ -64,7 +64,7 @@ def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     return T.si
 
 
-@check_parameters
+
 def E_to_T(E: u.Quantity) -> u.Quantity:
     '''Calculate temperature from energy.
     
@@ -82,7 +82,7 @@ def E_to_T(E: u.Quantity) -> u.Quantity:
     return T.si
 
 
-@check_parameters
+
 def T_to_E(T: u.Quantity) -> u.Quantity:
     '''Calculate energy from temperature.
     
@@ -100,7 +100,7 @@ def T_to_E(T: u.Quantity) -> u.Quantity:
     return E.si
 
 
-@check_parameters
+
 def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''Calculate thermal velocity from energy.
     
@@ -129,7 +129,7 @@ def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     return vth.si
 
 
-@check_parameters
+
 def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     '''Calculate energy from thermal velocity.
     

@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.collections import QuadMesh
 
-from ..utils.utils import check_parameters, _determine_processes
+from ..utils.utils import _determine_processes
 from .time_window import slide_time_window
 from .plot_tools import plot_mesh1d_ts
 
@@ -66,7 +66,7 @@ def generate_vdf_cart_unit(vdf_time: List[datetime]|np.ndarray, imf_time: List[d
     return np.array([e_v, e_2, e_3]).transpose(1, 0, 2), e_b
 
 
-@check_parameters
+
 def vdf_sph_to_cart(azimuth: u.Quantity, elevation: u.Quantity, energy: u.Quantity, vdf: u.Quantity, v_unit_new: np.ndarray) -> Tuple[u.Quantity, u.Quantity]:
     '''
     This function calculates the 3D scatters of VDF in the new coordinate system. (Only tested for SolO data)
@@ -143,7 +143,7 @@ def _imf_in_vdf(mag_vector_3d: np.ndarray, v_unit: np.ndarray):
     return mag_vector
     
     
-@check_parameters
+
 def vdf_griddata(vdf_vec: u.Quantity, vdf_value: u.Quantity, grid_lim: np.ndarray|list =None, grid_size: int =25, normalize: bool =True, device: str ='cpu') -> Tuple[u.Quantity, u.Quantity]:
     
     '''
@@ -198,7 +198,7 @@ def _unpack_params_griddata(vdf_input):
     return vdf_griddata(vdf_vec=vdf_input[0], vdf_value=vdf_input[1], grid_lim=vdf_input[2], grid_size=vdf_input[3])
 
 
-@check_parameters
+
 def vdf_griddata_t(vdf_vec_t: u.Quantity, vdf_value_t: u.Quantity, grid_lim: np.ndarray|list|None =None, grid_size: int =25, device: str ='cpu', multiprocess: int|float =1) -> Tuple[u.Quantity, u.Quantity]:
     
     '''
@@ -309,7 +309,7 @@ def _plot_arrow(axes: plt.Axes, mag_vector_3d: np.ndarray, point_3d: np.ndarray,
         axes.arrow(x_1, y_1, x_0 - x_1, y_0 - y_1, head_width=head_size, head_length=head_size, **arrow_kwargs)
 
 
-@check_parameters
+
 def plot_vdf_2d(axes: plt.Axes, pdf: u.Quantity|np.ndarray, v_grid: u.Quantity, compress_v_unit: int =2,
                 core_marker: bool|dict =False, imf_vector: u.Quantity|np.ndarray|None =None, v_unit: np.ndarray|None =None,
                 clip_lower_percentage: float =0, color_norm: Normalize|LogNorm|None =None, color_levels: List[float]|None =None, cax: plt.Axes|None =None,
@@ -393,7 +393,7 @@ def plot_vdf_2d(axes: plt.Axes, pdf: u.Quantity|np.ndarray, v_grid: u.Quantity, 
     return quadmesh
 
 
-@check_parameters
+
 def plot_vdf_1d_t(axes: plt.Axes, time: np.ndarray|List[datetime], pdf_t: u.Quantity|np.ndarray, v_grid_t: u.Quantity, target_v_unit: int =0, 
                   clip_lower_percentage: float =0, color_norm: Normalize|LogNorm|None =None, core_line: bool|dict =False, cax: plt.Axes|None =None, 
                   pcolormesh_kwargs: dict|None =None) -> QuadMesh:

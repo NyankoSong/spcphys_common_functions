@@ -3,9 +3,8 @@ from typing import List, Tuple
 import numpy as np
 from astropy import units as u
 import pandas as pd
-import xarray
 
-from ..utils.utils import check_parameters
+
 
 
 def _check_condition(condition: str) -> float:
@@ -108,7 +107,7 @@ def npdt64_to_dt(npdt64: np.ndarray) -> np.ndarray:
     return pd.to_datetime(npdt64).to_pydatetime()
 
 
-@check_parameters
+
 def interpolate(x: datetime|List[datetime]|np.ndarray, xp: List[datetime]|np.ndarray, yp: np.ndarray|u.Quantity, vector_norm_interp: bool =False) -> np.ndarray|u.Quantity:
     """Interpolate values at specified datetime indices.
     
