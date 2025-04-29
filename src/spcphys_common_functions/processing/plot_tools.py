@@ -365,7 +365,7 @@ def plot(x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, axes: plt.Axes
 
 
 def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u.Quantity|List[np.ndarray|u.Quantity], z: np.ndarray|u.Quantity|List[np.ndarray|u.Quantity],
-                   width: List[timedelta]|np.ndarray|timedelta|None=None, norm: str|LogNorm|Normalize ='linear', **pcolormesh_kwargs) -> QuadMesh:
+                   width: List[timedelta]|np.ndarray|timedelta|float|None=None, norm: str|LogNorm|Normalize ='linear', **pcolormesh_kwargs) -> QuadMesh:
     
     '''
     Plot a 1D mesh plot with time as the x-axis.
@@ -384,7 +384,8 @@ def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u
         t_diff = np.diff(t)
         t_diff_mean = np.mean(t_diff)
         if not all(t_diff < t_diff_mean * (1 + INVALID_DIFF_PERCENT)) or not all(t_diff > t_diff_mean * (1 - INVALID_DIFF_PERCENT)):
-            warnings.warn("The time intervals are not equal.")
+            warnings.warn("The time intervals are not equal. Using the difference of every two points as width.")
+        width = np.concatenate((t_diff, [t_diff[0]]))
             
     elif isinstance(width, Iterable):
         if len(width) != len(t):
@@ -393,10 +394,6 @@ def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u
         
     else:
         width = np.full(len(t), width)
-    
-    if not isinstance(y, list):
-        if len(y.shape) < 2:
-            y = np.tile(y, (t.shape[0], 1))
             
     if norm == 'linear':
         norm = Normalize(vmin=np.nanmin(z), vmax=np.nanmax(z))
@@ -405,18 +402,14 @@ def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u
             
     if 'norm' not in pcolormesh_kwargs:
         pcolormesh_kwargs['norm'] = norm
-            
-    if width is None:
+    
+    if isinstance(y[0], Iterable):
         for i in range(t.shape[0]):
             yi_valid_indices = np.isfinite(y[i])
             if yi_valid_indices.sum() < 2:
                 continue
-            quadmesh = axes.pcolormesh([t[i], t[i] + (t[i+1] - t[i])/2 if i < t.shape[0] - 1 else t[i] + (t[i] - t[i-1])/2], y[i, yi_valid_indices], np.vstack(([z[i, yi_valid_indices], z[i, yi_valid_indices]])).T, **pcolormesh_kwargs)
+            quadmesh = axes.pcolormesh([t[i] + width[i]/4, t[i] + width[i]/4*3], y[i, yi_valid_indices], np.vstack(([z[i, yi_valid_indices], z[i, yi_valid_indices]])).T, **pcolormesh_kwargs)
     else:
-        for i in range(t.shape[0]):
-            yi_valid_indices = np.isfinite(y[i])
-            if yi_valid_indices.sum() < 2:
-                continue
-            quadmesh = axes.pcolormesh([t[i], t[i] + width[i]/2], y[i, yi_valid_indices], np.vstack(([z[i, yi_valid_indices], z[i, yi_valid_indices]])).T, **pcolormesh_kwargs)
+        quadmesh = axes.pcolormesh(t + width/2, y, z.T, **pcolormesh_kwargs)
             
     return quadmesh

@@ -207,6 +207,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
             data_dict[dataset] = dict()
             date_flag = True
             cdf_dates_length = []
+            no_file_flag = False
             for varname in varnames:
                 print(f'Processing {varname}...')
                 data_dict[dataset][varname] = dict()
@@ -214,6 +215,10 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                 date_tmp = None
                 err_flag = False
                 dataset_cdfs = [cdf for cdf in satellite_info['CDFs'] if cdf.startswith(startswith)]
+                if len(dataset_cdfs) == 0:
+                    warnings.warn(f'No CDF files found for {dataset}, skip this dataset!')
+                    no_file_flag = True
+                    break
                 for cdf_i, cdf in enumerate(dataset_cdfs):
                     print(f'({cdf_i+1}/{len(dataset_cdfs)}) Reading {cdf}...')
                     cdf_path = os.path.join(satellite_info['PATH'], cdf)
@@ -270,6 +275,10 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                     else:
                         warnings.warn(f'Length of {varname} are not the same as other variables, so it is not sorted.')
                         data_dict[dataset][varname] = var_tmp
+                        
+            if no_file_flag:
+                data_dict.pop(dataset)
+                continue
         
         print(f'Saving data to {data_file_name}, this might use lots of RAM...')
         ########################################

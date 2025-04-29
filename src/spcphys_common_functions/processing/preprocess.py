@@ -105,7 +105,7 @@ def npdt64_to_dt(npdt64: np.ndarray) -> np.ndarray:
     :rtype: numpy.ndarray
     """
     
-    return np.array([pd.to_datetime(date).to_pydatetime() for date in npdt64])
+    return pd.to_datetime(npdt64).to_pydatetime()
 
 
 @check_parameters

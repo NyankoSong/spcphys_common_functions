@@ -43,11 +43,15 @@ def most_probable_x(x: u.Quantity|np.ndarray, bins: np.ndarray|str|int='freedman
     if len(x) < int(least_length):
         warnings.warn(f'Input x has less than {int(least_length)} data points.')
         return np.nan
-    
-    var_hist, hist_bins = astats.histogram(x.to_value() if isinstance(x, u.Quantity) else x, bins=bins)
+    x_value = x.to_value() if isinstance(x, u.Quantity) else x
+    var_hist, hist_bins = astats.histogram(x_value, bins=bins)
     var_hist_max_ind = np.argmax(var_hist)
     x_mp = hist_bins[var_hist_max_ind] + (hist_bins[var_hist_max_ind + 1] - hist_bins[var_hist_max_ind]) / 2
     
+    # if x_mp > np.max(x_value) or x_mp < np.min(x_value):
+    #     warnings.warn('Most probable value is outside the range of input data. Setting to the boundary value.')
+    #     x_mp = np.max(x_value) if x_mp > np.max(x_value) else np.min(x_value)
+
     return x_mp if not isinstance(x, u.Quantity) else x_mp * x.unit
     
     
