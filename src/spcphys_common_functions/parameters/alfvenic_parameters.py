@@ -71,6 +71,8 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     :type b: astropy.units.Quantity
     :param least_data_in_window: Least number of valid data points, defaults to 20
     :type least_data_in_window: int or float, optional
+    :param n_date: List or array of datetime objects for proton number density data, defaults to None
+    :type n_date: List[datetime] or numpy.ndarray, optional
     :return: Dictionary containing Alfvenic parameters (r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, num_valid_p_points, num_valid_b_points)
     :rtype: dict
     
@@ -100,13 +102,13 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     
     if num_valid_p_points < least_data_in_window or num_valid_b_points < least_data_in_window or num_valid_n_points < least_data_in_window:
         return {
-            'r3': np.nan, 
-            'p3': np.nan,
-            'residual_energy': np.nan, 
-            'cross_helicity': np.nan, 
-            'alfven_ratio': np.nan, 
-            'compressibility': np.nan, 
-            'vA': np.nan, 
+            'r3': np.nan * u.dimensionless_unscaled, 
+            'p3': np.nan * u.dimensionless_unscaled,
+            'residual_energy': np.nan * u.dimensionless_unscaled, 
+            'cross_helicity': np.nan * u.dimensionless_unscaled, 
+            'alfven_ratio': np.nan * u.dimensionless_unscaled, 
+            'compressibility': np.nan * u.dimensionless_unscaled, 
+            'vA': np.nan * u.m/u.s, 
             'num_valid_p_points': num_valid_p_points, 
             'num_valid_n_points': num_valid_n_points,
             'num_valid_b_points': num_valid_b_points}
@@ -184,6 +186,8 @@ def calc_alfven_t(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantit
     :type b: astropy.units.Quantity
     :param least_data_in_window: Least number of valid data points in each time window, defaults to 20
     :type least_data_in_window: int or float, optional
+    :param n_date: List or array of datetime objects for proton number density data, defaults to None
+    :type n_date: List[datetime] or numpy.ndarray, optional
     :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function
     :type slide_time_window_kwargs: dict
     :return: Dictionary of Alfvenic parameters for each time window (time, r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, time_window, num_valid_p_points, num_valid_b_points)
