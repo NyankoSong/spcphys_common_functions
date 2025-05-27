@@ -1,6 +1,6 @@
 '''Module for plotting tools.'''
 
-from typing import List, Iterable
+from typing import List, Iterable, Literal
 from datetime import datetime, timedelta
 import warnings
 import numpy as np
@@ -9,6 +9,7 @@ from astropy import stats as astats
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.collections import QuadMesh
+from matplotlib.contour import QuadContourSet
 from scipy.signal import convolve2d
 from scipy import stats
 
@@ -79,15 +80,16 @@ def _mean_std_line_params(x, y, x_edges, scale):
     return np.array(unlog_y_means), np.array(y_caps).T
 
 
-
-def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quantity, z: np.ndarray|u.Quantity|None=None, least_samples_per_cell: int=1, scales: list|tuple|str='linear', norm_type: str|None=None,
-                color_norm_type: str='linear', color_norm_range: list|tuple|None=None, bins: int|np.ndarray|list|str='freedman', hist_pcolormesh_kwargs: dict|None=None,
-                contour_levels: list|np.ndarray|None=None, contour_smooth: int|float|None=None, contour_kwargs: dict|None=None,
-                fit_line: bool=False, fit_line_plot_kwargs: dict|None=None,
-                mean_std: bool=False, mean_std_errorbar_kwargs: dict|None=None,
-                separate: str|None=None,
-                mean_std_line: bool=False, mean_std_line_kwargs: dict|None=None,
-                ) -> QuadMesh:
+def plot_hist2d(
+    axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quantity, z: np.ndarray|u.Quantity|None=None, least_samples_per_cell: int=1, 
+    scales: list|tuple|str='linear', norm_type: Literal['sum', 'max', None]=None,
+    color_norm_type: str='linear', color_norm_range: list|tuple|None=None, bins: int|np.ndarray|list|str='freedman', hist_pcolormesh_kwargs: dict|None=None,
+    contour_only: bool=False, contour_smooth: int|float|None=None, contour_kwargs: dict|None=None,
+    fit_line: bool=False, fit_line_kwargs: dict|None=None,
+    mean_std: bool=False, mean_std_errorbar_kwargs: dict|None=None,
+    separate: str|None=None,
+    mean_std_line: bool|str=False, mean_std_line_kwargs: dict|None=None,
+) -> QuadMesh | QuadContourSet:
     
     '''
     Plot a 2D histogram. If z is provided, overplot z as color.
@@ -107,12 +109,12 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     :param contour_smooth: The smoothing parameter for contours. Default is None.
     :param contour_kwargs: Additional arguments for contour plotting. Default is {}.
     :param fit_line: Whether to fit a line to the data. Default is False.
-    :param fit_line_plot_kwargs: Arguments for plotting the fit line. Default is {'color':'k', 'linestyle':'--', 'linewidth':1}.
+    :param fit_line_kwargs: Arguments for plotting the fit line. Default is {'c':'k', 'ls':'--', 'lw':1}.
     :param mean_std: Whether to plot mean and standard deviation. Default is False.
-    :param mean_std_errorbar_kwargs: Arguments for plotting error bars of mean and standard deviation. Default is {'fmt':'none', 'color':'k', 'capsize':2}.
+    :param mean_std_errorbar_kwargs: Arguments for plotting error bars of mean and standard deviation. Default is {'fmt':'none', 'c':'k', 'capsize':2}.
     :param separate: Whether to normalize separately along 'x' or 'y' axis. Default is None.
     :param mean_std_line: Whether to plot a line for mean and standard deviation. Default is False.
-    :param mean_std_line_kwargs: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}.
+    :param mean_std_line_kwargs: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'c':'k', 'capsize':2, 'lw':1, 'ls':'-'}.
     
     :return quadmesh: The QuadMesh object of the 2D histogram.
     '''
@@ -127,17 +129,40 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         raise ValueError("bins must be 'freedman', 'scott', 'knuth', 'blocks', an integer, a numpy array, or a list.")
     if separate and separate not in ['x', 'y']:
         raise ValueError("separate must be 'x', 'y' or None.")
+    if separate and z is not None:
+        raise ValueError("separate cannot be used when z is provided.")
+    if contour_only and z is not None:
+        raise ValueError("contour_only cannot be True when z is provided.")
+    if norm_type is not None and z is not None:
+        raise ValueError("norm_type cannot be used when z is provided.")
         
     if hist_pcolormesh_kwargs is None:
-        hist_pcolormesh_kwargs = {'cmap':'jet'}
+        hist_pcolormesh_kwargs = {}
+    hist_pcolormesh_kwargs.setdefault('cmap', 'jet')
+    
     if contour_kwargs is None:
         contour_kwargs = {}
-    if fit_line_plot_kwargs is None:
-        fit_line_plot_kwargs = {'color':'k', 'linestyle':'--', 'linewidth':1}
+        
+    if fit_line_kwargs is None:
+        fit_line_kwargs = {}
+    fit_line_kwargs.setdefault('c', 'k')
+    fit_line_kwargs.setdefault('ls', '--')
+    fit_line_kwargs.setdefault('lw', 1)
+        
     if mean_std_errorbar_kwargs is None:
-        mean_std_errorbar_kwargs = {'fmt':'none', 'color':'k', 'capsize':2}
+        mean_std_errorbar_kwargs = {}
+    mean_std_errorbar_kwargs.setdefault('fmt', 'none')
+    mean_std_errorbar_kwargs.setdefault('c', 'k')
+    mean_std_errorbar_kwargs.setdefault('capsize', 2)
+        
     if mean_std_line_kwargs is None:
-        mean_std_line_kwargs = {'fmt':'o', 'ms':2, 'color':'k', 'capsize':2, 'linewidth':1, 'linestyle':'-'}
+        mean_std_line_kwargs = {}
+    mean_std_line_kwargs.setdefault('fmt', 'o')
+    mean_std_line_kwargs.setdefault('ms', 2)
+    mean_std_line_kwargs.setdefault('c', 'k')
+    mean_std_line_kwargs.setdefault('capsize', 2)
+    mean_std_line_kwargs.setdefault('lw', 1)
+    mean_std_line_kwargs.setdefault('ls', '-')
         
 
     if isinstance(x, u.Quantity):
@@ -172,8 +197,11 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
             color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=np.nanmin(z_mat), vmax=np.nanmax(z_mat))
         elif scales[2] == 'linear':
             color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=np.nanmin(z_mat), vmax=np.nanmax(z_mat))
-            
-        quadmesh = axes.pcolormesh(x_edges, y_edges, z_mat.T, norm=color_norm, **hist_pcolormesh_kwargs)
+        
+        if contour_only:
+            raise ValueError("contour_only cannot be True when z is provided.")
+        else:
+            quadmesh = axes.pcolormesh(x_edges, y_edges, z_mat.T, norm=color_norm, **hist_pcolormesh_kwargs)
         
     else:
         if norm_type == 'max':
@@ -193,64 +221,71 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
         
         if color_norm_type == 'log':
             color_norm = LogNorm(*color_norm_range) if color_norm_range else LogNorm(vmin=np.nanmin(z_hist[z_hist > 0]), vmax=np.nanmax(z_hist))
+            lower_level, upper_level = np.ceil(np.log10(np.nanmin(z_hist[z_hist > 0]))), np.floor(np.log10(np.nanmax(z_hist)))
+            contour_levels_gen = 10**np.arange(lower_level, upper_level + 1)
         elif color_norm_type == 'linear':
             color_norm = Normalize(*color_norm_range) if color_norm_range else Normalize(vmin=np.nanmin(z_hist), vmax=np.nanmax(z_hist))
+            lower_level, upper_level = np.nanmin(z_hist), np.nanmax(z_hist)
+            contour_levels_gen = np.linspace(lower_level, upper_level, 5)
         
         z_masked = np.ma.masked_where(z_hist == 0, z_hist)
-        quadmesh = axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_kwargs)
+        if not contour_only:
+            quadmesh = axes.pcolormesh(x_edges, y_edges, z_masked.T, norm=color_norm, **hist_pcolormesh_kwargs)
     
         if not separate:
-            if contour_levels:
+            if len(contour_kwargs) > 0 or contour_only:
+                if 'levels' not in contour_kwargs:
+                    contour_kwargs['levels'] = contour_levels_gen
                 if contour_smooth:
                     if isinstance(contour_smooth, int) or int(contour_smooth) == contour_smooth:
                         z_hist = convolve2d(z_hist, np.ones((contour_smooth, contour_smooth)), mode='same')
                     elif isinstance(contour_smooth, float):
                         z_hist = convolve2d(z_hist, np.ones((int(contour_smooth*z_hist.shape[0]), int(contour_smooth*z_hist.shape[1]))), mode='same')
-                axes.contour(x_mid, y_mid, z_hist.T, levels=contour_levels, **contour_kwargs)
+                quadcontourset = axes.contour(x_mid, y_mid, z_hist.T, norm=color_norm, **contour_kwargs)
             
-            if fit_line:
-                if scales[0] == 'log':
-                    x_fit = np.log10(x)
-                else:
-                    x_fit = x
-                if scales[1] == 'log':
-                    y_fit = np.log10(y)
-                else:
-                    y_fit = y
-                    
-                slope, intercept, r_value, p_value, _ = stats.linregress(x_fit, y_fit)
-                x_fitted = np.array([np.nanmin(x_fit), np.nanmax(x_fit)])
-                y_fitted = slope * x_fitted + intercept
+        if fit_line:
+            if scales[0] == 'log':
+                x_fit = np.log10(x)
+            else:
+                x_fit = x
+            if scales[1] == 'log':
+                y_fit = np.log10(y)
+            else:
+                y_fit = y
                 
-                if scales[0] == 'log':
-                    x_fitted = 10**x_fitted
-                    right_label = f'{slope:.2f}' + r'$\log_{10}x$'
-                else:
-                    right_label = f'{slope:.2f}' + r'$x$'
-                if scales[1] == 'log':
-                    y_fitted = 10**y_fitted
-                    left_label = r'$\log_{10}y=$'
-                else:
-                    left_label = r'$y=$'
-                    
-                end_label =  (r'$+$' if intercept > 0 else '') + f'{intercept:.2f}\n' + r'$r\approx$' + f'{r_value:.2f}' + r'$\ \ p\geqslant$' + f'{p_value:.2f}'
+            slope, intercept, r_value, p_value, _ = stats.linregress(x_fit, y_fit)
+            x_fitted = np.array([np.nanmin(x_fit), np.nanmax(x_fit)])
+            y_fitted = slope * x_fitted + intercept
+            
+            if scales[0] == 'log':
+                x_fitted = 10**x_fitted
+                right_label = f'{slope:.2f}' + r'$\log_{10}x$'
+            else:
+                right_label = f'{slope:.2f}' + r'$x$'
+            if scales[1] == 'log':
+                y_fitted = 10**y_fitted
+                left_label = r'$\log_{10}y=$'
+            else:
+                left_label = r'$y=$'
                 
-                _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, label=left_label+right_label+end_label, **fit_line_plot_kwargs)
+            end_label =  (r'$+$' if intercept > 0 else '') + f'{intercept:.2f}\n' + r'$r\approx$' + f'{r_value:.2f}' + r'$\ \ p\geqslant$' + f'{p_value:.2f}'
+            fit_line_kwargs.setdefault('label', left_label+right_label+end_label)
             
-            if mean_std:
-                unlog_x_mean, x_cap, x_label = _mean_std_params(x, scales[0])
-                unlog_y_mean, y_cap, y_label = _mean_std_params(y, scales[1])
-                    
-                axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_kwargs)
+            _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, **fit_line_kwargs)
             
-        else:
-            if mean_std_line:
-                if separate == 'x':
-                    unlog_y_means, y_caps = _mean_std_line_params(x, y, x_edges, scales[1])
-                    axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_kwargs)
-                elif separate == 'y':
-                    unlog_x_means, x_caps = _mean_std_line_params(y, x, y_edges, scales[0])
-                    axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_kwargs)
+        if mean_std:
+            unlog_x_mean, x_cap, x_label = _mean_std_params(x, scales[0])
+            unlog_y_mean, y_cap, y_label = _mean_std_params(y, scales[1])
+                
+            axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_kwargs)
+            
+        if mean_std_line:
+            if separate == 'x' or mean_std_line == 'x':
+                unlog_y_means, y_caps = _mean_std_line_params(x, y, x_edges, scales[1])
+                axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_kwargs)
+            elif separate == 'y' or mean_std_line == 'y':
+                unlog_x_means, x_caps = _mean_std_line_params(y, x, y_edges, scales[0])
+                axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_kwargs)
                     
     
         
@@ -259,7 +294,10 @@ def plot_hist2d(axes: plt.Axes, x: np.ndarray|u.Quantity, y: np.ndarray|u.Quanti
     if scales[1] == 'log':
         axes.set_yscale('log')
         
-    return quadmesh
+    if contour_only:
+        return quadcontourset
+    else:
+        return quadmesh
 
 
 def _auto_downsample(axes: plt.Axes, x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, max_dens: int = 1000):

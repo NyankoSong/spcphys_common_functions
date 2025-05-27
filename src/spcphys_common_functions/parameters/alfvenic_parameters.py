@@ -4,16 +4,18 @@ WU H, TU C, WANG X, et al., 2021. Magnetic and Velocity Fluctuations in the Near
 
 '''
 
-from typing import List, Tuple
-from datetime import datetime
+from typing import List, Literal, Iterable
+import warnings
+from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from astropy import units as u
 from astropy.constants import mu0, m_p
 from scipy import stats as sstats
+from tqdm import tqdm
 
 
-from ..processing.time_window import slide_time_window
+from ..processing.time_window import slide_time_window, _time_indices
 from ..processing.preprocess import interpolate
 
 
@@ -56,7 +58,16 @@ def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
 
 
 
-def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20, n_date: List[datetime]|np.ndarray = None) -> dict:
+def calc_alfven(
+    p_date: List[datetime]|np.ndarray, 
+    v: u.Quantity, 
+    n: u.Quantity, 
+    b_date: List[datetime]|np.ndarray, 
+    b: u.Quantity, 
+    least_data_in_window: int|float =20, 
+    down_sampling_method: Literal['interpolate', 'mean'] ='interpolate',
+    down_sampling_window: timedelta|List[timedelta]|None =None,
+    ) -> dict:
     '''Calculate the Alfvenic parameters.
     
     :param p_date: List or array of datetime objects for proton velocity data
@@ -71,8 +82,10 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     :type b: astropy.units.Quantity
     :param least_data_in_window: Least number of valid data points, defaults to 20
     :type least_data_in_window: int or float, optional
-    :param n_date: List or array of datetime objects for proton number density data, defaults to None
-    :type n_date: List[datetime] or numpy.ndarray, optional
+    :param down_sampling_method: Method for down-sampling the magnetic field data to match the proton velocity data, either 'interpolate' or 'mean', defaults to 'interpolate'
+    :type down_sampling_method: str, optional
+    :param down_sampling_window: Time window for down-sampling the magnetic field data, defaults to None, which means it is determined by the resolution of the proton velocity data
+    :type down_sampling_window: datetime.timedelta or None, optional
     :return: Dictionary containing Alfvenic parameters (r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, num_valid_p_points, num_valid_b_points)
     :rtype: dict
     
@@ -92,15 +105,19 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
         raise ValueError("p_date, v and n must have the same number of rows.")
     if len(b_date) != b.shape[0]:
         raise ValueError("b_date and b must have the same number of rows.")
-    
-    if n_date is None:
-        n_date = p_date
+                
     valid_p_indices = np.isfinite(v.to_value()).all(axis=1)
     valid_n_indices = np.isfinite(n.to_value())
     valid_b_indices = np.isfinite(b.to_value()).all(axis=1)
     num_valid_p_points, num_valid_n_points, num_valid_b_points = np.sum(valid_p_indices), np.sum(valid_n_indices), np.sum(valid_b_indices)
     
     if num_valid_p_points < least_data_in_window or num_valid_b_points < least_data_in_window or num_valid_n_points < least_data_in_window:
+        if num_valid_p_points < least_data_in_window:
+            warnings.warn(f"Not enough valid proton velocity data points ({num_valid_p_points}) in the time window. Minimum required: {least_data_in_window}.", UserWarning)
+        if num_valid_b_points < least_data_in_window:
+            warnings.warn(f"Not enough valid magnetic field data points ({num_valid_b_points}) in the time window. Minimum required: {least_data_in_window}.", UserWarning)
+        if num_valid_n_points < least_data_in_window:
+            warnings.warn(f"Not enough valid proton number density data points ({num_valid_n_points}) in the time window. Minimum required: {least_data_in_window}.", UserWarning)
         return {
             'r3': np.nan * u.dimensionless_unscaled, 
             'p3': np.nan * u.dimensionless_unscaled,
@@ -115,38 +132,50 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     
     if isinstance(p_date, list):
         p_date = np.array(p_date)
-    if isinstance(n_date, list):
-        p_date = np.array(p_date)
     if isinstance(b_date, list):
         b_date = np.array(b_date)
     if isinstance(least_data_in_window, float):
         least_data_in_window = int(least_data_in_window)
-
-    # Delete invalid data parts to avoid more valid magnetic field data than valid proton data after interpolation
-    p_date = p_date[valid_p_indices]
-    n_date = n_date[valid_n_indices]
-    b_date = b_date[valid_b_indices]
-
-    v = v[valid_p_indices].si
-    n = interpolate(p_date, n_date, n[valid_n_indices].si)
-    b = b[valid_b_indices].si
     
     dv = calc_dx(v) #dV
-    dvA = interpolate(p_date, b_date, calc_va(b, n, dva=True), vector_norm_interp=True) #dV_A
+    dvA_b = calc_va(b, n, dva=True)
+    if down_sampling_method == 'interpolate':
+        warnings.warn('Down-sampling method "interpolate" is not recommended as it may cause a mismatch in time resolution. Use "mean" instead.', UserWarning)
+        dvA = interpolate(p_date, b_date, dvA_b) #dV_A
+    elif down_sampling_method == 'mean':
+        dvA = np.full_like(v, np.nan)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            if down_sampling_window is None:
+                for i, (p_time_left, p_time_right) in enumerate(zip(p_date[:-1], p_date[1:])):
+                    dvA[i, :] = np.nanmean(dvA_b[_time_indices(b_date, [p_time_left, p_time_right]), :], axis=0)
+                dvA[-1, :] = np.nanmean(dvA_b[_time_indices(b_date, [p_date[-1], p_date[-1] + (p_date[-1] - p_date[-2])]), :], axis=0)
+            elif not isinstance(down_sampling_window, Iterable):
+                for i, p_time_left in enumerate(p_date):
+                    dvA[i, :] = np.nanmean(dvA_b[_time_indices(b_date, [p_time_left, p_time_left + down_sampling_window]), :], axis=0)
+            else:
+                for i, (p_time_left, down_sampling_window_i) in enumerate(zip(p_date, down_sampling_window)):
+                    dvA[i, :] = np.nanmean(dvA_b[_time_indices(b_date, [p_time_left, p_time_left + down_sampling_window_i]), :], axis=0)
+
+    valid_alfven_p_indices = np.asarray(list(np.isfinite(dv).all(axis=1) * np.isfinite(dvA).all(axis=1)))
+
+    dv_valid = dv[valid_alfven_p_indices].si
+    dvA_valid = dvA[valid_alfven_p_indices].si
+    b_valid = b[valid_b_indices].si
     
     # dv2_mean = np.nansum(dv**2) / len(dv) # <dV^2>
     # dvA2_mean = np.nansum(dvA**2) / len(dvA) # <dV_A^2>
     # dv_dvA_mean = np.trace(np.dot(dv.T, dvA)) / len(dv) # <dV * dV_A>
     
-    dv2_mean = np.nanmean(np.nansum(dv**2, axis=1)) # <dV^2>
-    dvA2_mean = np.nanmean(np.nansum(dvA**2, axis=1)) # <dV_A^2>
-    dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv, dvA)) # <dV * dV_A>
+    dv2_mean = np.nanmean(np.nansum(dv_valid**2, axis=1)) # <dV^2>
+    dvA2_mean = np.nanmean(np.nansum(dvA_valid**2, axis=1)) # <dV_A^2>
+    dv_dvA_mean = np.nanmean(np.einsum('ij,ij->i', dv_valid, dvA_valid)) # <dV * dV_A>
     
     dn = calc_dx(n)
     
     b_magnitude = np.linalg.norm(b, axis=1)
     # Compressibility of magnetic field perturbation is calculated by subtracting first and then taking the modulus
-    db = calc_dx(b)
+    db = calc_dx(b_valid)
     # db_magnitude2_mean = np.nansum(db**2) / len(db)
     db_magnitude2_mean = np.nanmean(np.nansum(db**2, axis=1))
     
@@ -156,7 +185,7 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
     cross_helicity_i = 2 * dv_dvA_mean / (dv2_mean + dvA2_mean)
     alfven_ratio_i = dv2_mean / dvA2_mean
     compressibility_i = np.nanmean(dn**2) * np.nanmean(b_magnitude)**2 / (np.nanmean(n)**2 * db_magnitude2_mean)
-    vA_i = np.nanmean(np.linalg.norm(calc_va(b, n, dva=False), axis=1))
+    vA_i = np.nanmean(np.linalg.norm(calc_va(b_valid, n, dva=False), axis=1))
 
     return {
         'r3': r3_i.si, 
@@ -171,7 +200,17 @@ def calc_alfven(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity,
         'num_valid_b_points': num_valid_b_points}
 
 
-def calc_alfven_t(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, least_data_in_window: int|float =20, n_date: List[datetime]|np.ndarray = None, **slide_time_window_kwargs) -> dict:
+def calc_alfven_t(
+    p_date: List[datetime]|np.ndarray, 
+    v: u.Quantity, n: u.Quantity, 
+    b_date: List[datetime]|np.ndarray, 
+    b: u.Quantity, 
+    least_data_in_window: int|float =20, 
+    n_date: List[datetime]|np.ndarray = None, 
+    down_sampling_method: Literal['interpolate', 'mean'] ='interpolate',
+    down_sampling_window: timedelta|List[timedelta]|None =None,
+    **slide_time_window_kwargs
+    ) -> dict:
     '''Calculate the Alfvenic parameters over time windows.
     
     :param p_date: List or array of datetime objects for proton velocity data
@@ -230,15 +269,18 @@ def calc_alfven_t(p_date: List[datetime]|np.ndarray, v: u.Quantity, n: u.Quantit
     num_valid_n_points = np.zeros(num_window)
     num_valid_b_points = np.zeros(num_window)
     
-    for i, (p_window_indices, n_window_indices, b_window_indices) in enumerate(zip(p_time_window_indices, n_time_window_indices, b_time_window_indices)):
+    for i, (p_window_indices, n_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, n_time_window_indices, b_time_window_indices)), total=num_window, desc='Calculating Alfvenic Parameters'):
 
-        alfven_params_window = calc_alfven(p_date=p_date[p_window_indices], 
-                                           v=v[p_window_indices], 
-                                           n_date=n_date[n_window_indices],
-                                           n=n[n_window_indices], 
-                                           b_date=b_date[b_window_indices], 
-                                           b=b[b_window_indices], 
-                                           least_data_in_window=least_data_in_window)
+        alfven_params_window = calc_alfven(
+            p_date=p_date[p_window_indices], 
+            v=v[p_window_indices], 
+            n=n[n_window_indices], 
+            b_date=b_date[b_window_indices], 
+            b=b[b_window_indices], 
+            least_data_in_window=least_data_in_window, 
+            down_sampling_method=down_sampling_method,
+            down_sampling_window=down_sampling_window,
+            )
         
         num_valid_p_points[i], num_valid_n_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_n_points'], alfven_params_window['num_valid_b_points']
         r3[i], p3[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
