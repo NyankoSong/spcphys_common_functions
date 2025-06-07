@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.processing.time_window &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -66,37 +69,53 @@
            <div itemprop="articleBody">
              
   <h1>Source code for spcphys_common_functions.processing.time_window</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
-<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect_left</span><span class="p">,</span> <span class="n">bisect_right</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bisect</span><span class="w"> </span><span class="kn">import</span> <span class="n">bisect_left</span><span class="p">,</span> <span class="n">bisect_right</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 
-<span class="k">def</span> <span class="nf">_time_indices</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_time_indices</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find indices of datetime objects within a specified time range.</span>
+
+<span class="sd">    :param time: List of datetime objects to search in</span>
+<span class="sd">    :type time: List[datetime] or numpy.ndarray</span>
+<span class="sd">    :param time_range: Time range specified as [start_time, end_time]</span>
+<span class="sd">    :type time_range: List[datetime] or Tuple[datetime]</span>
+<span class="sd">    :return: Array of indices for datetime objects that fall within the specified time range</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">time_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">time_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
 
 
 <div class="viewcode-block" id="slide_time_window">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.time_window.slide_time_window">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">slide_time_window</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">window_size</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">datetime</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="p">:</span> <span class="n">datetime</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">align_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate sliding time windows over a list of datetime objects.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">slide_time_window</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">window_size</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">datetime</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="p">:</span> <span class="n">datetime</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">align_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate sliding time windows over a list of datetime objects.</span>
 
-<span class="sd">    This function creates sliding windows of a specified size over a list of datetime objects. The windows can be defined by either a fixed number of elements (int) or a time duration (timedelta). The step size between windows can also be specified as either an integer or a timedelta.</span>
-
-<span class="sd">    :param time: List of datetime objects to create windows from.</span>
-<span class="sd">    :param window_size: Size of each window, specified as either an integer (number of elements) or a timedelta (duration).</span>
-<span class="sd">    :param step: Step size between windows, specified as either an integer (number of elements) or a timedelta (duration)..</span>
-<span class="sd">    :param start_time: Optional start time for the windows. If not provided, the first element of the time list is used.</span>
-<span class="sd">    :param end_time: Optional end time for the windows. If not provided, the last element of the time list is used.</span>
-<span class="sd">    :param align_to: List of datetime objects to align the windows to.</span>
+<span class="sd">    :param time: List of datetime objects to create windows from</span>
+<span class="sd">    :type time: List[datetime] or numpy.ndarray</span>
+<span class="sd">    :param window_size: Size of each window, specified as either an integer (number of elements) or a timedelta (duration), defaults to None</span>
+<span class="sd">    :type window_size: timedelta or int, optional</span>
+<span class="sd">    :param step: Step size between windows, specified as either an integer (number of elements) or a timedelta (duration), defaults to None</span>
+<span class="sd">    :type step: timedelta or int, optional</span>
+<span class="sd">    :param start_time: Optional start time for the windows, defaults to None</span>
+<span class="sd">    :type start_time: datetime or None, optional</span>
+<span class="sd">    :param end_time: Optional end time for the windows, defaults to None</span>
+<span class="sd">    :type end_time: datetime or None, optional</span>
+<span class="sd">    :param align_to: List of datetime objects to align the windows to, defaults to None</span>
+<span class="sd">    :type align_to: List[datetime] or numpy.ndarray, optional</span>
+<span class="sd">    :return: Tuple containing time_window_ranges (start and end times of each window) and time_window_indices (indices of elements in each window)</span>
+<span class="sd">    :rtype: Tuple[List[Tuple[datetime, datetime]], List[numpy.ndarray]]</span>
 <span class="sd">    </span>
-<span class="sd">    :return time_window_ranges: List of tuples representing the start and end times of each window.</span>
-<span class="sd">    :return time_window_indices: List of numpy arrays containing the indices of the elements in each window.</span>
+<span class="sd">    This function creates sliding windows of a specified size over a list of datetime objects. </span>
+<span class="sd">    The windows can be defined by either a fixed number of elements (int) or a time duration </span>
+<span class="sd">    (timedelta). The step size between windows can also be specified as either an integer or </span>
+<span class="sd">    a timedelta.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="n">window_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">align_to</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -133,7 +152,6 @@
         
     <span class="k">return</span> <span class="n">time_window_ranges</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">],</span> <span class="n">time_window_indices</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]</span></div>
 
-    
 </pre></div>
 
            </div>

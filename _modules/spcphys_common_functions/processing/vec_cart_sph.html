@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.processing.vec_cart_sph &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -66,26 +69,25 @@
            <div itemprop="articleBody">
              
   <h1>Source code for spcphys_common_functions.processing.vec_cart_sph</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
 
 
 <div class="viewcode-block" id="vec_cart_to_sph">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.vec_cart_sph.vec_cart_to_sph">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">vec_cart_to_sph</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span><span class="n">Tuple</span><span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert a vector from Cartesian coordinates to spherical coordinates.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vec_cart_to_sph</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span><span class="n">Tuple</span><span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a vector from Cartesian coordinates to spherical coordinates.</span>
 
-<span class="sd">    :param v: The vector to be converted. Shape should be (N, 3), where N is the number of vectors.</span>
-<span class="sd">    :param r: The radial component of the vector. Shape should be (N, 3) or (3,).</span>
-<span class="sd">    :param z: The z-component of the vector. Shape should be (N, 3) or (3,). If None, the function will only compute the magnitude and angle between v and r. Default is None.</span>
-<span class="sd">    </span>
-<span class="sd">    :return: If z is None, returns the magnitude and angle between v and r. Otherwise, returns the magnitude, azimuth, and elevation.</span>
+<span class="sd">    :param v: The vector to be converted. Shape should be (N, 3), where N is the number of vectors</span>
+<span class="sd">    :type v: astropy.units.Quantity or numpy.ndarray</span>
+<span class="sd">    :param r: The radial component of the vector. Shape should be (N, 3) or (3,)</span>
+<span class="sd">    :type r: astropy.units.Quantity or numpy.ndarray</span>
+<span class="sd">    :param z: The z-component of the vector. Shape should be (N, 3) or (3,), defaults to None</span>
+<span class="sd">    :type z: astropy.units.Quantity or numpy.ndarray or None, optional</span>
+<span class="sd">    :return: If z is None, returns the magnitude and angle between v and r. Otherwise, returns the magnitude, azimuth, and elevation</span>
+<span class="sd">    :rtype: Tuple[astropy.units.Quantity or numpy.ndarray]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
         
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -115,18 +117,20 @@
 
     
     
+
 <div class="viewcode-block" id="vec_sph_to_cart">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.vec_cart_sph.vec_sph_to_cart">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">vec_sph_to_cart</span><span class="p">(</span><span class="n">v_mag</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">elevation</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert a vector from spherical coordinates to Cartesian coordinates.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vec_sph_to_cart</span><span class="p">(</span><span class="n">v_mag</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">elevation</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a vector from spherical coordinates to Cartesian coordinates.</span>
 
-<span class="sd">    :param v_mag: The magnitude of the vector. Shape should be (N,).</span>
-<span class="sd">    :param azimuth: The azimuth angle of the vector in degrees. Shape should be (N,).</span>
-<span class="sd">    :param elevation: The elevation angle of the vector in degrees. Shape should be (N,). If None, the function will assume the vector lies in the xy-plane. Default is None.</span>
-<span class="sd">    </span>
-<span class="sd">    :return: If elevation is None, returns the x and y components of the vector. Otherwise, returns the x, y, and z components.</span>
+<span class="sd">    :param v_mag: The magnitude of the vector. Shape should be (N,)</span>
+<span class="sd">    :type v_mag: astropy.units.Quantity or numpy.ndarray</span>
+<span class="sd">    :param azimuth: The azimuth angle of the vector in degrees. Shape should be (N,)</span>
+<span class="sd">    :type azimuth: astropy.units.Quantity</span>
+<span class="sd">    :param elevation: The elevation angle of the vector in degrees. Shape should be (N,), defaults to None</span>
+<span class="sd">    :type elevation: astropy.units.Quantity or None, optional</span>
+<span class="sd">    :return: If elevation is None, returns the x and y components of the vector. Otherwise, returns the x, y, and z components</span>
+<span class="sd">    :rtype: Tuple[astropy.units.Quantity or numpy.ndarray]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">azimuth</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span> <span class="ow">or</span> <span class="n">azimuth</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)):</span>

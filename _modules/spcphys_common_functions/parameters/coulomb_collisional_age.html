@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.parameters.coulomb_collisional_age &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -71,19 +74,19 @@
 
 <span class="sd">&#39;&#39;&#39;</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy.constants</span> <span class="kn">import</span> <span class="n">e</span><span class="p">,</span> <span class="n">m_p</span><span class="p">,</span> <span class="n">au</span><span class="p">,</span> <span class="n">eps0</span><span class="p">,</span> <span class="n">u</span> <span class="k">as</span> <span class="n">u_const</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">integrate</span>
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">e</span><span class="p">,</span> <span class="n">m_p</span><span class="p">,</span> <span class="n">au</span><span class="p">,</span> <span class="n">eps0</span><span class="p">,</span> <span class="n">u</span> <span class="k">as</span> <span class="n">u_const</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">integrate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
 
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
-<span class="kn">from</span> <span class="nn">.vth_E_T</span> <span class="kn">import</span> <span class="n">T_to_E</span><span class="p">,</span> <span class="n">T_to_vth</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.vth_E_T</span><span class="w"> </span><span class="kn">import</span> <span class="n">T_to_E</span><span class="p">,</span> <span class="n">T_to_vth</span>
+
 
 
 <div class="viewcode-block" id="calc_Ac">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.coulomb_collisional_age.calc_Ac">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">calc_Ac</span><span class="p">(</span><span class="n">v_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_Ac</span><span class="p">(</span><span class="n">v_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
             <span class="n">T_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
             <span class="n">n_j</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
             <span class="n">v_i</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>

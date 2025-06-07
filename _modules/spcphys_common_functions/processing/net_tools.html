@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.processing.net_tools &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -67,24 +70,25 @@
              
   <h1>Source code for spcphys_common_functions.processing.net_tools</h1><div class="highlight"><pre>
 <span></span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
-<span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">import</span> <span class="nn">nest_asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">nest_asyncio</span>
 <span class="n">nest_asyncio</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
-<span class="kn">import</span> <span class="nn">aiohttp</span>
-<span class="kn">from</span> <span class="nn">tqdm.asyncio</span> <span class="kn">import</span> <span class="n">tqdm</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">cdasws</span> <span class="kn">import</span> <span class="n">CdasWs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">aiohttp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cdflib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cdasws</span><span class="w"> </span><span class="kn">import</span> <span class="n">CdasWs</span>
 <span class="n">cdas</span> <span class="o">=</span> <span class="n">CdasWs</span><span class="p">()</span>
 
-<span class="kn">from</span> <span class="nn">.cdf_process</span> <span class="kn">import</span> <span class="n">_get_satellite_file_infos</span>
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cdf_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_satellite_file_infos</span>
 
 
-<span class="k">async</span> <span class="k">def</span> <span class="nf">_fetch_file</span><span class="p">(</span><span class="n">semaphore</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">chunk_end_time</span><span class="p">,</span> <span class="n">save_path</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span> <span class="n">delay</span><span class="p">):</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_file</span><span class="p">(</span><span class="n">semaphore</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">chunk_end_time</span><span class="p">,</span> <span class="n">save_path</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span> <span class="n">delay</span><span class="p">):</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">semaphore</span><span class="p">:</span>
         <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">retries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
@@ -97,6 +101,9 @@
                         <span class="k">async</span> <span class="k">with</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
                             <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
                                 <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">)):</span>
+                                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1"> already exists in </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s1">, overwriting it.&#39;</span><span class="p">)</span>
+                                        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
                                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                                         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                                             <span class="n">chunk</span> <span class="o">=</span> <span class="k">await</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
@@ -104,6 +111,12 @@
                                                 <span class="k">break</span>
                                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
                                     <span class="c1"># print(f&#39;{filename} saved to {save_path}&#39;)</span>
+                                    <span class="k">try</span><span class="p">:</span>
+                                        <span class="n">cdf_file</span> <span class="o">=</span> <span class="n">cdflib</span><span class="o">.</span><span class="n">CDF</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+                                        <span class="n">cdf_file</span><span class="o">.</span><span class="n">cdf_info</span><span class="p">()</span>
+                                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Corrupted CDF file </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                                    
                                     <span class="k">return</span>  <span class="c1"># 成功，退出函数</span>
                                 <span class="k">else</span><span class="p">:</span>
                                     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to fetch </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">: HTTP </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -119,15 +132,15 @@
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to fetch </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s1"> after </span><span class="si">{</span><span class="n">retries</span><span class="si">}</span><span class="s1"> attempts&#39;</span><span class="p">)</span>
         
         
-<span class="k">async</span> <span class="k">def</span> <span class="nf">_fetch_files</span><span class="p">(</span><span class="n">semaphore</span><span class="p">,</span> <span class="n">file_info_list</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span> <span class="n">delay</span><span class="p">):</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_files</span><span class="p">(</span><span class="n">semaphore</span><span class="p">,</span> <span class="n">file_info_list</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span> <span class="n">delay</span><span class="p">):</span>
     <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">_fetch_file</span><span class="p">(</span><span class="n">semaphore</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">chunk_end_time</span><span class="p">,</span> <span class="n">save_path</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span> <span class="n">delay</span><span class="p">)</span> <span class="k">for</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">chunk_end_time</span><span class="p">,</span> <span class="n">save_path</span> <span class="ow">in</span> <span class="n">file_info_list</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Downloading&quot;</span><span class="p">):</span>
         <span class="k">await</span> <span class="n">task</span>
 
+
 <div class="viewcode-block" id="fetch_cdf_from_cdaweb">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.net_tools.fetch_cdf_from_cdaweb">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">fetch_cdf_from_cdaweb</span><span class="p">(</span><span class="n">cdf_info</span><span class="p">:</span> <span class="nb">dict</span><span class="o">|</span><span class="nb">str</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">time_chunk</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">30</span><span class="p">),</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">dict</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_concurrent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch_cdf_from_cdaweb</span><span class="p">(</span><span class="n">cdf_info</span><span class="p">:</span> <span class="nb">dict</span><span class="o">|</span><span class="nb">str</span><span class="p">,</span> <span class="n">time_range</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">time_chunk</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">30</span><span class="p">),</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">dict</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_concurrent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fetch CDF files from CDAWeb based on provided dataset information and time range.</span>
 

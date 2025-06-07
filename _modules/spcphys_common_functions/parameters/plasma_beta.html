@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.parameters.plasma_beta &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -66,28 +69,23 @@
            <div itemprop="articleBody">
              
   <h1>Source code for spcphys_common_functions.parameters.plasma_beta</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
-<span class="kn">from</span> <span class="nn">astropy.constants</span> <span class="kn">import</span> <span class="n">k_B</span><span class="p">,</span> <span class="n">mu0</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">k_B</span><span class="p">,</span> <span class="n">mu0</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
-<span class="kn">from</span> <span class="nn">..processing.preprocess</span> <span class="kn">import</span> <span class="n">interpolate</span>
 
 
 <div class="viewcode-block" id="pressure_thermal">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.plasma_beta.pressure_thermal">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">pressure_thermal</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>    
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate thermal pressure.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pressure_thermal</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate thermal pressure.</span>
 <span class="sd">    </span>
-<span class="sd">    :param n: Proton number density data in shape (time).</span>
-<span class="sd">    :param T: Proton temperature data in shape (time).</span>
-<span class="sd">    </span>
-<span class="sd">    :return pth: Thermal pressure.</span>
+<span class="sd">    :param n: Proton number density data in shape (time)</span>
+<span class="sd">    :type n: astropy.units.Quantity</span>
+<span class="sd">    :param T: Proton temperature data in shape (time)</span>
+<span class="sd">    :type T: astropy.units.Quantity</span>
+<span class="sd">    :return: Thermal pressure</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**-</span><span class="mi">3</span><span class="p">):</span>
@@ -102,16 +100,16 @@
 
 
 
+
 <div class="viewcode-block" id="pressure_magnetic">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.plasma_beta.pressure_magnetic">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">pressure_magnetic</span><span class="p">(</span><span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate magnetic pressure.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pressure_magnetic</span><span class="p">(</span><span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate magnetic pressure.</span>
 <span class="sd">    </span>
-<span class="sd">    :param b: Magnetic field data in shape (time, 3).</span>
-<span class="sd">    </span>
-<span class="sd">    :return pb: Magnetic pressure.</span>
+<span class="sd">    :param b: Magnetic field data in shape (time, 3)</span>
+<span class="sd">    :type b: astropy.units.Quantity</span>
+<span class="sd">    :return: Magnetic pressure</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
@@ -123,20 +121,20 @@
 
 
 
+
 <div class="viewcode-block" id="calc_beta">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.plasma_beta.calc_beta">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">calc_beta</span><span class="p">(</span><span class="n">p_date</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">b_date</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate plasma beta.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_beta</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate plasma beta.</span>
 <span class="sd">    </span>
-<span class="sd">    :param p_date: List of datetime objects for proton number density data.</span>
-<span class="sd">    :param n: Proton number density data in shape (time).</span>
-<span class="sd">    :param b_date: List of datetime objects for magnetic field data.</span>
-<span class="sd">    :param b: Magnetic field data in shape (time, 3).</span>
-<span class="sd">    :param T: Proton temperature data in shape (time).</span>
-<span class="sd">    </span>
-<span class="sd">    :return beta: Plasma beta.</span>
+<span class="sd">    :param n: Proton number density data in shape (time)</span>
+<span class="sd">    :type n: astropy.units.Quantity</span>
+<span class="sd">    :param b: Magnetic field data in shape (time, 3)</span>
+<span class="sd">    :type b: astropy.units.Quantity</span>
+<span class="sd">    :param T: Proton temperature data in shape (time)</span>
+<span class="sd">    :type T: astropy.units.Quantity</span>
+<span class="sd">    :return: Plasma beta</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**-</span><span class="mi">3</span><span class="p">):</span>
@@ -150,15 +148,8 @@
     <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">si</span>
     <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">si</span>
     
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_date</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="n">p_date</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p_date</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b_date</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="n">b_date</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b_date</span><span class="p">)</span>
-    
     <span class="n">pth</span> <span class="o">=</span> <span class="n">pressure_thermal</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
     <span class="n">pb</span> <span class="o">=</span> <span class="n">pressure_magnetic</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-    
-    <span class="n">pb</span> <span class="o">=</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">p_date</span><span class="p">,</span> <span class="n">b_date</span><span class="p">,</span> <span class="n">pb</span><span class="p">,</span> <span class="n">vector_norm_interp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">pth</span> <span class="o">/</span> <span class="n">pb</span></div>
 

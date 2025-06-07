@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.processing.preprocess &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -66,19 +69,26 @@
            <div itemprop="articleBody">
              
   <h1>Source code for spcphys_common_functions.processing.preprocess</h1><div class="highlight"><pre>
-<span></span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">xarray</span>
-
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..processing.time_window</span><span class="w"> </span><span class="kn">import</span> <span class="n">_time_indices</span>
 
 
-<span class="k">def</span> <span class="nf">_check_condition</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_condition</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert string condition to float value.</span>
+<span class="sd">    </span>
+<span class="sd">    :param condition: String representation of a number or condition</span>
+<span class="sd">    :type condition: str</span>
+<span class="sd">    :return: Float value of the condition</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    </span>
+<span class="sd">    Handles special cases like &#39;inf&#39;, &#39;-inf&#39;, and scientific notation like &#39;1E3&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="s1">&#39;inf&#39;</span> <span class="ow">in</span> <span class="n">condition</span><span class="p">:</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">condition</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
@@ -89,7 +99,17 @@
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_get_boundary</span><span class="p">(</span><span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_boundary</span><span class="p">(</span><span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process and normalize boundary conditions.</span>
+<span class="sd">    </span>
+<span class="sd">    :param boundary: Boundary conditions specification</span>
+<span class="sd">    :type boundary: str, List[str|float], Tuple[str|float], or None, optional</span>
+<span class="sd">    :return: Normalized boundary conditions as a list of two float values</span>
+<span class="sd">    :rtype: List[float]</span>
+<span class="sd">    </span>
+<span class="sd">    If boundary is None, &#39;none&#39;, or incomplete, returns default boundary [-1E30, 1E30].</span>
+<span class="sd">    Otherwise, converts string representations to float values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="n">boundary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">boundary</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">boundary</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">boundary</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">boundary</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1E30</span><span class="p">,</span> <span class="mf">1E30</span><span class="p">]</span>
@@ -103,15 +123,16 @@
 
 <div class="viewcode-block" id="find_argnan">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.preprocess.find_argnan">[docs]</a>
-<span class="k">def</span> <span class="nf">find_argnan</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Find the indices of NaN values in the input array.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_argnan</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the indices of NaN values and out-of-bound values in the input array.</span>
 <span class="sd">    </span>
-<span class="sd">    :param x: Input array.</span>
-<span class="sd">    :param boundary: Boundary conditions for the input array. Default is [-1E30, 1E30].</span>
-<span class="sd">    </span>
-<span class="sd">    :return: Indices of NaN values.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    :param x: Input array</span>
+<span class="sd">    :type x: numpy.ndarray or astropy.units.Quantity</span>
+<span class="sd">    :param boundary: Boundary conditions for the input array, defaults to [-1E30, 1E30]</span>
+<span class="sd">    :type boundary: str, List[str|float], Tuple[str|float], or None, optional</span>
+<span class="sd">    :return: Indices of NaN values or out-of-bound values</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">boundary</span> <span class="o">=</span> <span class="n">_get_boundary</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
     
@@ -121,15 +142,20 @@
 
 <div class="viewcode-block" id="process_nan">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.preprocess.process_nan">[docs]</a>
-<span class="k">def</span> <span class="nf">process_nan</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Process NaN values in the input data.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_nan</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="o">|</span><span class="nb">float</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process NaN values in the input data.</span>
 <span class="sd">    </span>
-<span class="sd">    :param data: List of input data arrays.</span>
-<span class="sd">    :param boundary: Boundary conditions for the input data arrays. Default is [-1E30, 1E30].</span>
-<span class="sd">    </span>
-<span class="sd">    :return: List of processed data arrays.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    :param data: Input data array</span>
+<span class="sd">    :type data: numpy.ndarray or astropy.units.Quantity</span>
+<span class="sd">    :param boundary: Boundary conditions for the input data array, defaults to [-1E30, 1E30]</span>
+<span class="sd">    :type boundary: str, List[str|float], Tuple[str|float], or None, optional</span>
+<span class="sd">    :param time: Array of datetime objects associated with the data, defaults to None</span>
+<span class="sd">    :type time: List[datetime] or numpy.ndarray or None, optional</span>
+<span class="sd">    :param method: Method for handling NaN values (e.g., &#39;drop&#39;, &#39;interpolate&#39;), defaults to None</span>
+<span class="sd">    :type method: str or None, optional</span>
+<span class="sd">    :return: Processed data array with out-of-bound values replaced by NaN</span>
+<span class="sd">    :rtype: numpy.ndarray or astropy.units.Quantity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">boundary</span> <span class="o">=</span> <span class="n">_get_boundary</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
     
@@ -149,29 +175,36 @@
 
 <div class="viewcode-block" id="npdt64_to_dt">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.preprocess.npdt64_to_dt">[docs]</a>
-<span class="k">def</span> <span class="nf">npdt64_to_dt</span><span class="p">(</span><span class="n">npdt64</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Convert numpy datetime64 to datetime.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">npdt64_to_dt</span><span class="p">(</span><span class="n">npdt64</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert numpy datetime64 array to datetime array.</span>
+<span class="sd">    </span>
+<span class="sd">    :param npdt64: Input numpy datetime64 array</span>
+<span class="sd">    :type npdt64: numpy.ndarray</span>
+<span class="sd">    :return: Converted datetime array</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">()</span> <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="n">npdt64</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">npdt64</span><span class="p">)</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">()</span></div>
+
 
 
 
 <div class="viewcode-block" id="interpolate">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.preprocess.interpolate">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">datetime</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xp</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">yp</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">vector_norm_interp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Perform interpolation on the given time series data.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">interpolate</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">datetime</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xp</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">yp</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">vector_norm_interp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Interpolate values at specified datetime indices.</span>
 <span class="sd">    </span>
-<span class="sd">    :param x: Array of datetime at which to evaluate the interpolated values.</span>
-<span class="sd">    :param xp: Array of datetime of the data points.</span>
-<span class="sd">    :param yp: Array of y-coordinates of the data points in shape (t,) or (t, dim).</span>
-<span class="sd">    :param vector_norm_interp: Whether to interpolate the vector norm of the data points if yp is a vector time series. Default is False.</span>
-<span class="sd">    </span>
-<span class="sd">    :return y: Interpolated values at the x.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    :param x: Datetime or list of datetime objects to interpolate</span>
+<span class="sd">    :type x: datetime or List[datetime] or numpy.ndarray</span>
+<span class="sd">    :param xp: Datetime or list of datetime objects for interpolation</span>
+<span class="sd">    :type xp: List[datetime] or numpy.ndarray</span>
+<span class="sd">    :param yp: Values to be interpolated, can be a 1D or 2D array</span>
+<span class="sd">    :type yp: numpy.ndarray or astropy.units.Quantity</span>
+<span class="sd">    :param vector_norm_interp: Flag for vector norm interpolation, defaults to False</span>
+<span class="sd">    :type vector_norm_interp: bool, optional</span>
+<span class="sd">    :return: Interpolated values</span>
+<span class="sd">    :rtype: numpy.ndarray or astropy.units.Quantity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -210,6 +243,54 @@
         
     <span class="k">return</span> <span class="n">y</span></div>
 
+
+
+<div class="viewcode-block" id="down_sample">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.preprocess.down_sample">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">down_sample</span><span class="p">(</span>
+    <span class="n">t</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
+    <span class="n">tp</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">xp</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;interpolate&#39;</span><span class="p">]</span> <span class="o">=</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="n">timedelta</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tp</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+        <span class="c1"># warnings.warn(&#39;Down-sampling method &quot;interpolate&quot; is not recommended as it may cause a mismatch in time resolution. Use &quot;mean&quot; instead.&#39;, UserWarning)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">xp</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">xp</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">xp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">xp</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported shape for xp: </span><span class="si">{</span><span class="n">xp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Expected 1D or 2D array.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">xp</span><span class="o">.</span><span class="n">unit</span>
+            
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">window</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">t_left</span><span class="p">,</span> <span class="n">t_right</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:])):</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">xp</span><span class="p">[</span><span class="n">_time_indices</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="p">[</span><span class="n">t_left</span><span class="p">,</span> <span class="n">t_right</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">xp</span><span class="p">[</span><span class="n">_time_indices</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t_left</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">xp</span><span class="p">[</span><span class="n">_time_indices</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="p">[</span><span class="n">t_left</span><span class="p">,</span> <span class="n">t_left</span> <span class="o">+</span> <span class="n">window</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">t_left</span><span class="p">,</span> <span class="n">window_i</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">window</span><span class="p">)):</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">xp</span><span class="p">[</span><span class="n">_time_indices</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="p">[</span><span class="n">t_left</span><span class="p">,</span> <span class="n">t_left</span> <span class="o">+</span> <span class="n">window_i</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; is not supported. Use &#39;mean&#39; or &#39;interpolate&#39;.&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">x</span></div>
+
+                
 </pre></div>
 
            </div>
