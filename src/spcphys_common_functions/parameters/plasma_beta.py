@@ -1,12 +1,6 @@
 from astropy import units as u
 from astropy.constants import k_B, mu0
 import numpy as np
-import pandas as pd
-from typing import List
-from datetime import datetime
-
-
-from ..processing.preprocess import interpolate
 
 
 
@@ -51,15 +45,11 @@ def pressure_magnetic(b: u.Quantity):
 
 
 
-def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, T: u.Quantity):
+def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity):
     '''Calculate plasma beta.
     
-    :param p_date: List or array of datetime objects for proton number density data
-    :type p_date: List[datetime] or numpy.ndarray
     :param n: Proton number density data in shape (time)
     :type n: astropy.units.Quantity
-    :param b_date: List or array of datetime objects for magnetic field data
-    :type b_date: List[datetime] or numpy.ndarray
     :param b: Magnetic field data in shape (time, 3)
     :type b: astropy.units.Quantity
     :param T: Proton temperature data in shape (time)
@@ -79,15 +69,8 @@ def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[dat
     b = b.si
     T = T.si
     
-    if isinstance(p_date, list):
-        p_date = np.array(p_date)
-    if isinstance(b_date, list):
-        b_date = np.array(b_date)
-    
     pth = pressure_thermal(n, T)
     pb = pressure_magnetic(b)
-    
-    pb = interpolate(p_date, b_date, pb, vector_norm_interp=True)
     
     return pth / pb
 

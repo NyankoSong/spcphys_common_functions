@@ -1,10 +1,11 @@
-from datetime import datetime
-from typing import List, Tuple
+from datetime import datetime, timedelta
+import warnings
+from typing import List, Tuple, Literal, Iterable
 import numpy as np
 from astropy import units as u
 import pandas as pd
 
-
+from ..processing.time_window import _time_indices
 
 
 def _check_condition(condition: str) -> float:
@@ -159,3 +160,48 @@ def interpolate(x: datetime|List[datetime]|np.ndarray, xp: List[datetime]|np.nda
         y = y.flatten()
         
     return y
+
+
+def down_sample(
+    t: List[datetime]|np.ndarray, 
+    tp: List[datetime]|np.ndarray,
+    xp: np.ndarray|u.Quantity,
+    method: Literal['mean', 'interpolate'] ='interpolate',
+    window: timedelta|List[timedelta]|np.ndarray|None =None,
+    ) -> np.ndarray|u.Quantity:
+
+    if isinstance(t, list):
+        t = np.asarray(t)
+    if isinstance(tp, list):
+        tp = np.asarray(tp)
+    
+    if method == 'interpolate':
+        # warnings.warn('Down-sampling method "interpolate" is not recommended as it may cause a mismatch in time resolution. Use "mean" instead.', UserWarning)
+        x = interpolate(t, tp, xp)
+    elif method == 'mean':
+        if len(xp.shape) == 1:
+            x = np.full(len(t), np.nan, dtype=xp.dtype)
+        elif len(xp.shape) == 2:
+            x = np.full((len(t), xp.shape[1]), np.nan, dtype=xp.dtype)
+        else:
+            raise ValueError(f"Unsupported shape for xp: {xp.shape}. Expected 1D or 2D array.")
+        if isinstance(xp, u.Quantity):
+            x = x * xp.unit
+            
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            if window is None:
+                for i, (t_left, t_right) in enumerate(zip(t[:-1], t[1:])):
+                    x[i, :] = np.nanmean(xp[_time_indices(tp, [t_left, t_right])], axis=0)
+                x[-1, :] = np.nanmean(xp[_time_indices(tp, [t[-1], t[-1] + (t[-1] - t[-2])])], axis=0)
+            elif not isinstance(window, Iterable):
+                for i, t_left in enumerate(t):
+                    x[i, :] = np.nanmean(xp[_time_indices(tp, [t_left, t_left + window])], axis=0)
+            else:
+                for i, (t_left, window_i) in enumerate(zip(t, window)):
+                    x[i, :] = np.nanmean(xp[_time_indices(tp, [t_left, t_left + window_i])], axis=0)
+    else:
+        raise ValueError(f"Method '{method}' is not supported. Use 'mean' or 'interpolate'.")
+    
+    return x
+                
