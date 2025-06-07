@@ -9,11 +9,12 @@ nest_asyncio.apply()
 import aiohttp
 from tqdm.asyncio import tqdm
 import pandas as pd
+import cdflib
 from cdasws import CdasWs
 cdas = CdasWs()
 
 from .cdf_process import _get_satellite_file_infos
-from ..utils.utils import check_parameters
+
 
 
 async def _fetch_file(semaphore, dataset, varname, start_time, chunk_end_time, save_path, retries, delay):
@@ -29,6 +30,9 @@ async def _fetch_file(semaphore, dataset, varname, start_time, chunk_end_time, s
                         async with aiohttp.ClientSession() as session:
                             async with session.get(url) as response:
                                 if response.status == 200:
+                                    if os.path.exists(os.path.join(save_path, filename)):
+                                        warnings.warn(f'File {filename} already exists in {save_path}, overwriting it.')
+                                        os.remove(os.path.join(save_path, filename))
                                     with open(os.path.join(save_path, filename), 'wb') as f:
                                         while True:
                                             chunk = await response.content.read(1024*1024)
@@ -36,6 +40,12 @@ async def _fetch_file(semaphore, dataset, varname, start_time, chunk_end_time, s
                                                 break
                                             f.write(chunk)
                                     # print(f'{filename} saved to {save_path}')
+                                    try:
+                                        cdf_file = cdflib.CDF(os.path.join(save_path, filename))
+                                        cdf_file.cdf_info()
+                                    except Exception as e:
+                                        raise RuntimeError(f'Corrupted CDF file {filename}: {str(e)}')
+                                    
                                     return  # 成功，退出函数
                                 else:
                                     warnings.warn(f'Failed to fetch {filename}: HTTP {response.status}')
@@ -56,7 +66,7 @@ async def _fetch_files(semaphore, file_info_list, retries, delay):
     for task in tqdm.as_completed(tasks, total=len(tasks), desc="Downloading"):
         await task
 
-@check_parameters
+
 def fetch_cdf_from_cdaweb(cdf_info: dict|str, time_range: List[datetime]|Tuple[datetime], time_chunk: timedelta =timedelta(days=30), save_path: str|dict|None =None, info_filename: str|None =None, retries: int =3, delay: int =2, max_concurrent: int =3) -> List[Tuple[str, List[str], datetime, datetime, str]]:
     """
     Fetch CDF files from CDAWeb based on provided dataset information and time range.

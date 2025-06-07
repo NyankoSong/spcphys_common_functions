@@ -5,10 +5,10 @@ import numpy as np
 from scipy import stats
 from astropy import units as u
 
-from ..utils.utils import check_parameters
+
     
 
-@check_parameters
+
 def es_cohen(x1: np.ndarray|u.Quantity, x2:np.ndarray|u.Quantity, conf_interval: float=0.99, log_scale: bool=False, skewed: bool=False) -> Tuple[float, Tuple[float, float]]:
     '''
     Calculate Cohen's d (Hedges' g) effect size and confidence interval.

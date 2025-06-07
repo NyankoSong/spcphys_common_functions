@@ -4,29 +4,45 @@ from datetime import datetime, timedelta
 from bisect import bisect_left, bisect_right
 import numpy as np
 
-from ..utils.utils import check_parameters
+
 
 
 def _time_indices(time: List[datetime] | np.ndarray, time_range: List[datetime]|Tuple[datetime]) -> np.ndarray:
+    """Find indices of datetime objects within a specified time range.
+
+    :param time: List of datetime objects to search in
+    :type time: List[datetime] or numpy.ndarray
+    :param time_range: Time range specified as [start_time, end_time]
+    :type time_range: List[datetime] or Tuple[datetime]
+    :return: Array of indices for datetime objects that fall within the specified time range
+    :rtype: numpy.ndarray
+    """
     return np.arange(bisect_left(time, time_range[0]), bisect_left(time, time_range[1]))
 
 
-@check_parameters
+
 def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|int =None, step: timedelta|int =None, start_time: datetime|None =None, end_time: datetime|None =None, align_to: List[datetime]|np.ndarray =None) -> Tuple[List[Tuple[datetime, datetime]], List[np.ndarray]]:
-    """
-    Generate sliding time windows over a list of datetime objects.
+    """Generate sliding time windows over a list of datetime objects.
 
-    This function creates sliding windows of a specified size over a list of datetime objects. The windows can be defined by either a fixed number of elements (int) or a time duration (timedelta). The step size between windows can also be specified as either an integer or a timedelta.
-
-    :param time: List of datetime objects to create windows from.
-    :param window_size: Size of each window, specified as either an integer (number of elements) or a timedelta (duration).
-    :param step: Step size between windows, specified as either an integer (number of elements) or a timedelta (duration)..
-    :param start_time: Optional start time for the windows. If not provided, the first element of the time list is used.
-    :param end_time: Optional end time for the windows. If not provided, the last element of the time list is used.
-    :param align_to: List of datetime objects to align the windows to.
+    :param time: List of datetime objects to create windows from
+    :type time: List[datetime] or numpy.ndarray
+    :param window_size: Size of each window, specified as either an integer (number of elements) or a timedelta (duration), defaults to None
+    :type window_size: timedelta or int, optional
+    :param step: Step size between windows, specified as either an integer (number of elements) or a timedelta (duration), defaults to None
+    :type step: timedelta or int, optional
+    :param start_time: Optional start time for the windows, defaults to None
+    :type start_time: datetime or None, optional
+    :param end_time: Optional end time for the windows, defaults to None
+    :type end_time: datetime or None, optional
+    :param align_to: List of datetime objects to align the windows to, defaults to None
+    :type align_to: List[datetime] or numpy.ndarray, optional
+    :return: Tuple containing time_window_ranges (start and end times of each window) and time_window_indices (indices of elements in each window)
+    :rtype: Tuple[List[Tuple[datetime, datetime]], List[numpy.ndarray]]
     
-    :return time_window_ranges: List of tuples representing the start and end times of each window.
-    :return time_window_indices: List of numpy arrays containing the indices of the elements in each window.
+    This function creates sliding windows of a specified size over a list of datetime objects. 
+    The windows can be defined by either a fixed number of elements (int) or a time duration 
+    (timedelta). The step size between windows can also be specified as either an integer or 
+    a timedelta.
     """
     
     if window_size is None and align_to is None:
@@ -62,4 +78,3 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     end_index = bisect_right([time_window_range[1] for time_window_range in time_window_ranges], end_time) if end_time is not None else len(time_window_ranges)
         
     return time_window_ranges[start_index:end_index], time_window_indices[start_index:end_index]
-    

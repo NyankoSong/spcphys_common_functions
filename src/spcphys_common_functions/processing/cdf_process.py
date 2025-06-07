@@ -8,16 +8,18 @@ import numpy as np
 import pandas as pd
 
 from .preprocess import _get_boundary, npdt64_to_dt
-from ..utils.utils import check_parameters, _determine_processes
+from ..utils.utils import  _determine_processes
 
 def _recursion_traversal_dir(path:str) -> List[str]:
     
-    '''
-    Recursively traversal the directory to find all satellite data directories.
+    """
+    Recursively traverse the directory to find all satellite data directories.
     
-    :param path: str, the root directory of the satellite data.
-    :return: list, all satellite data directories.
-    '''
+    :param path: The root directory of the satellite data
+    :type path: str
+    :return: All satellite data directories
+    :rtype: List[str]
+    """
     
     satellite_paths = []
     for file in os.listdir(path):
@@ -37,13 +39,16 @@ def _recursion_traversal_dir(path:str) -> List[str]:
 
 def _get_satellite_file_infos(dir_path:str, info_filename: str|None=None):
     
-    '''
-    Get all satellite file infos in satellite directory.
+    """
+    Get all satellite file information in satellite directory.
     
-    :param dir_path: str, the root directory of the satellite data.
-    :param info_filename: str, the name of the info file.
-    :return: dict, the satellite file infos.
-    '''
+    :param dir_path: The root directory of the satellite data
+    :type dir_path: str
+    :param info_filename: The name of the info file, defaults to None
+    :type info_filename: str or None, optional
+    :return: The satellite file information dictionary
+    :rtype: dict
+    """
     
     satellite_paths = _recursion_traversal_dir(dir_path)
     satellite_file_infos = dict()
@@ -69,15 +74,43 @@ def _get_satellite_file_infos(dir_path:str, info_filename: str|None=None):
 
 
 def _convert_epoches(epoch_slice):
+    """
+    Convert CDF epoch format to datetime objects.
+    
+    :param epoch_slice: The epoch data to convert
+    :type epoch_slice: array-like
+    :return: Converted datetime array
+    :rtype: numpy.ndarray
+    """
     return npdt64_to_dt(cdflib.cdfepoch.to_datetime(epoch_slice))
 
 
 def _chunks(data, n):
+    """
+    Split a list into n chunks of approximately equal size.
+    
+    :param data: The data to be divided
+    :type data: list or array-like
+    :param n: Number of chunks
+    :type n: int
+    :return: List of chunks
+    :rtype: list
+    """
     k, m = divmod(len(data), n)
     return [data[i * (k + 1):(i + 1) * (k + 1)] if i < m else data[i * k + m:(i + 1) * k + m] for i in range(n)]
 
 
 def _parallel_convert_epoches(epoch, num_processes=None):
+    """
+    Convert CDF epochs to datetime objects using parallel processing.
+    
+    :param epoch: The epoch data to convert
+    :type epoch: array-like
+    :param num_processes: Number of processes to use for conversion, defaults to None
+    :type num_processes: int or None, optional
+    :return: Converted datetime array
+    :rtype: numpy.ndarray
+    """
     
     num_processes = _determine_processes(num_processes)
         
@@ -90,18 +123,27 @@ def _parallel_convert_epoches(epoch, num_processes=None):
     
     return np.concatenate(results)
 
-@check_parameters
+
 def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1, epoch_varname_default: List[str]|str='epoch'):
     
-    '''
-    Combine all satellite data into a single file for each satellite. 
+    """
+    Combine all satellite data into a single file for each satellite.
     
-    :param dir_path: str, the root directory of the satellite data.
-    :param info_filename: str, the name of the info file.
-    :param output_dir: str, the output directory of the processed data.
-    :param num_processes: float|int, the number of processes used to convert epoches, 1 for single process, 0.9 for 90% of the cpu cores, etc.
+    :param dir_path: The root directory of the satellite data
+    :type dir_path: str
+    :param info_filename: The name of the info file, defaults to None
+    :type info_filename: str or None, optional
+    :param output_dir: The output directory of the processed data, defaults to None
+    :type output_dir: str or None, optional
+    :param num_processes: The number of processes used to convert epochs (1 for single process, 0.9 for 90% of the CPU cores), defaults to 1
+    :type num_processes: float or int, optional
+    :param epoch_varname_default: The default name of epoch variable, defaults to 'epoch'
+    :type epoch_varname_default: List[str] or str, optional
+    :raises FileNotFoundError: If directory path does not exist
+    :raises ValueError: If num_processes is out of valid range
     
     This function assumes that the satellite data is stored in the following structure:
+    
     - dir_path
         - satellite1_name
             - cdf_files
@@ -111,22 +153,28 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
             - info_file
         ...
     
-    if the info_filename is None, the function will search for the csv file in the satellite directory. 
+    If the info_filename is None, the function will search for the csv file in the satellite directory.
     Make sure that there is only one csv file in each satellite directory if the info_filename is not specified.
-    The info file should be a csv file with the following structure:
-    | startswith, | dataset, | epochname, | varname,                | condition,|
-    |-------------|----------|------------|-------------------------|-----------|
-    | startswith1,| dataset1,| epochname1,| varname11 varname12 ...,| condition1|
-    | startswith2,| dataset2,| epochname2,| varname21 varname22 ...,| condition2|
-    ...
     
-    startswith is the prefix of the cdf files, this is used to identify the cdf files that belong to the same dataset.
-    dataset is the name of the dataset, this will be the key of the output data dict.
-    epochname is the name of the epoch variable, this is used to convert the epoch variable to datetime.
-    varname is the name of the variables in the dataset, and should be separated by space.
-    condition should be a string with two elements separated by space, which are the lower and upper boundary of the variable. 
-    if the variable has no condition, use 'none' or '' instead, this will set the boundary to [-1E30, 1E30].
-    '''
+    The info file should be a csv file with the following structure::
+    
+        +-------------+----------+------------+-------------------------+-----------+
+        | startswith, | dataset, | epochname, | varname,                | condition,|
+        +=============+==========+============+=========================+===========+
+        | startswith1,| dataset1,| epochname1,| varname11 varname12 ...,| condition1|
+        +-------------+----------+------------+-------------------------+-----------+
+        | startswith2,| dataset2,| epochname2,| varname21 varname22 ...,| condition2|
+        +-------------+----------+------------+-------------------------+-----------+
+        | ...         | ...      | ...        | ...                     | ...       |
+        +-------------+----------+------------+-------------------------+-----------+
+    
+    - startswith is the prefix of the cdf files, used to identify cdf files that belong to the same dataset
+    - dataset is the name of the dataset, the key of the output data dict
+    - epochname is the name of the epoch variable, used to convert the epoch variable to datetime
+    - varname contains the names of variables in the dataset, separated by space
+    - condition is a string with two elements separated by space, the lower and upper boundary of the variable.
+      If the variable has no condition, use 'none' or '', which will set the boundary to [-1E30, 1E30]
+    """
     
     if not os.path.exists(dir_path):
         raise FileNotFoundError(f'{dir_path} not found!')
@@ -159,6 +207,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
             data_dict[dataset] = dict()
             date_flag = True
             cdf_dates_length = []
+            no_file_flag = False
             for varname in varnames:
                 print(f'Processing {varname}...')
                 data_dict[dataset][varname] = dict()
@@ -166,6 +215,10 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                 date_tmp = None
                 err_flag = False
                 dataset_cdfs = [cdf for cdf in satellite_info['CDFs'] if cdf.startswith(startswith)]
+                if len(dataset_cdfs) == 0:
+                    warnings.warn(f'No CDF files found for {dataset}, skip this dataset!')
+                    no_file_flag = True
+                    break
                 for cdf_i, cdf in enumerate(dataset_cdfs):
                     print(f'({cdf_i+1}/{len(dataset_cdfs)}) Reading {cdf}...')
                     cdf_path = os.path.join(satellite_info['PATH'], cdf)
@@ -222,6 +275,10 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
                     else:
                         warnings.warn(f'Length of {varname} are not the same as other variables, so it is not sorted.')
                         data_dict[dataset][varname] = var_tmp
+                        
+            if no_file_flag:
+                data_dict.pop(dataset)
+                continue
         
         print(f'Saving data to {data_file_name}, this might use lots of RAM...')
         ########################################
@@ -232,17 +289,25 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
         print(f'{data_file_name} saved to {dir_path}!')
 
 
-@check_parameters
+
 def generate_cdf_info_csv(dir_path:str, info_filename:str='info.csv', epoch_varname_default: List[str]|str='epoch', ignore_varname: List[str]|str|None =None) -> dict:
     """
     Generate a CSV file containing information about CDF files in the specified directory.
 
-    :param dir_path: str, the root directory of the satellite data.
-    :param info_filename: str, the name of the info file to be generated. Default is 'info.csv'.
-    :param epoch_varname_default: List[str] | str, the default name(s) of the epoch variable. Default is 'epoch'. This is identified by if the epoch_varname_default is in the variable name instead of the exact match.
-    :param ignore_varname: List[str] | str | None, the variable name(s) to be ignored. Default is None. This is identified by if the ignore_varname is not in the variable name instead of the exact match.
+    :param dir_path: The root directory of the satellite data
+    :type dir_path: str
+    :param info_filename: The name of the info file to be generated, defaults to 'info.csv'
+    :type info_filename: str, optional
+    :param epoch_varname_default: The default name(s) of the epoch variable, defaults to 'epoch'
+    :type epoch_varname_default: List[str] or str, optional
+    :param ignore_varname: The variable name(s) to be ignored, defaults to None
+    :type ignore_varname: List[str] or str or None, optional
+    :raises FileNotFoundError: If directory path does not exist
+    :return: A dictionary containing information about the satellite files
+    :rtype: dict
     
-    :return: dict, a dictionary containing information about the satellite files.
+    The epoch variable is identified if epoch_varname_default is found in the variable name (not exact match).
+    Variables are ignored if ignore_varname is found in the variable name (not exact match).
     """
     
     if not os.path.exists(dir_path):
@@ -302,5 +367,4 @@ def generate_cdf_info_csv(dir_path:str, info_filename:str='info.csv', epoch_varn
         
     return satellite_info_dict
 
-                    
-    
+
