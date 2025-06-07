@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.parameters.vth_E_T &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -68,28 +71,94 @@
   <h1>Source code for spcphys_common_functions.parameters.vth_E_T</h1><div class="highlight"><pre>
 <span></span><span class="sd">&#39;&#39;&#39;Transformations between thermal velocity, energy, and temperature.&#39;&#39;&#39;</span>
 
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
-<span class="kn">from</span> <span class="nn">astropy.constants</span> <span class="kn">import</span> <span class="n">k_B</span><span class="p">,</span> <span class="n">m_p</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">k_B</span><span class="p">,</span> <span class="n">m_p</span>
 
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span>
+
+<div class="viewcode-block" id="E_tensor_to_E">
+<a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.E_tensor_to_E">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">E_tensor_to_E</span><span class="p">(</span>
+    <span class="n">E_tensor</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+    <span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span>
+    <span class="n">replace_negative</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate parallel and perpendicular components of temperature.</span>
+<span class="sd">    </span>
+<span class="sd">    :param E_tensor: Energy tensor with units, shape (n, 3), (n, 6) or (n, 3, 3)</span>
+<span class="sd">    :type E_tensor: astropy.units.Quantity</span>
+<span class="sd">    :param b: Magnetic field vector with units, shape (n, 3)</span>
+<span class="sd">    :type b: astropy.units.Quantity</span>
+<span class="sd">    :param replace_negative: Whether to replace negative temperatures with np.nan, defaults to True</span>
+<span class="sd">    :type replace_negative: bool, optional</span>
+<span class="sd">    :return: Parallel and perpendicular components of temperature</span>
+<span class="sd">    :rtype: Tuple[astropy.units.Quantity, astropy.units.Quantity]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">E_tensor</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Energy tensor E_tensor must have units of energy (u.J)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Magnetic field b must have units of magnetic field (u.T)&quot;</span><span class="p">)</span>
+    
+    <span class="n">shape_error</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">T_tensor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">J</span>
+        <span class="k">if</span> <span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Assuming E_tensor is Txx, Tyy, and Tzz of the temperature tensor.&#39;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Assuming E_tensor is Txx, Tyy, Tzz, Txy, Txz, and Tyz of the temperature tensor.&#39;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+            <span class="n">T_tensor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_tensor</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shape_error</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">E_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">T_tensor</span> <span class="o">=</span> <span class="n">E_tensor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shape_error</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">shape_error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;E_tensor must have shape (n, 3), (n, 6) or (n, 3, 3) for 3D tensor components.&quot;</span><span class="p">)</span>
+    
+    <span class="n">b_unit_vector</span> <span class="o">=</span> <span class="n">b</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">T_para</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ki,kij,kj-&gt;k&#39;</span><span class="p">,</span> <span class="n">b_unit_vector</span><span class="p">,</span> <span class="n">T_tensor</span><span class="p">,</span> <span class="n">b_unit_vector</span><span class="p">)</span>
+    <span class="n">T_perp</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">T_tensor</span><span class="p">,</span> <span class="n">axis1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis2</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">T_para</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">replace_negative</span><span class="p">:</span>
+        <span class="n">T_para</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">T_para</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">T_para</span><span class="p">)</span>
+        <span class="n">T_perp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">T_perp</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">T_perp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">T_para</span><span class="p">,</span> <span class="n">T_perp</span></div>
+
 
 
 <div class="viewcode-block" id="T_to_vth">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.T_to_vth">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">T_to_vth</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate thermal velocity from temperature.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">T_to_vth</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate thermal velocity from temperature.</span>
 <span class="sd">    </span>
-<span class="sd">    :param T: Temperature with units (e.g., T * u.K).</span>
-<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
-<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
-<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">    :param T: Temperature with units</span>
+<span class="sd">    :type T: astropy.units.Quantity</span>
+<span class="sd">    :param mass: Mass with units, defaults to proton mass</span>
+<span class="sd">    :type mass: astropy.units.Quantity, optional</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity, defaults to 2</span>
+<span class="sd">    :type n: int or float, optional</span>
+<span class="sd">              n=2 for most probable speed,</span>
 <span class="sd">              n=3 for root mean square speed,</span>
 <span class="sd">              n=8/π for mean speed,</span>
-<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
-<span class="sd">              </span>
-<span class="sd">    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)</span>
+<span class="sd">    :return: Thermal velocity with units</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
@@ -104,22 +173,24 @@
 
 
 
+
 <div class="viewcode-block" id="vth_to_T">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.vth_to_T">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">vth_to_T</span><span class="p">(</span><span class="n">vth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate temperature from thermal velocity.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vth_to_T</span><span class="p">(</span><span class="n">vth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate temperature from thermal velocity.</span>
 <span class="sd">    </span>
-<span class="sd">    :param vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
-<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
-<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
-<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">    :param vth: Thermal velocity with units</span>
+<span class="sd">    :type vth: astropy.units.Quantity</span>
+<span class="sd">    :param mass: Mass with units, defaults to proton mass</span>
+<span class="sd">    :type mass: astropy.units.Quantity, optional</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity, defaults to 2</span>
+<span class="sd">    :type n: int or float, optional</span>
+<span class="sd">              n=2 for most probable speed,</span>
 <span class="sd">              n=3 for root mean square speed,</span>
 <span class="sd">              n=8/π for mean speed,</span>
-<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
-<span class="sd">              </span>
-<span class="sd">    :return T: Temperature with units (e.g., T * u.K).</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)</span>
+<span class="sd">    :return: Temperature with units</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">vth</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
@@ -134,16 +205,16 @@
 
 
 
+
 <div class="viewcode-block" id="E_to_T">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.E_to_T">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">E_to_T</span><span class="p">(</span><span class="n">E</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate temperature from energy.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">E_to_T</span><span class="p">(</span><span class="n">E</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate temperature from energy.</span>
 <span class="sd">    </span>
-<span class="sd">    :param E: Energy with units (e.g., E * u.J).</span>
-<span class="sd">    </span>
-<span class="sd">    :return T: Temperature with units (e.g., T * u.K).</span>
+<span class="sd">    :param E: Energy with units</span>
+<span class="sd">    :type E: astropy.units.Quantity</span>
+<span class="sd">    :return: Temperature with units</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">E</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="p">):</span>
@@ -155,16 +226,16 @@
 
 
 
+
 <div class="viewcode-block" id="T_to_E">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.T_to_E">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">T_to_E</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate energy from temperature.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">T_to_E</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate energy from temperature.</span>
 <span class="sd">    </span>
-<span class="sd">    :param T: Temperature with units (e.g., T * u.K).</span>
-<span class="sd">    </span>
-<span class="sd">    :return E: Energy with units (e.g., E * u.J).</span>
+<span class="sd">    :param T: Temperature with units</span>
+<span class="sd">    :type T: astropy.units.Quantity</span>
+<span class="sd">    :return: Energy with units</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
@@ -176,22 +247,24 @@
 
 
 
+
 <div class="viewcode-block" id="E_to_vth">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.E_to_vth">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">E_to_vth</span><span class="p">(</span><span class="n">E</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate thermal velocity from energy.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">E_to_vth</span><span class="p">(</span><span class="n">E</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate thermal velocity from energy.</span>
 <span class="sd">    </span>
-<span class="sd">    :param E: Energy with units (e.g., E * u.J).</span>
-<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
-<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
-<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">    :param E: Energy with units</span>
+<span class="sd">    :type E: astropy.units.Quantity</span>
+<span class="sd">    :param mass: Mass with units, defaults to proton mass</span>
+<span class="sd">    :type mass: astropy.units.Quantity, optional</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity, defaults to 2</span>
+<span class="sd">    :type n: int or float, optional</span>
+<span class="sd">              n=2 for most probable speed,</span>
 <span class="sd">              n=3 for root mean square speed,</span>
 <span class="sd">              n=8/π for mean speed,</span>
-<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
-<span class="sd">              </span>
-<span class="sd">    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)</span>
+<span class="sd">    :return: Thermal velocity with units</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">E</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="p">):</span>
@@ -206,22 +279,24 @@
 
 
 
+
 <div class="viewcode-block" id="vth_to_E">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.vth_E_T.vth_to_E">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">vth_to_E</span><span class="p">(</span><span class="n">vth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate energy from thermal velocity.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vth_to_E</span><span class="p">(</span><span class="n">vth</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">mass</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">=</span><span class="n">m_p</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate energy from thermal velocity.</span>
 <span class="sd">    </span>
-<span class="sd">    :param vth: Thermal velocity with units (e.g., vth * u.m/u.s).</span>
-<span class="sd">    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.</span>
-<span class="sd">    :param n: Factor determining the type of thermal velocity.</span>
-<span class="sd">              n=2 for most probable speed (Default),</span>
+<span class="sd">    :param vth: Thermal velocity with units</span>
+<span class="sd">    :type vth: astropy.units.Quantity</span>
+<span class="sd">    :param mass: Mass with units, defaults to proton mass</span>
+<span class="sd">    :type mass: astropy.units.Quantity, optional</span>
+<span class="sd">    :param n: Factor determining the type of thermal velocity, defaults to 2</span>
+<span class="sd">    :type n: int or float, optional</span>
+<span class="sd">              n=2 for most probable speed,</span>
 <span class="sd">              n=3 for root mean square speed,</span>
 <span class="sd">              n=8/π for mean speed,</span>
-<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).</span>
-<span class="sd">              </span>
-<span class="sd">    :return E: Energy with units (e.g., E * u.J).</span>
+<span class="sd">              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)</span>
+<span class="sd">    :return: Energy with units</span>
+<span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">vth</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>

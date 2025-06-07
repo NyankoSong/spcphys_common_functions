@@ -6,12 +6,15 @@
 spcphys_common_functions documentation
 ======================================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+This package mainly contains some commonly used functions in my research.
+For example, calculating the alfvénicity, backmapping, or batch downloading cdf data from the internet, etc.
 
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   source/spcphys_common_functions
+
+
 

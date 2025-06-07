@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spcphys_common_functions.processing.cdf_process &mdash; spcphys_common_functions  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -39,8 +39,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -66,26 +69,28 @@
            <div itemprop="articleBody">
              
   <h1>Source code for spcphys_common_functions.processing.cdf_process</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">cdflib</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cdflib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">.preprocess</span> <span class="kn">import</span> <span class="n">_get_boundary</span><span class="p">,</span> <span class="n">npdt64_to_dt</span>
-<span class="kn">from</span> <span class="nn">..utils.utils</span> <span class="kn">import</span> <span class="n">check_parameters</span><span class="p">,</span> <span class="n">_determine_processes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.preprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_boundary</span><span class="p">,</span> <span class="n">npdt64_to_dt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils.utils</span><span class="w"> </span><span class="kn">import</span>  <span class="n">_determine_processes</span>
 
-<span class="k">def</span> <span class="nf">_recursion_traversal_dir</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_recursion_traversal_dir</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Recursively traversal the directory to find all satellite data directories.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively traverse the directory to find all satellite data directories.</span>
 <span class="sd">    </span>
-<span class="sd">    :param path: str, the root directory of the satellite data.</span>
-<span class="sd">    :return: list, all satellite data directories.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    :param path: The root directory of the satellite data</span>
+<span class="sd">    :type path: str</span>
+<span class="sd">    :return: All satellite data directories</span>
+<span class="sd">    :rtype: List[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">satellite_paths</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
@@ -103,15 +108,18 @@
     <span class="k">return</span> <span class="n">satellite_paths</span>
 
 
-<span class="k">def</span> <span class="nf">_get_satellite_file_infos</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_satellite_file_infos</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Get all satellite file infos in satellite directory.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get all satellite file information in satellite directory.</span>
 <span class="sd">    </span>
-<span class="sd">    :param dir_path: str, the root directory of the satellite data.</span>
-<span class="sd">    :param info_filename: str, the name of the info file.</span>
-<span class="sd">    :return: dict, the satellite file infos.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    :param dir_path: The root directory of the satellite data</span>
+<span class="sd">    :type dir_path: str</span>
+<span class="sd">    :param info_filename: The name of the info file, defaults to None</span>
+<span class="sd">    :type info_filename: str or None, optional</span>
+<span class="sd">    :return: The satellite file information dictionary</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">satellite_paths</span> <span class="o">=</span> <span class="n">_recursion_traversal_dir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
     <span class="n">satellite_file_infos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -136,16 +144,44 @@
     <span class="k">return</span> <span class="n">satellite_file_infos</span>
 
 
-<span class="k">def</span> <span class="nf">_convert_epoches</span><span class="p">(</span><span class="n">epoch_slice</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_epoches</span><span class="p">(</span><span class="n">epoch_slice</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert CDF epoch format to datetime objects.</span>
+<span class="sd">    </span>
+<span class="sd">    :param epoch_slice: The epoch data to convert</span>
+<span class="sd">    :type epoch_slice: array-like</span>
+<span class="sd">    :return: Converted datetime array</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">npdt64_to_dt</span><span class="p">(</span><span class="n">cdflib</span><span class="o">.</span><span class="n">cdfepoch</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">epoch_slice</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_chunks</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_chunks</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split a list into n chunks of approximately equal size.</span>
+<span class="sd">    </span>
+<span class="sd">    :param data: The data to be divided</span>
+<span class="sd">    :type data: list or array-like</span>
+<span class="sd">    :param n: Number of chunks</span>
+<span class="sd">    :type n: int</span>
+<span class="sd">    :return: List of chunks</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">m</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="n">m</span><span class="p">:(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="n">m</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
 
 
-<span class="k">def</span> <span class="nf">_parallel_convert_epoches</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">num_processes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parallel_convert_epoches</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">num_processes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert CDF epochs to datetime objects using parallel processing.</span>
+<span class="sd">    </span>
+<span class="sd">    :param epoch: The epoch data to convert</span>
+<span class="sd">    :type epoch: array-like</span>
+<span class="sd">    :param num_processes: Number of processes to use for conversion, defaults to None</span>
+<span class="sd">    :type num_processes: int or None, optional</span>
+<span class="sd">    :return: Converted datetime array</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">num_processes</span> <span class="o">=</span> <span class="n">_determine_processes</span><span class="p">(</span><span class="n">num_processes</span><span class="p">)</span>
         
@@ -158,20 +194,29 @@
     
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 
+
 <div class="viewcode-block" id="process_satellite_data">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.cdf_process.process_satellite_data">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">process_satellite_data</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_processes</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">epoch_varname_default</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">|</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_satellite_data</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_processes</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">epoch_varname_default</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">|</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">):</span>
 <span class="w">    </span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Combine all satellite data into a single file for each satellite. </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combine all satellite data into a single file for each satellite.</span>
 <span class="sd">    </span>
-<span class="sd">    :param dir_path: str, the root directory of the satellite data.</span>
-<span class="sd">    :param info_filename: str, the name of the info file.</span>
-<span class="sd">    :param output_dir: str, the output directory of the processed data.</span>
-<span class="sd">    :param num_processes: float|int, the number of processes used to convert epoches, 1 for single process, 0.9 for 90% of the cpu cores, etc.</span>
+<span class="sd">    :param dir_path: The root directory of the satellite data</span>
+<span class="sd">    :type dir_path: str</span>
+<span class="sd">    :param info_filename: The name of the info file, defaults to None</span>
+<span class="sd">    :type info_filename: str or None, optional</span>
+<span class="sd">    :param output_dir: The output directory of the processed data, defaults to None</span>
+<span class="sd">    :type output_dir: str or None, optional</span>
+<span class="sd">    :param num_processes: The number of processes used to convert epochs (1 for single process, 0.9 for 90% of the CPU cores), defaults to 1</span>
+<span class="sd">    :type num_processes: float or int, optional</span>
+<span class="sd">    :param epoch_varname_default: The default name of epoch variable, defaults to &#39;epoch&#39;</span>
+<span class="sd">    :type epoch_varname_default: List[str] or str, optional</span>
+<span class="sd">    :raises FileNotFoundError: If directory path does not exist</span>
+<span class="sd">    :raises ValueError: If num_processes is out of valid range</span>
 <span class="sd">    </span>
 <span class="sd">    This function assumes that the satellite data is stored in the following structure:</span>
+<span class="sd">    </span>
 <span class="sd">    - dir_path</span>
 <span class="sd">        - satellite1_name</span>
 <span class="sd">            - cdf_files</span>
@@ -181,22 +226,28 @@
 <span class="sd">            - info_file</span>
 <span class="sd">        ...</span>
 <span class="sd">    </span>
-<span class="sd">    if the info_filename is None, the function will search for the csv file in the satellite directory. </span>
+<span class="sd">    If the info_filename is None, the function will search for the csv file in the satellite directory.</span>
 <span class="sd">    Make sure that there is only one csv file in each satellite directory if the info_filename is not specified.</span>
-<span class="sd">    The info file should be a csv file with the following structure:</span>
-<span class="sd">    | startswith, | dataset, | epochname, | varname,                | condition,|</span>
-<span class="sd">    |-------------|----------|------------|-------------------------|-----------|</span>
-<span class="sd">    | startswith1,| dataset1,| epochname1,| varname11 varname12 ...,| condition1|</span>
-<span class="sd">    | startswith2,| dataset2,| epochname2,| varname21 varname22 ...,| condition2|</span>
-<span class="sd">    ...</span>
 <span class="sd">    </span>
-<span class="sd">    startswith is the prefix of the cdf files, this is used to identify the cdf files that belong to the same dataset.</span>
-<span class="sd">    dataset is the name of the dataset, this will be the key of the output data dict.</span>
-<span class="sd">    epochname is the name of the epoch variable, this is used to convert the epoch variable to datetime.</span>
-<span class="sd">    varname is the name of the variables in the dataset, and should be separated by space.</span>
-<span class="sd">    condition should be a string with two elements separated by space, which are the lower and upper boundary of the variable. </span>
-<span class="sd">    if the variable has no condition, use &#39;none&#39; or &#39;&#39; instead, this will set the boundary to [-1E30, 1E30].</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    The info file should be a csv file with the following structure::</span>
+<span class="sd">    </span>
+<span class="sd">        +-------------+----------+------------+-------------------------+-----------+</span>
+<span class="sd">        | startswith, | dataset, | epochname, | varname,                | condition,|</span>
+<span class="sd">        +=============+==========+============+=========================+===========+</span>
+<span class="sd">        | startswith1,| dataset1,| epochname1,| varname11 varname12 ...,| condition1|</span>
+<span class="sd">        +-------------+----------+------------+-------------------------+-----------+</span>
+<span class="sd">        | startswith2,| dataset2,| epochname2,| varname21 varname22 ...,| condition2|</span>
+<span class="sd">        +-------------+----------+------------+-------------------------+-----------+</span>
+<span class="sd">        | ...         | ...      | ...        | ...                     | ...       |</span>
+<span class="sd">        +-------------+----------+------------+-------------------------+-----------+</span>
+<span class="sd">    </span>
+<span class="sd">    - startswith is the prefix of the cdf files, used to identify cdf files that belong to the same dataset</span>
+<span class="sd">    - dataset is the name of the dataset, the key of the output data dict</span>
+<span class="sd">    - epochname is the name of the epoch variable, used to convert the epoch variable to datetime</span>
+<span class="sd">    - varname contains the names of variables in the dataset, separated by space</span>
+<span class="sd">    - condition is a string with two elements separated by space, the lower and upper boundary of the variable.</span>
+<span class="sd">      If the variable has no condition, use &#39;none&#39; or &#39;&#39;, which will set the boundary to [-1E30, 1E30]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">dir_path</span><span class="si">}</span><span class="s1"> not found!&#39;</span><span class="p">)</span>
@@ -229,6 +280,7 @@
             <span class="n">data_dict</span><span class="p">[</span><span class="n">dataset</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
             <span class="n">date_flag</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">cdf_dates_length</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">no_file_flag</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">varname</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Processing </span><span class="si">{</span><span class="n">varname</span><span class="si">}</span><span class="s1">...&#39;</span><span class="p">)</span>
                 <span class="n">data_dict</span><span class="p">[</span><span class="n">dataset</span><span class="p">][</span><span class="n">varname</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -236,6 +288,10 @@
                 <span class="n">date_tmp</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="n">err_flag</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="n">dataset_cdfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">cdf</span> <span class="k">for</span> <span class="n">cdf</span> <span class="ow">in</span> <span class="n">satellite_info</span><span class="p">[</span><span class="s1">&#39;CDFs&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">cdf</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">startswith</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset_cdfs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No CDF files found for </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s1">, skip this dataset!&#39;</span><span class="p">)</span>
+                    <span class="n">no_file_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
                 <span class="k">for</span> <span class="n">cdf_i</span><span class="p">,</span> <span class="n">cdf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataset_cdfs</span><span class="p">):</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">cdf_i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset_cdfs</span><span class="p">)</span><span class="si">}</span><span class="s1">) Reading </span><span class="si">{</span><span class="n">cdf</span><span class="si">}</span><span class="s1">...&#39;</span><span class="p">)</span>
                     <span class="n">cdf_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">satellite_info</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">],</span> <span class="n">cdf</span><span class="p">)</span>
@@ -292,6 +348,10 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Length of </span><span class="si">{</span><span class="n">varname</span><span class="si">}</span><span class="s1"> are not the same as other variables, so it is not sorted.&#39;</span><span class="p">)</span>
                         <span class="n">data_dict</span><span class="p">[</span><span class="n">dataset</span><span class="p">][</span><span class="n">varname</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_tmp</span>
+                        
+            <span class="k">if</span> <span class="n">no_file_flag</span><span class="p">:</span>
+                <span class="n">data_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="k">continue</span>
         
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving data to </span><span class="si">{</span><span class="n">data_file_name</span><span class="si">}</span><span class="s1">, this might use lots of RAM...&#39;</span><span class="p">)</span>
         <span class="c1">########################################</span>
@@ -303,19 +363,27 @@
 
 
 
+
 <div class="viewcode-block" id="generate_cdf_info_csv">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.processing.html#spcphys_common_functions.processing.cdf_process.generate_cdf_info_csv">[docs]</a>
-<span class="nd">@check_parameters</span>
-<span class="k">def</span> <span class="nf">generate_cdf_info_csv</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;info.csv&#39;</span><span class="p">,</span> <span class="n">epoch_varname_default</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">|</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="n">ignore_varname</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">|</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_cdf_info_csv</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">info_filename</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;info.csv&#39;</span><span class="p">,</span> <span class="n">epoch_varname_default</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">|</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="n">ignore_varname</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">|</span><span class="nb">str</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a CSV file containing information about CDF files in the specified directory.</span>
 
-<span class="sd">    :param dir_path: str, the root directory of the satellite data.</span>
-<span class="sd">    :param info_filename: str, the name of the info file to be generated. Default is &#39;info.csv&#39;.</span>
-<span class="sd">    :param epoch_varname_default: List[str] | str, the default name(s) of the epoch variable. Default is &#39;epoch&#39;. This is identified by if the epoch_varname_default is in the variable name instead of the exact match.</span>
-<span class="sd">    :param ignore_varname: List[str] | str | None, the variable name(s) to be ignored. Default is None. This is identified by if the ignore_varname is not in the variable name instead of the exact match.</span>
+<span class="sd">    :param dir_path: The root directory of the satellite data</span>
+<span class="sd">    :type dir_path: str</span>
+<span class="sd">    :param info_filename: The name of the info file to be generated, defaults to &#39;info.csv&#39;</span>
+<span class="sd">    :type info_filename: str, optional</span>
+<span class="sd">    :param epoch_varname_default: The default name(s) of the epoch variable, defaults to &#39;epoch&#39;</span>
+<span class="sd">    :type epoch_varname_default: List[str] or str, optional</span>
+<span class="sd">    :param ignore_varname: The variable name(s) to be ignored, defaults to None</span>
+<span class="sd">    :type ignore_varname: List[str] or str or None, optional</span>
+<span class="sd">    :raises FileNotFoundError: If directory path does not exist</span>
+<span class="sd">    :return: A dictionary containing information about the satellite files</span>
+<span class="sd">    :rtype: dict</span>
 <span class="sd">    </span>
-<span class="sd">    :return: dict, a dictionary containing information about the satellite files.</span>
+<span class="sd">    The epoch variable is identified if epoch_varname_default is found in the variable name (not exact match).</span>
+<span class="sd">    Variables are ignored if ignore_varname is found in the variable name (not exact match).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
@@ -376,8 +444,7 @@
     <span class="k">return</span> <span class="n">satellite_info_dict</span></div>
 
 
-                    
-    
+
 </pre></div>
 
            </div>
