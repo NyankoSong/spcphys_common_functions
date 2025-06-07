@@ -1,23 +1,18 @@
 from astropy import units as u
 from astropy.constants import k_B, mu0
 import numpy as np
-import pandas as pd
-from typing import List
-from datetime import datetime
-
-from ..utils.utils import check_parameters
-from ..processing.preprocess import interpolate
 
 
-@check_parameters
+
 def pressure_thermal(n: u.Quantity, T: u.Quantity):    
-    '''
-    Calculate thermal pressure.
+    '''Calculate thermal pressure.
     
-    :param n: Proton number density data in shape (time).
-    :param T: Proton temperature data in shape (time).
-    
-    :return pth: Thermal pressure.
+    :param n: Proton number density data in shape (time)
+    :type n: astropy.units.Quantity
+    :param T: Proton temperature data in shape (time)
+    :type T: astropy.units.Quantity
+    :return: Thermal pressure
+    :rtype: astropy.units.Quantity
     '''
     
     if not n.unit.is_equivalent(u.m**-3):
@@ -31,14 +26,14 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
     return (n * k_B * T).si
 
 
-@check_parameters
+
 def pressure_magnetic(b: u.Quantity):
-    '''
-    Calculate magnetic pressure.
+    '''Calculate magnetic pressure.
     
-    :param b: Magnetic field data in shape (time, 3).
-    
-    :return pb: Magnetic pressure.
+    :param b: Magnetic field data in shape (time, 3)
+    :type b: astropy.units.Quantity
+    :return: Magnetic pressure
+    :rtype: astropy.units.Quantity
     '''
     
     if not b.unit.is_equivalent(u.T):
@@ -49,18 +44,18 @@ def pressure_magnetic(b: u.Quantity):
     return (np.linalg.norm(b, axis=1)**2 / (2 * mu0)).si
 
 
-@check_parameters
-def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[datetime]|np.ndarray, b: u.Quantity, T: u.Quantity):
-    '''
-    Calculate plasma beta.
+
+def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity):
+    '''Calculate plasma beta.
     
-    :param p_date: List of datetime objects for proton number density data.
-    :param n: Proton number density data in shape (time).
-    :param b_date: List of datetime objects for magnetic field data.
-    :param b: Magnetic field data in shape (time, 3).
-    :param T: Proton temperature data in shape (time).
-    
-    :return beta: Plasma beta.
+    :param n: Proton number density data in shape (time)
+    :type n: astropy.units.Quantity
+    :param b: Magnetic field data in shape (time, 3)
+    :type b: astropy.units.Quantity
+    :param T: Proton temperature data in shape (time)
+    :type T: astropy.units.Quantity
+    :return: Plasma beta
+    :rtype: astropy.units.Quantity
     '''
     
     if not n.unit.is_equivalent(u.m**-3):
@@ -74,15 +69,8 @@ def calc_beta(p_date: List[datetime]|np.ndarray, n: u.Quantity, b_date: List[dat
     b = b.si
     T = T.si
     
-    if isinstance(p_date, list):
-        p_date = np.array(p_date)
-    if isinstance(b_date, list):
-        b_date = np.array(b_date)
-    
     pth = pressure_thermal(n, T)
     pb = pressure_magnetic(b)
-    
-    pb = interpolate(p_date, b_date, pb, vector_norm_interp=True)
     
     return pth / pb
 

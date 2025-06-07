@@ -1,25 +1,88 @@
 '''Transformations between thermal velocity, energy, and temperature.'''
 
+from typing import Tuple
+import warnings
+import numpy as np
 from astropy import units as u
 from astropy.constants import k_B, m_p
 
-from ..utils.utils import check_parameters
 
-
-@check_parameters
-def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
-    '''
-    Calculate thermal velocity from temperature.
+def E_tensor_to_E(
+    E_tensor: u.Quantity,
+    b: u.Quantity,
+    replace_negative: bool = True
+    ) -> Tuple[u.Quantity, u.Quantity]:
+    '''Calculate parallel and perpendicular components of temperature.
     
-    :param T: Temperature with units (e.g., T * u.K).
-    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.
-    :param n: Factor determining the type of thermal velocity.
-              n=2 for most probable speed (Default),
+    :param E_tensor: Energy tensor with units, shape (n, 3), (n, 6) or (n, 3, 3)
+    :type E_tensor: astropy.units.Quantity
+    :param b: Magnetic field vector with units, shape (n, 3)
+    :type b: astropy.units.Quantity
+    :param replace_negative: Whether to replace negative temperatures with np.nan, defaults to True
+    :type replace_negative: bool, optional
+    :return: Parallel and perpendicular components of temperature
+    :rtype: Tuple[astropy.units.Quantity, astropy.units.Quantity]
+    '''
+    if not E_tensor.unit.is_equivalent(u.J):
+        raise ValueError("Energy tensor E_tensor must have units of energy (u.J)")
+    if not b.unit.is_equivalent(u.T):
+        raise ValueError("Magnetic field b must have units of magnetic field (u.T)")
+    
+    shape_error = False
+    if len(E_tensor.shape) == 2:
+        T_tensor = np.zeros((E_tensor.shape[0], 3, 3)) * u.J
+        if E_tensor.shape[1] == 3:
+            warnings.warn('Assuming E_tensor is Txx, Tyy, and Tzz of the temperature tensor.', UserWarning)
+            T_tensor[:, 0, 0] = E_tensor[:, 0]
+            T_tensor[:, 1, 1] = E_tensor[:, 1]
+            T_tensor[:, 2, 2] = E_tensor[:, 2]
+        elif E_tensor.shape[1] == 6:
+            warnings.warn('Assuming E_tensor is Txx, Tyy, Tzz, Txy, Txz, and Tyz of the temperature tensor.', UserWarning)
+            T_tensor[:, 0, 0] = E_tensor[:, 0]
+            T_tensor[:, 1, 1] = E_tensor[:, 1]
+            T_tensor[:, 2, 2] = E_tensor[:, 2]
+            T_tensor[:, 0, 1] = E_tensor[:, 3]
+            T_tensor[:, 1, 0] = E_tensor[:, 3]
+            T_tensor[:, 0, 2] = E_tensor[:, 4]
+            T_tensor[:, 2, 0] = E_tensor[:, 4]
+            T_tensor[:, 1, 2] = E_tensor[:, 5]
+            T_tensor[:, 2, 1] = E_tensor[:, 5]
+        else:
+            shape_error = True
+    elif len(E_tensor.shape) == 3 and E_tensor.shape[1] == 3 and E_tensor.shape[2] == 3:
+        T_tensor = E_tensor
+    else:
+        shape_error = True
+
+    if shape_error:
+        raise ValueError("E_tensor must have shape (n, 3), (n, 6) or (n, 3, 3) for 3D tensor components.")
+    
+    b_unit_vector = b / np.linalg.norm(b, axis=1, keepdims=True)
+    T_para = np.einsum('ki,kij,kj->k', b_unit_vector, T_tensor, b_unit_vector)
+    T_perp = (np.trace(T_tensor, axis1=1, axis2=2) - T_para) / 2
+
+    if replace_negative:
+        T_para = np.where(T_para <= 0, np.nan, T_para)
+        T_perp = np.where(T_perp <= 0, np.nan, T_perp)
+
+    return T_para, T_perp
+
+
+def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
+    '''Calculate thermal velocity from temperature.
+    
+    :param T: Temperature with units
+    :type T: astropy.units.Quantity
+    :param mass: Mass with units, defaults to proton mass
+    :type mass: astropy.units.Quantity, optional
+    :param n: Factor determining the type of thermal velocity, defaults to 2
+    :type n: int or float, optional
+              n=2 for most probable speed,
               n=3 for root mean square speed,
               n=8/π for mean speed,
-              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-              
-    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).
+              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)
+    :return: Thermal velocity with units
+    :rtype: astropy.units.Quantity
     '''
     
     if not T.unit.is_equivalent(u.K):
@@ -33,20 +96,22 @@ def T_to_vth(T: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     return vth.si
 
 
-@check_parameters
+
 def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
-    '''
-    Calculate temperature from thermal velocity.
+    '''Calculate temperature from thermal velocity.
     
-    :param vth: Thermal velocity with units (e.g., vth * u.m/u.s).
-    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.
-    :param n: Factor determining the type of thermal velocity.
-              n=2 for most probable speed (Default),
+    :param vth: Thermal velocity with units
+    :type vth: astropy.units.Quantity
+    :param mass: Mass with units, defaults to proton mass
+    :type mass: astropy.units.Quantity, optional
+    :param n: Factor determining the type of thermal velocity, defaults to 2
+    :type n: int or float, optional
+              n=2 for most probable speed,
               n=3 for root mean square speed,
               n=8/π for mean speed,
-              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-              
-    :return T: Temperature with units (e.g., T * u.K).
+              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)
+    :return: Temperature with units
+    :rtype: astropy.units.Quantity
     '''
     
     if not vth.unit.is_equivalent(u.m / u.s):
@@ -60,14 +125,14 @@ def vth_to_T(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     return T.si
 
 
-@check_parameters
+
 def E_to_T(E: u.Quantity) -> u.Quantity:
-    '''
-    Calculate temperature from energy.
+    '''Calculate temperature from energy.
     
-    :param E: Energy with units (e.g., E * u.J).
-    
-    :return T: Temperature with units (e.g., T * u.K).
+    :param E: Energy with units
+    :type E: astropy.units.Quantity
+    :return: Temperature with units
+    :rtype: astropy.units.Quantity
     '''
     
     if not E.unit.is_equivalent(u.J):
@@ -78,14 +143,14 @@ def E_to_T(E: u.Quantity) -> u.Quantity:
     return T.si
 
 
-@check_parameters
+
 def T_to_E(T: u.Quantity) -> u.Quantity:
-    '''
-    Calculate energy from temperature.
+    '''Calculate energy from temperature.
     
-    :param T: Temperature with units (e.g., T * u.K).
-    
-    :return E: Energy with units (e.g., E * u.J).
+    :param T: Temperature with units
+    :type T: astropy.units.Quantity
+    :return: Energy with units
+    :rtype: astropy.units.Quantity
     '''
     
     if not T.unit.is_equivalent(u.K):
@@ -96,20 +161,22 @@ def T_to_E(T: u.Quantity) -> u.Quantity:
     return E.si
 
 
-@check_parameters
+
 def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
-    '''
-    Calculate thermal velocity from energy.
+    '''Calculate thermal velocity from energy.
     
-    :param E: Energy with units (e.g., E * u.J).
-    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.
-    :param n: Factor determining the type of thermal velocity.
-              n=2 for most probable speed (Default),
+    :param E: Energy with units
+    :type E: astropy.units.Quantity
+    :param mass: Mass with units, defaults to proton mass
+    :type mass: astropy.units.Quantity, optional
+    :param n: Factor determining the type of thermal velocity, defaults to 2
+    :type n: int or float, optional
+              n=2 for most probable speed,
               n=3 for root mean square speed,
               n=8/π for mean speed,
-              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-              
-    :return vth: Thermal velocity with units (e.g., vth * u.m/u.s).
+              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)
+    :return: Thermal velocity with units
+    :rtype: astropy.units.Quantity
     '''
     
     if not E.unit.is_equivalent(u.J):
@@ -123,20 +190,22 @@ def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     return vth.si
 
 
-@check_parameters
+
 def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
-    '''
-    Calculate energy from thermal velocity.
+    '''Calculate energy from thermal velocity.
     
-    :param vth: Thermal velocity with units (e.g., vth * u.m/u.s).
-    :param mass: Mass with units (e.g., mass * u.kg). Default is proton mass.
-    :param n: Factor determining the type of thermal velocity.
-              n=2 for most probable speed (Default),
+    :param vth: Thermal velocity with units
+    :type vth: astropy.units.Quantity
+    :param mass: Mass with units, defaults to proton mass
+    :type mass: astropy.units.Quantity, optional
+    :param n: Factor determining the type of thermal velocity, defaults to 2
+    :type n: int or float, optional
+              n=2 for most probable speed,
               n=3 for root mean square speed,
               n=8/π for mean speed,
-              n=1 for one-dimensional root mean square speed (for single direction temperature calculation).
-              
-    :return E: Energy with units (e.g., E * u.J).
+              n=1 for one-dimensional root mean square speed (for single direction temperature calculation)
+    :return: Energy with units
+    :rtype: astropy.units.Quantity
     '''
     
     if not vth.unit.is_equivalent(u.m / u.s):
