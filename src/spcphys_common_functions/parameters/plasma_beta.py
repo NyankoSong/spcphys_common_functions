@@ -17,11 +17,12 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
     
     if not n.unit.is_equivalent(u.m**-3):
         raise TypeError("n must be a quantity with units of number density (m^-3)")
-    if not T.unit.is_equivalent(u.K):
+    if not T.unit.is_equivalent(u.K) and not T.unit.is_equivalent(u.J):
         raise TypeError("T must be a quantity with units of temperature (K)")
     
     n = n.si
     T = T.si
+    T = T.to(u.K, equivalencies=u.temperature_energy())
         
     return (n * k_B * T).si
 
@@ -30,7 +31,7 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
 def pressure_magnetic(b: u.Quantity):
     '''Calculate magnetic pressure.
     
-    :param b: Magnetic field data in shape (time, 3)
+    :param b: Magnetic field data in shape (time, 3) or magnitude in shape (time,)
     :type b: astropy.units.Quantity
     :return: Magnetic pressure
     :rtype: astropy.units.Quantity
@@ -40,8 +41,12 @@ def pressure_magnetic(b: u.Quantity):
         raise TypeError("b must be a quantity with units of magnetic field (T)")
     
     b = b.si
-        
-    return (np.linalg.norm(b, axis=1)**2 / (2 * mu0)).si
+    if b.ndim == 1:
+        return (b**2 / (2 * mu0)).si
+    elif b.ndim == 2 and b.shape[1] == 3:
+        return (np.linalg.norm(b, axis=1)**2 / (2 * mu0)).si
+    else:
+        raise ValueError("b must be a 1D or 2D array with shape (time,) or (time, 3) respectively.")
 
 
 
@@ -57,13 +62,6 @@ def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity):
     :return: Plasma beta
     :rtype: astropy.units.Quantity
     '''
-    
-    if not n.unit.is_equivalent(u.m**-3):
-        raise TypeError("n must be a quantity with units of number density (m^-3)")
-    if not b.unit.is_equivalent(u.T):
-        raise TypeError("b must be a quantity with units of magnetic field (T)")
-    if not T.unit.is_equivalent(u.K):
-        raise TypeError("T must be a quantity with units of temperature (K)")
     
     n = n.si
     b = b.si

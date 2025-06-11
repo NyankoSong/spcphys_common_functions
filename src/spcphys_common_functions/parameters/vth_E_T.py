@@ -7,15 +7,15 @@ from astropy import units as u
 from astropy.constants import k_B, m_p
 
 
-def E_tensor_to_E(
-    E_tensor: u.Quantity,
+def T_tensor_to_T(
+    T_tensor: u.Quantity,
     b: u.Quantity,
     replace_negative: bool = True
     ) -> Tuple[u.Quantity, u.Quantity]:
     '''Calculate parallel and perpendicular components of temperature.
     
-    :param E_tensor: Energy tensor with units, shape (n, 3), (n, 6) or (n, 3, 3)
-    :type E_tensor: astropy.units.Quantity
+    :param T_tensor: Energy tensor with units, shape (n, 3), (n, 6) or (n, 3, 3)
+    :type T_tensor: astropy.units.Quantity
     :param b: Magnetic field vector with units, shape (n, 3)
     :type b: astropy.units.Quantity
     :param replace_negative: Whether to replace negative temperatures with np.nan, defaults to True
@@ -23,43 +23,43 @@ def E_tensor_to_E(
     :return: Parallel and perpendicular components of temperature
     :rtype: Tuple[astropy.units.Quantity, astropy.units.Quantity]
     '''
-    if not E_tensor.unit.is_equivalent(u.J):
-        raise ValueError("Energy tensor E_tensor must have units of energy (u.J)")
+    if not T_tensor.unit.is_equivalent(u.J) or not T_tensor.unit.is_equivalent(u.K):
+        raise ValueError("Energy tensor T_tensor must have units of energy (u.J) and temperature (u.K)")
     if not b.unit.is_equivalent(u.T):
         raise ValueError("Magnetic field b must have units of magnetic field (u.T)")
     
     shape_error = False
-    if len(E_tensor.shape) == 2:
-        T_tensor = np.zeros((E_tensor.shape[0], 3, 3)) * u.J
-        if E_tensor.shape[1] == 3:
-            warnings.warn('Assuming E_tensor is Txx, Tyy, and Tzz of the temperature tensor.', UserWarning)
-            T_tensor[:, 0, 0] = E_tensor[:, 0]
-            T_tensor[:, 1, 1] = E_tensor[:, 1]
-            T_tensor[:, 2, 2] = E_tensor[:, 2]
-        elif E_tensor.shape[1] == 6:
-            warnings.warn('Assuming E_tensor is Txx, Tyy, Tzz, Txy, Txz, and Tyz of the temperature tensor.', UserWarning)
-            T_tensor[:, 0, 0] = E_tensor[:, 0]
-            T_tensor[:, 1, 1] = E_tensor[:, 1]
-            T_tensor[:, 2, 2] = E_tensor[:, 2]
-            T_tensor[:, 0, 1] = E_tensor[:, 3]
-            T_tensor[:, 1, 0] = E_tensor[:, 3]
-            T_tensor[:, 0, 2] = E_tensor[:, 4]
-            T_tensor[:, 2, 0] = E_tensor[:, 4]
-            T_tensor[:, 1, 2] = E_tensor[:, 5]
-            T_tensor[:, 2, 1] = E_tensor[:, 5]
+    if len(T_tensor.shape) == 2:
+        T_tensor_mat = np.zeros((T_tensor.shape[0], 3, 3)) * u.J
+        if T_tensor.shape[1] == 3:
+            warnings.warn('Assuming T_tensor is Txx, Tyy, and Tzz of the temperature tensor and Txy=Txz=Tyz=0.', UserWarning)
+            T_tensor_mat[:, 0, 0] = T_tensor[:, 0]
+            T_tensor_mat[:, 1, 1] = T_tensor[:, 1]
+            T_tensor_mat[:, 2, 2] = T_tensor[:, 2]
+        elif T_tensor.shape[1] == 6:
+            warnings.warn('Assuming T_tensor is Txx, Tyy, Tzz, Txy, Txz, and Tyz of the temperature tensor.', UserWarning)
+            T_tensor_mat[:, 0, 0] = T_tensor[:, 0]
+            T_tensor_mat[:, 1, 1] = T_tensor[:, 1]
+            T_tensor_mat[:, 2, 2] = T_tensor[:, 2]
+            T_tensor_mat[:, 0, 1] = T_tensor[:, 3]
+            T_tensor_mat[:, 1, 0] = T_tensor[:, 3]
+            T_tensor_mat[:, 0, 2] = T_tensor[:, 4]
+            T_tensor_mat[:, 2, 0] = T_tensor[:, 4]
+            T_tensor_mat[:, 1, 2] = T_tensor[:, 5]
+            T_tensor_mat[:, 2, 1] = T_tensor[:, 5]
         else:
             shape_error = True
-    elif len(E_tensor.shape) == 3 and E_tensor.shape[1] == 3 and E_tensor.shape[2] == 3:
-        T_tensor = E_tensor
+    elif len(T_tensor.shape) == 3 and T_tensor.shape[1] == 3 and T_tensor.shape[2] == 3:
+        T_tensor_mat = T_tensor
     else:
         shape_error = True
 
     if shape_error:
-        raise ValueError("E_tensor must have shape (n, 3), (n, 6) or (n, 3, 3) for 3D tensor components.")
+        raise ValueError("T_tensor must have shape (n, 3), (n, 6) or (n, 3, 3) for 3D tensor components.")
     
     b_unit_vector = b / np.linalg.norm(b, axis=1, keepdims=True)
-    T_para = np.einsum('ki,kij,kj->k', b_unit_vector, T_tensor, b_unit_vector)
-    T_perp = (np.trace(T_tensor, axis1=1, axis2=2) - T_para) / 2
+    T_para = np.einsum('ki,kij,kj->k', b_unit_vector, T_tensor_mat, b_unit_vector)
+    T_perp = (np.trace(T_tensor_mat, axis1=1, axis2=2) - T_para) / 2
 
     if replace_negative:
         T_para = np.where(T_para <= 0, np.nan, T_para)
