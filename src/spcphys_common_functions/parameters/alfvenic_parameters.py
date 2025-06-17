@@ -300,13 +300,16 @@ def calc_alfven_t(
             alfven_params_window = calc_alfven(
                 p_date=p_date[p_window_indices], 
                 v=v[p_window_indices], 
-                n=n[n_window_indices] if n is not None else None, 
+                n=n[n_window_indices], 
                 b_date=b_date[b_window_indices] if b_date is not None else None, 
                 b=b[b_window_indices], 
                 least_data_in_window=least_data_in_window, 
                 down_sampling_method=down_sampling_method,
                 down_sampling_window=down_sampling_window,
             )
+            
+            num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
+            r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
     else:
         for i, (p_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, b_time_window_indices)), total=num_window, desc='Calculating Alfvenic Parameters'):
 
@@ -320,10 +323,9 @@ def calc_alfven_t(
                 down_sampling_method=down_sampling_method,
                 down_sampling_window=down_sampling_window,
             )
-            
         
-        num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
-        r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
+            num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
+            r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
     
     return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'p3': p3, 'rvB': rvB, 'pvB': pvB,
             'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
