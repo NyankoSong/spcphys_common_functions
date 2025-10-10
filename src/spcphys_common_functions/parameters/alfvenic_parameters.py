@@ -7,6 +7,7 @@ WU H, TU C, WANG X, et al., 2021. Magnetic and Velocity Fluctuations in the Near
 from typing import List, Literal
 import warnings
 from datetime import datetime, timedelta
+from multiprocessing import Pool
 import numpy as np
 from astropy import units as u
 from astropy.constants import mu0, m_p
@@ -16,6 +17,7 @@ from tqdm import tqdm
 
 from ..processing.time_window import slide_time_window
 from ..processing.preprocess import down_sample
+from ..utils.utils import _determine_processes
 
 
 
@@ -214,6 +216,169 @@ def calc_alfven(
         'num_valid_b_points': num_valid_b_points}
 
 
+# def calc_alfven_t(
+#     p_date: List[datetime]|np.ndarray, 
+#     v: u.Quantity, 
+#     b: u.Quantity, 
+#     b_date: List[datetime]|np.ndarray|None =None, 
+#     n: u.Quantity|None =None, 
+#     least_data_in_window: int|float =20, 
+#     n_date: List[datetime]|np.ndarray =None, 
+#     down_sampling_method: Literal['interpolate', 'mean'] ='interpolate',
+#     down_sampling_window: timedelta|List[timedelta]|None =None,
+#     **slide_time_window_kwargs
+#     ) -> dict:
+#     '''Calculate the Alfvenic parameters over time windows.
+    
+#     :param p_date: List or array of datetime objects for proton velocity data
+#     :type p_date: List[datetime] or numpy.ndarray
+#     :param v: Proton velocity data in shape (time, 3)
+#     :type v: astropy.units.Quantity
+#     :param n: Proton number density data in shape (time)
+#     :type n: astropy.units.Quantity
+#     :param b_date: List or array of datetime objects for magnetic field data
+#     :type b_date: List[datetime] or numpy.ndarray
+#     :param b: Magnetic field data in shape (time, 3)
+#     :type b: astropy.units.Quantity
+#     :param least_data_in_window: Least number of valid data points in each time window, defaults to 20
+#     :type least_data_in_window: int or float, optional
+#     :param n_date: List or array of datetime objects for proton number density data, defaults to None
+#     :type n_date: List[datetime] or numpy.ndarray, optional
+#     :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function
+#     :type slide_time_window_kwargs: dict
+#     :return: Dictionary of Alfvenic parameters for each time window (time, r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, time_window, num_valid_p_points, num_valid_b_points)
+#     :rtype: dict
+    
+#     This function calculates time-dependent Alfvenic parameters including correlation coefficient
+#     between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, and compressibility.
+#     '''
+    
+#     if 'start_time' not in slide_time_window_kwargs:
+#         slide_time_window_kwargs['start_time'] = p_date[0]
+#     if 'end_time' not in slide_time_window_kwargs:
+#         slide_time_window_kwargs['end_time'] = p_date[-1]
+#     if 'window_size' not in slide_time_window_kwargs:
+#         slide_time_window_kwargs['window_size'] = slide_time_window_kwargs['end_time'] - slide_time_window_kwargs['start_time']
+#     if 'step' not in slide_time_window_kwargs:
+#         slide_time_window_kwargs['step'] = slide_time_window_kwargs['window_size']
+        
+        
+#     time_windows, p_time_window_indices = slide_time_window(p_date, **slide_time_window_kwargs)
+#     if n_date is None and n is not None:
+#         if n.shape[0] != v.shape[0]:
+#             raise ValueError("n must have the same length as v if n_date is not provided.")
+#         n_time_window_indices = p_time_window_indices
+#     elif n_date is not None and n is not None:
+#         _, n_time_window_indices = slide_time_window(n_date, **slide_time_window_kwargs)
+#     else:
+#         warnings.warn("Any parameters related to Alfven velocity will not be calculated as n is None.", UserWarning)
+
+#     if b_date is None:
+#         b_time_window_indices = p_time_window_indices
+#     else:
+#         if 'align_to' not in slide_time_window_kwargs:
+#             _, b_time_window_indices = slide_time_window(b_date, align_to=[t[0] for t in time_windows], **slide_time_window_kwargs)
+#         else:
+#             _, b_time_window_indices = slide_time_window(b_date, **slide_time_window_kwargs)
+
+#     num_window = len(time_windows)
+    
+#     r3 = np.zeros(num_window) * u.dimensionless_unscaled
+#     p3 = np.zeros(num_window) * u.dimensionless_unscaled
+#     rvB = np.zeros(num_window) * u.dimensionless_unscaled
+#     pvB = np.zeros(num_window) * u.dimensionless_unscaled
+#     residual_energy = np.zeros(num_window) * u.dimensionless_unscaled
+#     cross_helicity = np.zeros(num_window) * u.dimensionless_unscaled
+#     alfven_ratio = np.zeros(num_window) * u.dimensionless_unscaled
+#     compressibility = np.zeros(num_window) * u.dimensionless_unscaled
+#     vA = np.zeros(num_window) * u.m/u.s
+    
+#     num_valid_p_points = np.zeros(num_window)
+#     num_valid_b_points = np.zeros(num_window)
+    
+#     if n is not None:
+#         for i, (p_window_indices, n_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, n_time_window_indices, b_time_window_indices)), total=num_window, desc='Calculating Alfvenic Parameters'):
+
+#             alfven_params_window = calc_alfven(
+#                 p_date=p_date[p_window_indices], 
+#                 v=v[p_window_indices], 
+#                 n=n[n_window_indices], 
+#                 b_date=b_date[b_window_indices] if b_date is not None else None, 
+#                 b=b[b_window_indices], 
+#                 least_data_in_window=least_data_in_window, 
+#                 down_sampling_method=down_sampling_method,
+#                 down_sampling_window=down_sampling_window,
+#             )
+            
+#             num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
+#             r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
+#     else:
+#         for i, (p_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, b_time_window_indices)), total=num_window, desc='Calculating Alfvenic Parameters'):
+
+#             alfven_params_window = calc_alfven(
+#                 p_date=p_date[p_window_indices], 
+#                 v=v[p_window_indices], 
+#                 n=None, 
+#                 b_date=b_date[b_window_indices] if b_date is not None else None, 
+#                 b=b[b_window_indices], 
+#                 least_data_in_window=least_data_in_window, 
+#                 down_sampling_method=down_sampling_method,
+#                 down_sampling_window=down_sampling_window,
+#             )
+        
+#             num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
+#             r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
+    
+#     return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'p3': p3, 'rvB': rvB, 'pvB': pvB,
+#             'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
+#             'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
+#     # return {'time': [t[0] for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
+#     #         'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
+
+
+
+def _calc_alfven_window(args):
+    """
+    Helper function for calculating Alfvenic parameters in a single time window.
+    This function is designed to be used with multiprocessing.
+    
+    :param args: Tuple containing all necessary arguments
+    :type args: tuple
+    :return: Dictionary of Alfvenic parameters for the window
+    :rtype: dict
+    """
+    (window_idx, p_date_window, v_window, n_window, b_date_window, b_window, 
+     least_data_in_window, down_sampling_method, down_sampling_window) = args
+    
+    try:
+        alfven_params_window = calc_alfven(
+            p_date=p_date_window, 
+            v=v_window, 
+            n=n_window, 
+            b_date=b_date_window, 
+            b=b_window, 
+            least_data_in_window=least_data_in_window, 
+            down_sampling_method=down_sampling_method,
+            down_sampling_window=down_sampling_window,
+        )
+        return window_idx, alfven_params_window
+    except Exception as e:
+        warnings.warn(f"Error calculating Alfvenic parameters for window {window_idx}: {str(e)}")
+        return window_idx, {
+            'r3': np.nan * u.dimensionless_unscaled, 
+            'p3': np.nan * u.dimensionless_unscaled,
+            'rvB': np.nan * u.dimensionless_unscaled,
+            'pvB': np.nan * u.dimensionless_unscaled,
+            'residual_energy': np.nan * u.dimensionless_unscaled, 
+            'cross_helicity': np.nan * u.dimensionless_unscaled, 
+            'alfven_ratio': np.nan * u.dimensionless_unscaled, 
+            'compressibility': np.nan * u.dimensionless_unscaled, 
+            'vA': np.nan * u.m/u.s, 
+            'num_valid_p_points': 0, 
+            'num_valid_b_points': 0
+        }
+
+
 def calc_alfven_t(
     p_date: List[datetime]|np.ndarray, 
     v: u.Quantity, 
@@ -224,9 +389,10 @@ def calc_alfven_t(
     n_date: List[datetime]|np.ndarray =None, 
     down_sampling_method: Literal['interpolate', 'mean'] ='interpolate',
     down_sampling_window: timedelta|List[timedelta]|None =None,
+    num_processes: float|int =1,
     **slide_time_window_kwargs
     ) -> dict:
-    '''Calculate the Alfvenic parameters over time windows.
+    '''Calculate the Alfvenic parameters over time windows with optional multiprocessing.
     
     :param p_date: List or array of datetime objects for proton velocity data
     :type p_date: List[datetime] or numpy.ndarray
@@ -242,14 +408,27 @@ def calc_alfven_t(
     :type least_data_in_window: int or float, optional
     :param n_date: List or array of datetime objects for proton number density data, defaults to None
     :type n_date: List[datetime] or numpy.ndarray, optional
+    :param down_sampling_method: Method for down-sampling, defaults to 'interpolate'
+    :type down_sampling_method: Literal['interpolate', 'mean'], optional
+    :param down_sampling_window: Time window for down-sampling, defaults to None
+    :type down_sampling_window: timedelta or List[timedelta] or None, optional
+    :param num_processes: Number of processes to use (1 for single process, 0.9 for 90% of CPU cores), defaults to 1
+    :type num_processes: float or int, optional
     :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function
     :type slide_time_window_kwargs: dict
-    :return: Dictionary of Alfvenic parameters for each time window (time, r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, time_window, num_valid_p_points, num_valid_b_points)
+    :return: Dictionary of Alfvenic parameters for each time window
     :rtype: dict
+    :raises ValueError: If num_processes is out of valid range
     
     This function calculates time-dependent Alfvenic parameters including correlation coefficient
     between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, and compressibility.
+    Supports multiprocessing for improved performance with large datasets.
     '''
+    
+    # Validate num_processes
+    import os
+    if num_processes < 0 or num_processes > os.cpu_count():
+        raise ValueError(f'num_processes should be in the range of (0, 1) or [1, {os.cpu_count()}]!')
     
     if 'start_time' not in slide_time_window_kwargs:
         slide_time_window_kwargs['start_time'] = p_date[0]
@@ -260,8 +439,8 @@ def calc_alfven_t(
     if 'step' not in slide_time_window_kwargs:
         slide_time_window_kwargs['step'] = slide_time_window_kwargs['window_size']
         
-        
     time_windows, p_time_window_indices = slide_time_window(p_date, **slide_time_window_kwargs)
+    
     if n_date is None and n is not None:
         if n.shape[0] != v.shape[0]:
             raise ValueError("n must have the same length as v if n_date is not provided.")
@@ -270,6 +449,7 @@ def calc_alfven_t(
         _, n_time_window_indices = slide_time_window(n_date, **slide_time_window_kwargs)
     else:
         warnings.warn("Any parameters related to Alfven velocity will not be calculated as n is None.", UserWarning)
+        n_time_window_indices = [None] * len(time_windows)
 
     if b_date is None:
         b_time_window_indices = p_time_window_indices
@@ -281,6 +461,7 @@ def calc_alfven_t(
 
     num_window = len(time_windows)
     
+    # Initialize result arrays
     r3 = np.zeros(num_window) * u.dimensionless_unscaled
     p3 = np.zeros(num_window) * u.dimensionless_unscaled
     rvB = np.zeros(num_window) * u.dimensionless_unscaled
@@ -294,41 +475,64 @@ def calc_alfven_t(
     num_valid_p_points = np.zeros(num_window)
     num_valid_b_points = np.zeros(num_window)
     
-    if n is not None:
-        for i, (p_window_indices, n_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, n_time_window_indices, b_time_window_indices)), total=num_window, desc='Calculating Alfvenic Parameters'):
-
-            alfven_params_window = calc_alfven(
-                p_date=p_date[p_window_indices], 
-                v=v[p_window_indices], 
-                n=n[n_window_indices], 
-                b_date=b_date[b_window_indices] if b_date is not None else None, 
-                b=b[b_window_indices], 
-                least_data_in_window=least_data_in_window, 
-                down_sampling_method=down_sampling_method,
-                down_sampling_window=down_sampling_window,
-            )
-            
-            num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
-            r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
-    else:
-        for i, (p_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, b_time_window_indices)), total=num_window, desc='Calculating Alfvenic Parameters'):
-
-            alfven_params_window = calc_alfven(
-                p_date=p_date[p_window_indices], 
-                v=v[p_window_indices], 
-                n=None, 
-                b_date=b_date[b_window_indices] if b_date is not None else None, 
-                b=b[b_window_indices], 
-                least_data_in_window=least_data_in_window, 
-                down_sampling_method=down_sampling_method,
-                down_sampling_window=down_sampling_window,
-            )
+    # Prepare arguments for parallel processing
+    args_list = []
+    for i in range(num_window):
+        p_window_indices = p_time_window_indices[i]
+        b_window_indices = b_time_window_indices[i]
+        n_window_indices = n_time_window_indices[i] if n is not None else None
         
-            num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window['num_valid_p_points'], alfven_params_window['num_valid_b_points']
-            r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window['r3'], alfven_params_window['p3'], alfven_params_window['rvB'], alfven_params_window['pvB'], alfven_params_window['residual_energy'], alfven_params_window['cross_helicity'], alfven_params_window['alfven_ratio'], alfven_params_window['compressibility'], alfven_params_window['vA']
+        p_date_window = p_date[p_window_indices]
+        v_window = v[p_window_indices]
+        b_window = b[b_window_indices]
+        b_date_window = b_date[b_window_indices] if b_date is not None else None
+        n_window = n[n_window_indices] if n is not None and n_window_indices is not None else None
+        
+        args_list.append((
+            i, p_date_window, v_window, n_window, b_date_window, b_window,
+            least_data_in_window, down_sampling_method, down_sampling_window
+        ))
+    
+    # Process windows
+    if num_processes == 1:
+        # Single process with progress bar
+        for args in tqdm(args_list, desc='Calculating Alfvenic Parameters'):
+            window_idx, alfven_params_window = _calc_alfven_window(args)
+            
+            num_valid_p_points[window_idx] = alfven_params_window['num_valid_p_points']
+            num_valid_b_points[window_idx] = alfven_params_window['num_valid_b_points']
+            r3[window_idx] = alfven_params_window['r3']
+            p3[window_idx] = alfven_params_window['p3']
+            rvB[window_idx] = alfven_params_window['rvB']
+            pvB[window_idx] = alfven_params_window['pvB']
+            residual_energy[window_idx] = alfven_params_window['residual_energy']
+            cross_helicity[window_idx] = alfven_params_window['cross_helicity']
+            alfven_ratio[window_idx] = alfven_params_window['alfven_ratio']
+            compressibility[window_idx] = alfven_params_window['compressibility']
+            vA[window_idx] = alfven_params_window['vA']
+    else:
+        # Multiprocessing
+        num_processes = _determine_processes(num_processes)
+        print(f'Using {num_processes} processes for Alfvenic parameter calculation...')
+        
+        with Pool(processes=num_processes) as pool:
+            results = list(tqdm(pool.imap(_calc_alfven_window, args_list), total=len(args_list), desc='Calculating Alfvenic Parameters'))
+        
+        # Collect results
+        for window_idx, alfven_params_window in results:
+            num_valid_p_points[window_idx] = alfven_params_window['num_valid_p_points']
+            num_valid_b_points[window_idx] = alfven_params_window['num_valid_b_points']
+            r3[window_idx] = alfven_params_window['r3']
+            p3[window_idx] = alfven_params_window['p3']
+            rvB[window_idx] = alfven_params_window['rvB']
+            pvB[window_idx] = alfven_params_window['pvB']
+            residual_energy[window_idx] = alfven_params_window['residual_energy']
+            cross_helicity[window_idx] = alfven_params_window['cross_helicity']
+            alfven_ratio[window_idx] = alfven_params_window['alfven_ratio']
+            compressibility[window_idx] = alfven_params_window['compressibility']
+            vA[window_idx] = alfven_params_window['vA']
     
     return {'time': [t[0] + (t[1] - t[0])/2 for t in time_windows], 'r3': r3, 'p3': p3, 'rvB': rvB, 'pvB': pvB,
-            'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
-            'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
-    # return {'time': [t[0] for t in time_windows], 'r3': r3, 'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 'compressibility': compressibility, 'vA': vA,
-    #         'time_window': time_windows, 'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}
+            'residual_energy': residual_energy, 'cross_helicity': cross_helicity, 'alfven_ratio': alfven_ratio, 
+            'compressibility': compressibility, 'vA': vA, 'time_window': time_windows, 
+            'num_valid_p_points': num_valid_p_points, 'num_valid_b_points': num_valid_b_points}

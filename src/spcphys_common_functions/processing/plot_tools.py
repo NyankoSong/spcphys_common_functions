@@ -13,7 +13,173 @@ from matplotlib.contour import QuadContourSet
 from scipy import stats
 
 
+def box_stats(data, scale: Literal['linear', 'log'] ='linear', label=None):
+    if scale == 'log':
+        log_nr2 = np.log10(data)
+        q1 = np.nanpercentile(log_nr2, 25)
+        q3 = np.nanpercentile(log_nr2, 75)
+        iqr = q3 - q1
+        stats = {
+            'label': label,
+            'whislo': 10**(q1 - 1.5*iqr),
+            'q1': 10**q1,
+            'med': 10**np.nanmedian(log_nr2),
+            'q3': 10**q3,
+            'whishi': 10**(q3 + 1.5*iqr),
+            'fliers': (10**log_nr2[log_nr2 < q1 - 1.5*iqr]).tolist() + (10**log_nr2[log_nr2 > q3 + 1.5*iqr]).tolist(),
+            'mean': 10**np.nanmean(log_nr2),
+            'cilo': 10**(np.nanmedian(log_nr2) - 1.57 * iqr / np.sqrt(len(log_nr2))),
+            'cihi': 10**(np.nanmedian(log_nr2) + 1.57 * iqr / np.sqrt(len(log_nr2))),
+        }
+    else:
+        q1 = np.nanpercentile(data, 25)
+        q3 = np.nanpercentile(data, 75)
+        iqr = q3 - q1
+        stats = {
+            'label': label,
+            'whislo': q1 - 1.5*iqr,
+            'q1': q1,
+            'med': np.nanmedian(data),
+            'q3': q3,
+            'whishi': q3 + 1.5*iqr,
+            'fliers': data[data < q1 - 1.5*iqr].tolist() + data[data > q3 + 1.5*iqr].tolist(),
+            'mean': np.nanmean(data),
+            'cilo': np.nanmedian(data) - 1.57 * iqr / np.sqrt(len(data)),
+            'cihi': np.nanmedian(data) + 1.57 * iqr / np.sqrt(len(data)),
+        }
+    
+    return stats
+
+
+def violin_stats(data, scale: Literal['linear', 'log'] ='linear', n_kde_points=1000):
+    """
+    Prepares statistics for matplotlib.axes.Axes.violin's vpstats parameter,
+    with log scale support.
+
+    Parameters
+    ----------
+    data : array-like
+        Input data.
+    scale : {'log', 'linear'}, optional
+        The scale for processing data before KDE and statistics calculation.
+        If 'log', data is log10 transformed (positive, finite values only).
+        Default is 'log'.
+    label : any, optional
+        Included for signature consistency. Not used in the returned vpstats dict.
+    N_kde_points : int, optional
+        Number of points to evaluate the KDE. Default is 100.
+
+    Returns
+    -------
+    dict
+        A dictionary for vpstats:
+        'coords': List of scalars where KDE was evaluated.
+        'vals': List of KDE values at 'coords' (normalized density).
+        'mean': Mean of (processed) data.
+        'median': Median of (processed) data.
+        'min': Min of (processed) data.
+        'max': Max of (processed) data.
+        Returns empty 'coords'/'vals' and NaN stats if data is unsuitable.
+    """
+    data_arr = np.asarray(data)
+
+    if scale == 'log':
+        processed_data = data_arr[np.isfinite(data_arr) & (data_arr > 0)]
+        if processed_data.size > 0:
+            processed_data = np.log10(processed_data)
+        else:
+            processed_data = np.array([])
+    else: # linear scale
+        processed_data = data_arr[np.isfinite(data_arr)]
+
+    # Initialize stats
+    mean_val, median_val, min_val, max_val = np.nan, np.nan, np.nan, np.nan
+    kde_eval_points_list = []
+    density_values_list = []
+
+    if processed_data.size > 0:
+        mean_val = np.mean(processed_data)
+        median_val = np.median(processed_data)
+        min_val = np.min(processed_data)
+        max_val = np.max(processed_data)
+
+        unique_pts = np.unique(processed_data)
+        if len(unique_pts) >= 2:
+            try:
+                kde = stats.gaussian_kde(processed_data)
+                
+                kde_eval_min = unique_pts.min()
+                kde_eval_max = unique_pts.max()
+                
+                if np.isclose(kde_eval_min, kde_eval_max) and n_kde_points > 1:
+                    # All unique points were essentially identical.
+                    # KDE is not meaningful for a shape, treat as single point.
+                    # Or, let plt.violin handle this case if it can.
+                    # For vpstats, we might provide a single point.
+                    # However, plt.violin might expect multiple points for coords/vals.
+                    # Let's default to empty if we can't make a sensible KDE shape.
+                    pass # kde_eval_points_list and density_values_list remain empty
+                else:
+                    num_eval_points = max(2, n_kde_points) if not np.isclose(kde_eval_min, kde_eval_max) else 1
+                    kde_eval_at = np.linspace(kde_eval_min, kde_eval_max, num_eval_points)
+                    
+                    if len(kde_eval_at) == 1: # Single unique point after processing
+                        # Represent as a very narrow spike if forced, or let it be empty.
+                        # For vpstats, providing a single coord/val might be tricky for plotting.
+                        # Matplotlib's internal violin creation might handle single-value datasets
+                        # by not drawing a body or drawing a line.
+                        # Let's provide the single point and a nominal density.
+                        # density_at_points = np.array([1.0]) # Arbitrary single point density
+                        # For now, let's ensure we have at least two points for linspace if min != max
+                        # If min == max, num_eval_points will be 1.
+                        # If kde_eval_at has only one point, KDE might not be very informative.
+                        # Let's stick to the logic: if num_eval_points is 1, kde_eval_at has 1 point.
+                        density_at_points = kde.evaluate(kde_eval_at)
+
+                    else:
+                        density_at_points = kde.evaluate(kde_eval_at)
+
+                    max_density = density_at_points.max()
+                    if max_density > 0:
+                        density_normalized = density_at_points / max_density
+                    else:
+                        density_normalized = np.zeros_like(density_at_points)
+                    
+                    kde_eval_points_list = kde_eval_at.tolist()
+                    density_values_list = density_normalized.tolist()
+
+            except Exception: # Catch all KDE errors
+                # kde_eval_points_list and density_values_list remain empty
+                pass
+            
+    if scale == 'log':
+        # Convert stats back to original scale
+        if mean_val is not None:
+            mean_val = 10**mean_val
+        if median_val is not None:
+            median_val = 10**median_val
+        if min_val is not None:
+            min_val = 10**min_val
+        if max_val is not None:
+            max_val = 10**max_val
+        kde_eval_points_list = [10**pt for pt in kde_eval_points_list]
+    
+    stats_dict = {
+        'coords': kde_eval_points_list,
+        'vals': density_values_list,
+        'mean': mean_val,
+        'median': median_val,
+        'min': min_val,
+        'max': max_val,
+    }
+    return stats_dict
+
+
 def _determine_bins(x, bins, scale):
+    
+    if isinstance(bins, np.ndarray):
+        return bins
+    
     x = x[~np.isnan(x)]
     if scale == 'linear':
         _, bins = astats.histogram(x, bins=bins)
@@ -39,50 +205,142 @@ def _log_or_linear_plot(scales: List[str], ax: plt.Axes =None):
         return plt.plot if ax is None else ax.plot
 
 
-def _logarithmic_error(x, mean_func):
-    log_x = np.log10(x)
-    log_x_mean = mean_func(log_x, axis=0)
-    unlog_x_mean = 10**log_x_mean
-    log_x_std = np.nanstd(log_x, axis=0)
-    # This method is not used in this way, but is used for observational data without raw data,
-    # such as when only the mean and standard deviation are provided
-    x_cap = [np.abs(unlog_x_mean - 10**(log_x_mean - log_x_std)),  np.abs(unlog_x_mean - 10**(log_x_mean + log_x_std))]
-    return unlog_x_mean, log_x_std, x_cap
-
-
-def _mean_std_params(x, scale):
-    if scale == 'log':
-        unlog_x_mean, log_x_std, x_cap = _logarithmic_error(x)
-        x_label = r'$x=10\^($' + f'{np.log10(unlog_x_mean):.2f}' + r'$\pm$' + f'{log_x_std:.2f}' + r'$)$'
+def _mid_err_params(x, scale, mid_method, err_method):
+    """
+    Calculate central value and error bars for data.
+    
+    :param x: Input data array
+    :param scale: 'linear' or 'log' scale
+    :param mid_method: 'mean', 'max', or 'median' for central value calculation
+    :param err_method: 'std', 'iqr', or 'whisiqr' for error calculation method
+        - 'std': standard deviation
+        - 'iqr': uses Q1 and Q3 (interquartile range)
+        - 'whisiqr': uses Q1-1.5*IQR and Q3+1.5*IQR (whiskers)
+    :return: (x_mid, x_cap, x_label) where x_cap is [lower_err, upper_err]
+    """
+    
+    if mid_method == 'mean':
+        mid_func = np.nanmean
+    elif mid_method == 'max':
+        mid_func = np.nanmax
+    elif mid_method == 'median':
+        mid_func = np.nanmedian
     else:
-        x_mean, x_err = np.nanmean(x, axis=0), np.nanstd(x, axis=0)
-        x_cap = [x_err, x_err]
-        x_label = r'$x=$' + f'{x_mean:.2f}' + r'$\pm$' + f'{x_err:.2f}'
-    return unlog_x_mean, x_cap, x_label
+        raise ValueError("mid_method must be 'mean', 'max', or 'median'")
+        
+    if scale == 'log':
+        # 对数尺度：先取对数，然后计算
+        log_x = np.log10(x)
+        x_mid_log = mid_func(log_x, axis=0)
+        
+        if err_method == 'std':
+            x_err_log = np.nanstd(log_x, axis=0)
+            # 转换回原尺度（非对称）
+            x_mid = 10**x_mid_log
+            x_cap = np.array([10**x_mid_log - 10**(x_mid_log - x_err_log), 
+                             10**(x_mid_log + x_err_log) - 10**x_mid_log])
+            
+            # 生成标签
+            if np.isclose(x_cap[0], x_cap[1], rtol=0.01):
+                # 近似对称的情况
+                x_label = r'$x=10^{' + f'{x_mid_log:.2f}' + r'\pm' + f'{x_err_log:.2f}' + r'}$'
+            else:
+                # 非对称的情况
+                x_label = r'$x=10^{' + f'{x_mid_log:.2f}' + r'^{+' + f'{x_err_log:.2f}' + r'}_{-' + f'{x_err_log:.2f}' + r'}}$'
+                
+        elif err_method == 'iqr':
+            # 使用box_stats计算IQR，使用四分位点
+            box_dict = box_stats(x, scale='log')
+            x_err_lower = x_mid_log - np.log10(box_dict['q1'])  # x_mid - q1
+            x_err_upper = np.log10(box_dict['q3']) - x_mid_log  # q3 - x_mid
+            
+            # 转换回原尺度
+            x_mid = 10**x_mid_log
+            x_cap = np.array([10**x_mid_log - 10**(x_mid_log - x_err_lower), 
+                             10**(x_mid_log + x_err_upper) - 10**x_mid_log])
+            
+            # 生成标签
+            if np.isclose(x_err_lower, x_err_upper, rtol=0.01):
+                x_label = r'$x=10^{' + f'{x_mid_log:.2f}' + r'\pm' + f'{x_err_lower:.2f}' + r'}$'
+            else:
+                x_label = r'$x=10^{' + f'{x_mid_log:.2f}' + r'^{+' + f'{x_err_upper:.2f}' + r'}_{-' + f'{x_err_lower:.2f}' + r'}}$'
+                
+        elif err_method == 'whisiqr':
+            # 使用box_stats计算IQR，使用whiskers (Q1-1.5*IQR 和 Q3+1.5*IQR)
+            box_dict = box_stats(x, scale='log')
+            x_err_lower = x_mid_log - np.log10(box_dict['whislo'])  # x_mid - (q1 - 1.5*iqr)
+            x_err_upper = np.log10(box_dict['whishi']) - x_mid_log  # (q3 + 1.5*iqr) - x_mid
+            
+            # 转换回原尺度
+            x_mid = 10**x_mid_log
+            x_cap = np.array([10**x_mid_log - 10**(x_mid_log - x_err_lower), 
+                             10**(x_mid_log + x_err_upper) - 10**x_mid_log])
+            
+            # 生成标签
+            if np.isclose(x_err_lower, x_err_upper, rtol=0.01):
+                x_label = r'$x=10^{' + f'{x_mid_log:.2f}' + r'\pm' + f'{x_err_lower:.2f}' + r'}$'
+            else:
+                x_label = r'$x=10^{' + f'{x_mid_log:.2f}' + r'^{+' + f'{x_err_upper:.2f}' + r'}_{-' + f'{x_err_lower:.2f}' + r'}}$'
+        else:
+            raise ValueError("err_method must be 'std', 'iqr', or 'whisiqr'")
+            
+    else:  # linear scale
+        x_mid = mid_func(x, axis=0)
+        
+        if err_method == 'std':
+            x_err = np.nanstd(x, axis=0)
+            # 线性尺度下的对称误差
+            x_cap = np.array([x_err, x_err])
+            
+            # 生成标签
+            x_label = r'$x=' + f'{x_mid:.2f}' + r'\pm' + f'{x_err:.2f}' + r'$'
+            
+        elif err_method == 'iqr':
+            # 使用box_stats计算IQR，使用四分位点
+            box_dict = box_stats(x, scale='linear')
+            x_err_lower = x_mid - box_dict['q1']  # x_mid - q1
+            x_err_upper = box_dict['q3'] - x_mid  # q3 - x_mid
+            x_cap = np.array([x_err_lower, x_err_upper])
+            
+            # 生成标签
+            if np.isclose(x_err_lower, x_err_upper, rtol=0.01):
+                x_label = r'$x=' + f'{x_mid:.2f}' + r'\pm' + f'{x_err_lower:.2f}' + r'$'
+            else:
+                x_label = r'$x=' + f'{x_mid:.2f}' + r'^{+' + f'{x_err_upper:.2f}' + r'}_{-' + f'{x_err_lower:.2f}' + r'}$'
+                
+        elif err_method == 'whisiqr':
+            # 使用box_stats计算IQR，使用whiskers (Q1-1.5*IQR 和 Q3+1.5*IQR)
+            box_dict = box_stats(x, scale='linear')
+            x_err_lower = x_mid - box_dict['whislo']  # x_mid - (q1 - 1.5*iqr)
+            x_err_upper = box_dict['whishi'] - x_mid  # (q3 + 1.5*iqr) - x_mid
+            x_cap = np.array([x_err_lower, x_err_upper])
+            
+            # 生成标签
+            if np.isclose(x_err_lower, x_err_upper, rtol=0.01):
+                x_label = r'$x=' + f'{x_mid:.2f}' + r'\pm' + f'{x_err_lower:.2f}' + r'$'
+            else:
+                x_label = r'$x=' + f'{x_mid:.2f}' + r'^{+' + f'{x_err_upper:.2f}' + r'}_{-' + f'{x_err_lower:.2f}' + r'}$'
+        else:
+            raise ValueError("err_method must be 'std', 'iqr', or 'whisiqr'")
+            
+    return x_mid, x_cap, x_label
 
 
-def _mean_std_line_params(x, y, x_edges, scale, method):
-    unlog_y_means = []
+def _mid_err_line_params(x, y, x_edges, scale, mid_method, err_method):
+    y_mids = []
     y_caps = []
-    if method == 'mean':
-        mean_func = np.nanmean
-    elif method == 'max':
-        mean_func = np.nanmax
-    elif method == 'median':
-        mean_func = np.nanmedian
-    if scale == 'log':
-        for i in range(len(x_edges)-1):
-            unlog_y_mean, _, y_cap = _logarithmic_error(y[(x > x_edges[i]) & (x < x_edges[i+1])], mean_func)
-            unlog_y_means.append(unlog_y_mean)
+    
+    for i in range(len(x_edges)-1):
+        y_window = y[(x > x_edges[i]) & (x < x_edges[i+1])]
+        if len(y_window) > 0:
+            y_mid, y_cap, _ = _mid_err_params(y_window, scale, mid_method, err_method)
+            y_mids.append(y_mid)
             y_caps.append(y_cap)
-    else:
-        for i in range(len(x_edges)-1):
-            y_window = y[(x > x_edges[i]) & (x < x_edges[i+1])]
-            y_mean, y_err = mean_func(y_window), np.std(y_window)
-            unlog_y_means.append(y_mean)
-            y_caps.append([y_err, y_err])
+        else:
+            y_mids.append(np.nan)
+            y_caps.append([np.nan, np.nan])
 
-    return np.array(unlog_y_means), np.array(y_caps).T
+    return np.array(y_mids), np.array(y_caps).T
 
 
 def histogram(
@@ -195,6 +453,7 @@ def reproject_histogram(
         new_hist['hist'] = hist_dict['hist'][tuple(index)]
     else:
         new_hist['hist'] = np.nansum(hist_dict['hist'], axis=tuple(i for i in range(len(hist_dict['hist'].shape)) if i not in keep_dims))
+        
     new_hist['edges'] = [hist_dict['edges'][i] for i in keep_dims]
     new_hist['mids'] = [hist_dict['mids'][i] for i in keep_dims]
     new_hist['bins'] = [hist_dict['bins'][i] for i in keep_dims]
@@ -215,9 +474,9 @@ def plot_hist2d(
     plot_method: Literal['pcolormesh', 'contour', 'contourf']='pcolormesh',
     plot_kwargs: dict|None=None,
     fit_line: bool=False, fit_line_kwargs: dict|None=None,
-    mean_std: bool=False, mean_std_errorbar_kwargs: dict|None=None,
+    mid_err: bool=False, mid_err_kwargs: dict|None=None,
     separate: str|None=None,
-    mean_std_line: Literal['x', 'y', None] =None, mean_std_line_method: Literal['mean', 'max', 'median'] ='mean', mean_std_line_kwargs: dict|None=None,
+    mid_err_line: Literal['x', 'y', None] =None, mid_method: Literal['mean', 'max', 'median'] ='mean', err_method: Literal['std', 'iqr', 'whisiqr'] ='std', mid_err_line_kwargs: dict|None=None,
     return_histogram: bool=False,
 ) -> QuadMesh | QuadContourSet | tuple | dict:
     
@@ -239,12 +498,11 @@ def plot_hist2d(
     :param plot_kwargs: Additional arguments for the plotting method. Default varies by method.
     :param fit_line: Whether to fit a line to the data. Default is False.
     :param fit_line_kwargs: Arguments for plotting the fit line. Default is {'c':'k', 'ls':'--', 'lw':1}.
-    :param mean_std: Whether to plot mean and standard deviation. Default is False.
-    :param mean_std_errorbar_kwargs: Arguments for plotting error bars of mean and standard deviation. Default is {'fmt':'none', 'c':'k', 'capsize':2}.
+    :param mid_err: Whether to plot mean and standard deviation. Default is False.
+    :param mid_err_kwargs: Arguments for plotting error bars of mean and standard deviation. Default is {'fmt':'none', 'c':'k', 'capsize':2}.
     :param separate: Whether to normalize separately along 'x' or 'y' axis. Default is None.
-    :param mean_std_line: Whether to plot mean and standard deviation line. Can be 'x', 'y', or None. Default is None.
-    :param mean_std_line_method: The method for calculating the mean and standard deviation line, can be 'mean', 'max', or 'median'. Default is 'mean'.
-    :param mean_std_line_kwargs: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'c':'k', 'capsize':2, 'lw':1, 'ls':'-'}.
+    :param mid_err_line: Whether to plot mean and standard deviation line. Can be 'x', 'y', or None. Default is None.
+    :param mid_err_line_kwargs: Arguments for plotting the mean and standard deviation line. Default is {'fmt':'o', 'ms':2, 'c':'k', 'capsize':2, 'lw':1, 'ls':'-'}.
     
     :return: The plot object (QuadMesh or QuadContourSet).
     '''
@@ -257,9 +515,9 @@ def plot_hist2d(
             raise ValueError("separate must be 'x', 'y' or None.")
         if z is not None:
             raise ValueError("separate cannot be used when z is provided.")
-        if fit_line or mean_std or mean_std_line:
+        if fit_line or mid_err or mid_err_line:
             if x is None or y is None:
-                raise ValueError("x and y must be provided when using fit_line, mean_std, or mean_std_line with separate normalization.")
+                raise ValueError("x and y must be provided when using fit_line, mid_err, or mid_err_line with separate normalization.")
     if norm_type is not None and z is not None:
         raise ValueError("norm_type cannot be used when z is provided.")
     if plot_method not in ['pcolormesh', 'contour', 'contourf']:
@@ -283,20 +541,20 @@ def plot_hist2d(
     fit_line_kwargs.setdefault('ls', '--')
     fit_line_kwargs.setdefault('lw', 1)
 
-    if mean_std_errorbar_kwargs is None:
-        mean_std_errorbar_kwargs = {}
-    mean_std_errorbar_kwargs.setdefault('fmt', 'none')
-    mean_std_errorbar_kwargs.setdefault('c', 'k')
-    mean_std_errorbar_kwargs.setdefault('capsize', 2)
+    if mid_err_kwargs is None:
+        mid_err_kwargs = {}
+    mid_err_kwargs.setdefault('fmt', 'none')
+    mid_err_kwargs.setdefault('c', 'k')
+    mid_err_kwargs.setdefault('capsize', 2)
         
-    if mean_std_line_kwargs is None:
-        mean_std_line_kwargs = {}
-    mean_std_line_kwargs.setdefault('fmt', 'o')
-    mean_std_line_kwargs.setdefault('ms', 2)
-    mean_std_line_kwargs.setdefault('c', 'k')
-    mean_std_line_kwargs.setdefault('capsize', 2)
-    mean_std_line_kwargs.setdefault('lw', 1)
-    mean_std_line_kwargs.setdefault('ls', '-')
+    if mid_err_line_kwargs is None:
+        mid_err_line_kwargs = {}
+    mid_err_line_kwargs.setdefault('fmt', 'o')
+    mid_err_line_kwargs.setdefault('ms', 2)
+    mid_err_line_kwargs.setdefault('c', 'k')
+    mid_err_line_kwargs.setdefault('capsize', 2)
+    mid_err_line_kwargs.setdefault('lw', 1)
+    mid_err_line_kwargs.setdefault('ls', '-')
 
     if hist_dict is None:
         # Convert quantities to values
@@ -413,19 +671,19 @@ def plot_hist2d(
             
             _log_or_linear_plot(scales, axes)(x_fitted, y_fitted, **fit_line_kwargs)
             
-        if mean_std:
-            unlog_x_mean, x_cap, x_label = _mean_std_params(x, scales[0])
-            unlog_y_mean, y_cap, y_label = _mean_std_params(y, scales[1])
+        if mid_err:
+            unlog_x_mean, x_cap, x_label = _mid_err_params(x, scales[0])
+            unlog_y_mean, y_cap, y_label = _mid_err_params(y, scales[1])
                 
-            axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mean_std_errorbar_kwargs)
+            axes.errorbar(unlog_x_mean, unlog_y_mean, xerr=x_cap, yerr=y_cap, label=x_label+'\n'+y_label, **mid_err_kwargs)
             
-        if mean_std_line:
-            if separate == 'x' or mean_std_line == 'x':
-                unlog_y_means, y_caps = _mean_std_line_params(x, y, x_edges, scales[1], method=mean_std_line_method)
-                axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mean_std_line_kwargs)
-            elif separate == 'y' or mean_std_line == 'y':
-                unlog_x_means, x_caps = _mean_std_line_params(y, x, y_edges, scales[0], method=mean_std_line_method)
-                axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mean_std_line_kwargs)
+        if mid_err_line:
+            if separate == 'x' or mid_err_line == 'x':
+                unlog_y_means, y_caps = _mid_err_line_params(x, y, x_edges, scales[1], mid_method=mid_method, err_method=err_method)
+                axes.errorbar(x_mid, unlog_y_means, yerr=y_caps, **mid_err_line_kwargs)
+            elif separate == 'y' or mid_err_line == 'y':
+                unlog_x_means, x_caps = _mid_err_line_params(y, x, y_edges, scales[0], mid_method=mid_method, err_method=err_method)
+                axes.errorbar(unlog_x_means, y_mid, xerr=x_caps, **mid_err_line_kwargs)
         
     # Set axis scales
     if scales[0] == 'log':

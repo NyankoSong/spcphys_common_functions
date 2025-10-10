@@ -68,6 +68,11 @@ def min_var(data: np.ndarray, verbose: bool=False):
     #     v[:, 2] = -v[:, 2]
     #     v[:, 1] = -v[:, 1]
 
+    # Ensure minvar-Z and intvar-Z are both positive, to ensure matching results between IDL and Python
+    if v[2, 1] < 0:
+        v[:, 1] = -v[:, 1]
+        v[:, 0] = -v[:, 0]
+
     vrot = np.array([np.dot(row, v) for row in data])
 
     if verbose:
