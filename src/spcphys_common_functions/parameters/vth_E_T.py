@@ -23,14 +23,14 @@ def T_tensor_to_T(
     :return: Parallel and perpendicular components of temperature
     :rtype: Tuple[astropy.units.Quantity, astropy.units.Quantity]
     '''
-    if not T_tensor.unit.is_equivalent(u.J) or not T_tensor.unit.is_equivalent(u.K):
-        raise ValueError("Energy tensor T_tensor must have units of energy (u.J) and temperature (u.K)")
+    if not T_tensor.unit.is_equivalent(u.J) and not T_tensor.unit.is_equivalent(u.K):
+        raise ValueError("Energy tensor T_tensor must have units of energy (u.J) or temperature (u.K)")
     if not b.unit.is_equivalent(u.T):
         raise ValueError("Magnetic field b must have units of magnetic field (u.T)")
     
     shape_error = False
     if len(T_tensor.shape) == 2:
-        T_tensor_mat = np.zeros((T_tensor.shape[0], 3, 3)) * u.J
+        T_tensor_mat = np.zeros((T_tensor.shape[0], 3, 3)) * T_tensor.unit
         if T_tensor.shape[1] == 3:
             warnings.warn('Assuming T_tensor is Txx, Tyy, and Tzz of the temperature tensor and Txy=Txz=Tyz=0.', UserWarning)
             T_tensor_mat[:, 0, 0] = T_tensor[:, 0]
