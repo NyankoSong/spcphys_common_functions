@@ -650,6 +650,9 @@ def plot_hist2d(
                 y_fit = np.log10(y)
             else:
                 y_fit = y
+            
+            valid_fit_indices = ~np.isnan(x_fit) & ~np.isnan(y_fit)
+            x_fit, y_fit = x_fit[valid_fit_indices], y_fit[valid_fit_indices]
                 
             slope, intercept, r_value, p_value, _ = stats.linregress(x_fit, y_fit)
             x_fitted = np.array([np.nanmin(x_fit), np.nanmax(x_fit)])

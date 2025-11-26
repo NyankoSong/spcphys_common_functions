@@ -11,6 +11,7 @@ from multiprocessing import Pool
 import numpy as np
 from astropy import units as u
 from astropy.constants import mu0, m_p
+from scipy.constants import physical_constants
 from scipy import stats as sstats
 from tqdm import tqdm
 
@@ -38,20 +39,24 @@ def calc_dx(x: u.Quantity|np.ndarray, axis=0, **mean_kwargs) -> u.Quantity|np.nd
 
 
 
-def calc_va(b: u.Quantity, n: u.Quantity, dva: bool = False) -> u.Quantity:
+def calc_va(b: u.Quantity, n: u.Quantity, na: u.Quantity =None, dva: bool =False) -> u.Quantity:
     '''Calculate the Alfven velocity.
 
     :param b: Magnetic field data in shape (time, 3)
     :type b: astropy.units.Quantity
     :param n: Proton number density data in shape (time)
     :type n: astropy.units.Quantity
+    :param na: Alpha particle number density data in shape (time), defaults to None
+    :type na: astropy.units.Quantity, optional
     :param dva: Whether to remove mean value from magnetic field data, defaults to False
     :type dva: bool, optional
     :return: Alfven velocity or Alfven velocity with mean value removed
     :rtype: astropy.units.Quantity
     '''
-    
-    bottom = np.sqrt(mu0 * np.nanmean(n) * m_p)
+    if na is not None:
+        bottom = np.sqrt(mu0 * (np.nanmean(n) * m_p + np.nanmean(na) * physical_constants['alpha particle mass'][0] * u.Unit(physical_constants['alpha particle mass'][1])))
+    else:
+        bottom = np.sqrt(mu0 * np.nanmean(n) * m_p)
     if dva:
         return (calc_dx(b) / bottom).si
     else:
@@ -64,6 +69,7 @@ def calc_alfven(
     b: u.Quantity, 
     b_date: List[datetime]|np.ndarray|None =None, 
     n: u.Quantity|None =None, 
+    na: u.Quantity|None =None,
     least_data_in_window: int|float =20, 
     down_sampling_method: Literal['interpolate', 'mean'] ='interpolate',
     down_sampling_window: timedelta|List[timedelta]|None =None,
@@ -76,6 +82,8 @@ def calc_alfven(
     :type v: astropy.units.Quantity
     :param n: Proton number density data in shape (time)
     :type n: astropy.units.Quantity
+    :param na: Alpha particle number density data in shape (time), optional
+    :type na: astropy.units.Quantity or None
     :param b_date: List or array of datetime objects for magnetic field data
     :type b_date: List[datetime] or numpy.ndarray
     :param b: Magnetic field data in shape (time, 3)
@@ -163,7 +171,7 @@ def calc_alfven(
         #         else:
         #             for i, (p_time_left, down_sampling_window_i) in enumerate(zip(p_date, down_sampling_window)):
         #                 dvA[i, :] = np.nanmean(dvA_b[_time_indices(b_date, [p_time_left, p_time_left + down_sampling_window_i]), :], axis=0)
-        dvA = calc_va(db_p, n) #dV_A
+        dvA = calc_va(db_p, n, na=na) #dV_A
 
         dv_valid = dv[valid_alfven_p_indices].si
         dvA_valid = dvA[valid_alfven_p_indices].si
