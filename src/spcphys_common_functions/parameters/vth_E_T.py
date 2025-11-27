@@ -186,7 +186,7 @@ def E_to_vth(E: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantity:
     
     E = E.si
     mass = mass.si
-    vth = (2 * E / mass)**0.5
+    vth = (n * E / mass)**0.5
     return vth.si
 
 
@@ -215,7 +215,7 @@ def vth_to_E(vth: u.Quantity, mass: u.Quantity=m_p, n: int|float=2) -> u.Quantit
     
     vth = vth.si
     mass = mass.si
-    E = 0.5 * mass * vth**2
+    E = mass * vth**2 / n
     return E.si
 
 

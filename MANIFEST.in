@@ -1,0 +1,29 @@
+# Include license and documentation files
+include LICENSE
+include Readme.md
+include requirements.txt
+include pyproject.toml
+
+# Include type checking marker
+include src/spcphys_common_functions/py.typed
+
+# Include all Python files in src
+recursive-include src *.py
+recursive-include src *.pyi
+
+# Include test files
+recursive-include tests *.py
+
+# Exclude build and cache directories
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude .git*
+prune build
+prune dist
+prune *.egg-info
+prune .tox
+prune .pytest_cache
+prune .mypy_cache
+prune .ruff_cache

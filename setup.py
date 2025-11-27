@@ -1,40 +1,82 @@
+"""
+Setup script for spcphys-common-functions.
+
+This file is maintained for backward compatibility.
+The preferred configuration is in pyproject.toml.
+"""
+
 from os import path
 from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
-with open(path.join(here, 'requirements.txt'), 'r', encoding='utf-8') as f:
-    all_reqs = f.read().split('\n')
 
+# Read long description from README
 with open(path.join(here, 'Readme.md'), 'r', encoding='utf-8') as f:
     long_description = f.read()
 
-install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
+# Read requirements from requirements.txt
+with open(path.join(here, 'requirements.txt'), 'r', encoding='utf-8') as f:
+    all_reqs = f.read().strip().split('\n')
+
+install_requires = [x.strip() for x in all_reqs if x.strip() and not x.startswith('#') and 'git+' not in x]
 
 setup(
-    name='spcphys_common_functions',  # 必填，项目的名字，用户根据这个名字安装，pip install SpiderKeeper-new
-    version='0.1.0',  # 必填，项目的版本，建议遵循语义化版本规范
-    author='NyankoSong',  # 项目的作者
-    description='',  # 项目的一个简短描述
-    long_description=long_description,  # 项目的详细说明，通常读取 README.md 文件的内容
-    long_description_content_type='text/markdown',  # 描述的格式，可选的值： text/plain, text/x-rst, and text/markdown
-    author_email='nyankosong@gmail.com',  # 作者的有效邮箱地址
-    url='https://github.com/NyankoSong/spcphys_common_functions',  # 项目的源码地址
+    name='spcphys-common-functions',
+    version='0.1.0',
+    author='NyankoSong',
+    author_email='nyankosong@gmail.com',
+    maintainer='NyankoSong',
+    maintainer_email='nyankosong@gmail.com',
+    description='A collection of commonly used functions for space physics research',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    url='https://github.com/NyankoSong/spcphys-common-functions',
+    project_urls={
+        'Documentation': 'https://github.com/NyankoSong/spcphys-common-functions#readme',
+        'Source': 'https://github.com/NyankoSong/spcphys-common-functions',
+        'Issues': 'https://github.com/NyankoSong/spcphys-common-functions/issues',
+    },
     license='MIT',
-    # include_package_data=True,
-    # package_data= {
-        # 'src' : ["resources/"]
-    # },
-    packages=find_packages(where='src'),  # 必填，指定打包的目录，默认是当前目录，如果是其他目录比如 src, 可以使用 find_packages(where='src')
+    packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=install_requires,  # 指定你的项目依赖的 python 包，这里直接读取 requirements.txt
-    # 分类器通过对项目进行分类，帮助用户找到项目
+    include_package_data=True,
+    install_requires=install_requires,
+    extras_require={
+        'dev': [
+            'pytest>=7.0.0',
+            'pytest-cov>=4.0.0',
+            'black>=23.0.0',
+            'isort>=5.12.0',
+            'flake8>=6.0.0',
+            'mypy>=1.0.0',
+            'pre-commit>=3.0.0',
+        ],
+        'test': [
+            'pytest>=7.0.0',
+            'pytest-cov>=4.0.0',
+            'pytest-asyncio>=0.21.0',
+        ],
+    },
     classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Topic :: Scientific/Engineering :: Astronomy',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Typing :: Typed',
     ],
-    python_requires=">=3.11"
+    keywords=[
+        'space physics',
+        'solar wind',
+        'plasma physics',
+        'alfven waves',
+        'magnetohydrodynamics',
+        'heliophysics',
+    ],
+    python_requires='>=3.11',
+    zip_safe=False,
 )
-
-
-#参考 https://juejin.cn/post/7053009657371033630, https://zhuanlan.zhihu.com/p/527321393, https://blog.csdn.net/qq_33934427/article/details/129152909
