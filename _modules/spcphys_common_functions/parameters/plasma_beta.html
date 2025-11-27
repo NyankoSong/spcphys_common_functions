@@ -41,7 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/modules.html">spcphys_common_functions</a></li>
 </ul>
 
         </div>
@@ -90,11 +90,12 @@
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**-</span><span class="mi">3</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;n must be a quantity with units of number density (m^-3)&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;T must be a quantity with units of temperature (K)&quot;</span><span class="p">)</span>
     
     <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">si</span>
     <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">si</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">equivalencies</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">temperature_energy</span><span class="p">())</span>
         
     <span class="k">return</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">k_B</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">si</span></div>
 
@@ -106,7 +107,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">pressure_magnetic</span><span class="p">(</span><span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate magnetic pressure.</span>
 <span class="sd">    </span>
-<span class="sd">    :param b: Magnetic field data in shape (time, 3)</span>
+<span class="sd">    :param b: Magnetic field data in shape (time, 3) or magnitude in shape (time,)</span>
 <span class="sd">    :type b: astropy.units.Quantity</span>
 <span class="sd">    :return: Magnetic pressure</span>
 <span class="sd">    :rtype: astropy.units.Quantity</span>
@@ -116,8 +117,12 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;b must be a quantity with units of magnetic field (T)&quot;</span><span class="p">)</span>
     
     <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">si</span>
-        
-    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mu0</span><span class="p">))</span><span class="o">.</span><span class="n">si</span></div>
+    <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mu0</span><span class="p">))</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">elif</span> <span class="n">b</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mu0</span><span class="p">))</span><span class="o">.</span><span class="n">si</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;b must be a 1D or 2D array with shape (time,) or (time, 3) respectively.&quot;</span><span class="p">)</span></div>
 
 
 
@@ -136,13 +141,6 @@
 <span class="sd">    :return: Plasma beta</span>
 <span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**-</span><span class="mi">3</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;n must be a quantity with units of number density (m^-3)&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;b must be a quantity with units of magnetic field (T)&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;T must be a quantity with units of temperature (K)&quot;</span><span class="p">)</span>
     
     <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">si</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">si</span>

@@ -41,7 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/modules.html">spcphys_common_functions</a></li>
 </ul>
 
         </div>
@@ -69,40 +69,43 @@
            <div itemprop="articleBody">
              
   <h1>Source code for spcphys_common_functions.parameters.minimum_variance</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;Modified from https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py&#39;&#39;&#39;</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Minimum Variance Analysis (MVA) for space physics data.</span>
+
+<span class="sd">Modified from https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 
-
-
-
 <div class="viewcode-block" id="min_var">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.minimum_variance.min_var">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">min_var</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This program computes the principal variance directions and variances of a</span>
-<span class="sd">    vector quantity as well as the associated eigenvalues.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">min_var</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the principal variance directions and variances of a vector quantity.</span>
+<span class="sd">    </span>
+<span class="sd">    This function performs Minimum Variance Analysis (MVA) to find the principal</span>
+<span class="sd">    axes of variance for a set of vector measurements.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    -----------</span>
-<span class="sd">    data:</span>
-<span class="sd">        Vxyz, an (npoints, ndim) array of data(ie Nx3)</span>
+<span class="sd">    :param data: Input data array with shape (npoints, 3), where npoints is the</span>
+<span class="sd">                 number of measurements and 3 represents the vector components (x, y, z)</span>
+<span class="sd">    :type data: numpy.ndarray</span>
+<span class="sd">    :param verbose: If True, print diagnostic information including average direction,</span>
+<span class="sd">                    angle to minimum variance direction, and eigenvalue/eigenvector info,</span>
+<span class="sd">                    defaults to False</span>
+<span class="sd">    :type verbose: bool, optional</span>
+<span class="sd">    :return: Tuple containing:</span>
+<span class="sd">    </span>
+<span class="sd">        - vrot: Rotated data in the new coordinate system with shape (npoints, 3).</span>
+<span class="sd">          vrot[:, 0] is the maximum variance direction,</span>
+<span class="sd">          vrot[:, 1] is the intermediate variance direction,</span>
+<span class="sd">          vrot[:, 2] is the minimum variance direction.</span>
+<span class="sd">        - v: Eigenvector matrix with shape (3, 3) containing the principal axes.</span>
+<span class="sd">          v[:, 0] is the maximum variance direction eigenvector,</span>
+<span class="sd">          v[:, 1] is the intermediate variance direction eigenvector,</span>
+<span class="sd">          v[:, 2] is the minimum variance direction eigenvector.</span>
+<span class="sd">        - w: Eigenvalues array with shape (3,) in descending order.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    vrot:</span>
-<span class="sd">        an array of (npoints, ndim) containing the rotated data in the new coordinate system, ijk.</span>
-<span class="sd">        Vi(maximum direction)=vrot[0,:]</span>
-<span class="sd">        Vj(intermediate direction)=vrot[1,:]</span>
-<span class="sd">        Vk(minimum variance direction)=Vrot[2,:]</span>
-<span class="sd">    v:</span>
-<span class="sd">        an (ndim,ndim) array containing the principal axes vectors</span>
-<span class="sd">        Maximum variance direction eigenvector, Vi=v[*,0]</span>
-<span class="sd">        Intermediate variance direction, Vj=v[*,1] (descending order)</span>
-<span class="sd">    w:</span>
-<span class="sd">        the eigenvalues of the computation</span>
+<span class="sd">    :rtype: tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
             
     <span class="c1">#  Min var starts here</span>
@@ -140,6 +143,11 @@
     <span class="c1"># if v[2, 2] &lt; 0:</span>
     <span class="c1">#     v[:, 2] = -v[:, 2]</span>
     <span class="c1">#     v[:, 1] = -v[:, 1]</span>
+
+    <span class="c1"># Ensure minvar-Z and intvar-Z are both positive, to ensure matching results between IDL and Python</span>
+    <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">v</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">v</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
 
     <span class="n">vrot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
 

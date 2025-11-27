@@ -41,7 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/modules.html">spcphys_common_functions</a></li>
 </ul>
 
         </div>
@@ -78,15 +78,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">mu0</span><span class="p">,</span> <span class="n">m_p</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">physical_constants</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span> <span class="k">as</span> <span class="n">sstats</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">..processing.time_window</span><span class="w"> </span><span class="kn">import</span> <span class="n">slide_time_window</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..processing.preprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">down_sample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_determine_processes</span>
 
 
 
@@ -112,20 +115,24 @@
 
 <div class="viewcode-block" id="calc_va">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.alfvenic_parameters.calc_va">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">calc_va</span><span class="p">(</span><span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">dva</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_va</span><span class="p">(</span><span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">na</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dva</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate the Alfven velocity.</span>
 
 <span class="sd">    :param b: Magnetic field data in shape (time, 3)</span>
 <span class="sd">    :type b: astropy.units.Quantity</span>
 <span class="sd">    :param n: Proton number density data in shape (time)</span>
 <span class="sd">    :type n: astropy.units.Quantity</span>
+<span class="sd">    :param na: Alpha particle number density data in shape (time), defaults to None</span>
+<span class="sd">    :type na: astropy.units.Quantity, optional</span>
 <span class="sd">    :param dva: Whether to remove mean value from magnetic field data, defaults to False</span>
 <span class="sd">    :type dva: bool, optional</span>
 <span class="sd">    :return: Alfven velocity or Alfven velocity with mean value removed</span>
 <span class="sd">    :rtype: astropy.units.Quantity</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    
-    <span class="n">bottom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">m_p</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">na</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bottom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu0</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">m_p</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">na</span><span class="p">)</span> <span class="o">*</span> <span class="n">physical_constants</span><span class="p">[</span><span class="s1">&#39;alpha particle mass&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">physical_constants</span><span class="p">[</span><span class="s1">&#39;alpha particle mass&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bottom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">m_p</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">dva</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">calc_dx</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">bottom</span><span class="p">)</span><span class="o">.</span><span class="n">si</span>
     <span class="k">else</span><span class="p">:</span>
@@ -141,6 +148,7 @@
     <span class="n">b</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> 
     <span class="n">b_date</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
     <span class="n">n</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">na</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">least_data_in_window</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span> <span class="o">=</span><span class="mi">20</span><span class="p">,</span> 
     <span class="n">down_sampling_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">]</span> <span class="o">=</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span>
     <span class="n">down_sampling_window</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="n">timedelta</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -153,6 +161,8 @@
 <span class="sd">    :type v: astropy.units.Quantity</span>
 <span class="sd">    :param n: Proton number density data in shape (time)</span>
 <span class="sd">    :type n: astropy.units.Quantity</span>
+<span class="sd">    :param na: Alpha particle number density data in shape (time), optional</span>
+<span class="sd">    :type na: astropy.units.Quantity or None</span>
 <span class="sd">    :param b_date: List or array of datetime objects for magnetic field data</span>
 <span class="sd">    :type b_date: List[datetime] or numpy.ndarray</span>
 <span class="sd">    :param b: Magnetic field data in shape (time, 3)</span>
@@ -240,7 +250,7 @@
         <span class="c1">#         else:</span>
         <span class="c1">#             for i, (p_time_left, down_sampling_window_i) in enumerate(zip(p_date, down_sampling_window)):</span>
         <span class="c1">#                 dvA[i, :] = np.nanmean(dvA_b[_time_indices(b_date, [p_time_left, p_time_left + down_sampling_window_i]), :], axis=0)</span>
-        <span class="n">dvA</span> <span class="o">=</span> <span class="n">calc_va</span><span class="p">(</span><span class="n">db_p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="c1">#dV_A</span>
+        <span class="n">dvA</span> <span class="o">=</span> <span class="n">calc_va</span><span class="p">(</span><span class="n">db_p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">na</span><span class="o">=</span><span class="n">na</span><span class="p">)</span> <span class="c1">#dV_A</span>
 
         <span class="n">dv_valid</span> <span class="o">=</span> <span class="n">dv</span><span class="p">[</span><span class="n">valid_alfven_p_indices</span><span class="p">]</span><span class="o">.</span><span class="n">si</span>
         <span class="n">dvA_valid</span> <span class="o">=</span> <span class="n">dvA</span><span class="p">[</span><span class="n">valid_alfven_p_indices</span><span class="p">]</span><span class="o">.</span><span class="n">si</span>
@@ -294,6 +304,169 @@
 
 
 
+<span class="c1"># def calc_alfven_t(</span>
+<span class="c1">#     p_date: List[datetime]|np.ndarray, </span>
+<span class="c1">#     v: u.Quantity, </span>
+<span class="c1">#     b: u.Quantity, </span>
+<span class="c1">#     b_date: List[datetime]|np.ndarray|None =None, </span>
+<span class="c1">#     n: u.Quantity|None =None, </span>
+<span class="c1">#     least_data_in_window: int|float =20, </span>
+<span class="c1">#     n_date: List[datetime]|np.ndarray =None, </span>
+<span class="c1">#     down_sampling_method: Literal[&#39;interpolate&#39;, &#39;mean&#39;] =&#39;interpolate&#39;,</span>
+<span class="c1">#     down_sampling_window: timedelta|List[timedelta]|None =None,</span>
+<span class="c1">#     **slide_time_window_kwargs</span>
+<span class="c1">#     ) -&gt; dict:</span>
+<span class="c1">#     &#39;&#39;&#39;Calculate the Alfvenic parameters over time windows.</span>
+    
+<span class="c1">#     :param p_date: List or array of datetime objects for proton velocity data</span>
+<span class="c1">#     :type p_date: List[datetime] or numpy.ndarray</span>
+<span class="c1">#     :param v: Proton velocity data in shape (time, 3)</span>
+<span class="c1">#     :type v: astropy.units.Quantity</span>
+<span class="c1">#     :param n: Proton number density data in shape (time)</span>
+<span class="c1">#     :type n: astropy.units.Quantity</span>
+<span class="c1">#     :param b_date: List or array of datetime objects for magnetic field data</span>
+<span class="c1">#     :type b_date: List[datetime] or numpy.ndarray</span>
+<span class="c1">#     :param b: Magnetic field data in shape (time, 3)</span>
+<span class="c1">#     :type b: astropy.units.Quantity</span>
+<span class="c1">#     :param least_data_in_window: Least number of valid data points in each time window, defaults to 20</span>
+<span class="c1">#     :type least_data_in_window: int or float, optional</span>
+<span class="c1">#     :param n_date: List or array of datetime objects for proton number density data, defaults to None</span>
+<span class="c1">#     :type n_date: List[datetime] or numpy.ndarray, optional</span>
+<span class="c1">#     :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function</span>
+<span class="c1">#     :type slide_time_window_kwargs: dict</span>
+<span class="c1">#     :return: Dictionary of Alfvenic parameters for each time window (time, r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, time_window, num_valid_p_points, num_valid_b_points)</span>
+<span class="c1">#     :rtype: dict</span>
+    
+<span class="c1">#     This function calculates time-dependent Alfvenic parameters including correlation coefficient</span>
+<span class="c1">#     between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, and compressibility.</span>
+<span class="c1">#     &#39;&#39;&#39;</span>
+    
+<span class="c1">#     if &#39;start_time&#39; not in slide_time_window_kwargs:</span>
+<span class="c1">#         slide_time_window_kwargs[&#39;start_time&#39;] = p_date[0]</span>
+<span class="c1">#     if &#39;end_time&#39; not in slide_time_window_kwargs:</span>
+<span class="c1">#         slide_time_window_kwargs[&#39;end_time&#39;] = p_date[-1]</span>
+<span class="c1">#     if &#39;window_size&#39; not in slide_time_window_kwargs:</span>
+<span class="c1">#         slide_time_window_kwargs[&#39;window_size&#39;] = slide_time_window_kwargs[&#39;end_time&#39;] - slide_time_window_kwargs[&#39;start_time&#39;]</span>
+<span class="c1">#     if &#39;step&#39; not in slide_time_window_kwargs:</span>
+<span class="c1">#         slide_time_window_kwargs[&#39;step&#39;] = slide_time_window_kwargs[&#39;window_size&#39;]</span>
+        
+        
+<span class="c1">#     time_windows, p_time_window_indices = slide_time_window(p_date, **slide_time_window_kwargs)</span>
+<span class="c1">#     if n_date is None and n is not None:</span>
+<span class="c1">#         if n.shape[0] != v.shape[0]:</span>
+<span class="c1">#             raise ValueError(&quot;n must have the same length as v if n_date is not provided.&quot;)</span>
+<span class="c1">#         n_time_window_indices = p_time_window_indices</span>
+<span class="c1">#     elif n_date is not None and n is not None:</span>
+<span class="c1">#         _, n_time_window_indices = slide_time_window(n_date, **slide_time_window_kwargs)</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         warnings.warn(&quot;Any parameters related to Alfven velocity will not be calculated as n is None.&quot;, UserWarning)</span>
+
+<span class="c1">#     if b_date is None:</span>
+<span class="c1">#         b_time_window_indices = p_time_window_indices</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         if &#39;align_to&#39; not in slide_time_window_kwargs:</span>
+<span class="c1">#             _, b_time_window_indices = slide_time_window(b_date, align_to=[t[0] for t in time_windows], **slide_time_window_kwargs)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             _, b_time_window_indices = slide_time_window(b_date, **slide_time_window_kwargs)</span>
+
+<span class="c1">#     num_window = len(time_windows)</span>
+    
+<span class="c1">#     r3 = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     p3 = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     rvB = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     pvB = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     residual_energy = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     cross_helicity = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     alfven_ratio = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     compressibility = np.zeros(num_window) * u.dimensionless_unscaled</span>
+<span class="c1">#     vA = np.zeros(num_window) * u.m/u.s</span>
+    
+<span class="c1">#     num_valid_p_points = np.zeros(num_window)</span>
+<span class="c1">#     num_valid_b_points = np.zeros(num_window)</span>
+    
+<span class="c1">#     if n is not None:</span>
+<span class="c1">#         for i, (p_window_indices, n_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, n_time_window_indices, b_time_window_indices)), total=num_window, desc=&#39;Calculating Alfvenic Parameters&#39;):</span>
+
+<span class="c1">#             alfven_params_window = calc_alfven(</span>
+<span class="c1">#                 p_date=p_date[p_window_indices], </span>
+<span class="c1">#                 v=v[p_window_indices], </span>
+<span class="c1">#                 n=n[n_window_indices], </span>
+<span class="c1">#                 b_date=b_date[b_window_indices] if b_date is not None else None, </span>
+<span class="c1">#                 b=b[b_window_indices], </span>
+<span class="c1">#                 least_data_in_window=least_data_in_window, </span>
+<span class="c1">#                 down_sampling_method=down_sampling_method,</span>
+<span class="c1">#                 down_sampling_window=down_sampling_window,</span>
+<span class="c1">#             )</span>
+            
+<span class="c1">#             num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window[&#39;num_valid_p_points&#39;], alfven_params_window[&#39;num_valid_b_points&#39;]</span>
+<span class="c1">#             r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window[&#39;r3&#39;], alfven_params_window[&#39;p3&#39;], alfven_params_window[&#39;rvB&#39;], alfven_params_window[&#39;pvB&#39;], alfven_params_window[&#39;residual_energy&#39;], alfven_params_window[&#39;cross_helicity&#39;], alfven_params_window[&#39;alfven_ratio&#39;], alfven_params_window[&#39;compressibility&#39;], alfven_params_window[&#39;vA&#39;]</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         for i, (p_window_indices, b_window_indices) in tqdm(enumerate(zip(p_time_window_indices, b_time_window_indices)), total=num_window, desc=&#39;Calculating Alfvenic Parameters&#39;):</span>
+
+<span class="c1">#             alfven_params_window = calc_alfven(</span>
+<span class="c1">#                 p_date=p_date[p_window_indices], </span>
+<span class="c1">#                 v=v[p_window_indices], </span>
+<span class="c1">#                 n=None, </span>
+<span class="c1">#                 b_date=b_date[b_window_indices] if b_date is not None else None, </span>
+<span class="c1">#                 b=b[b_window_indices], </span>
+<span class="c1">#                 least_data_in_window=least_data_in_window, </span>
+<span class="c1">#                 down_sampling_method=down_sampling_method,</span>
+<span class="c1">#                 down_sampling_window=down_sampling_window,</span>
+<span class="c1">#             )</span>
+        
+<span class="c1">#             num_valid_p_points[i], num_valid_b_points[i] = alfven_params_window[&#39;num_valid_p_points&#39;], alfven_params_window[&#39;num_valid_b_points&#39;]</span>
+<span class="c1">#             r3[i], p3[i], rvB[i], pvB[i], residual_energy[i], cross_helicity[i], alfven_ratio[i], compressibility[i], vA[i] = alfven_params_window[&#39;r3&#39;], alfven_params_window[&#39;p3&#39;], alfven_params_window[&#39;rvB&#39;], alfven_params_window[&#39;pvB&#39;], alfven_params_window[&#39;residual_energy&#39;], alfven_params_window[&#39;cross_helicity&#39;], alfven_params_window[&#39;alfven_ratio&#39;], alfven_params_window[&#39;compressibility&#39;], alfven_params_window[&#39;vA&#39;]</span>
+    
+<span class="c1">#     return {&#39;time&#39;: [t[0] + (t[1] - t[0])/2 for t in time_windows], &#39;r3&#39;: r3, &#39;p3&#39;: p3, &#39;rvB&#39;: rvB, &#39;pvB&#39;: pvB,</span>
+<span class="c1">#             &#39;residual_energy&#39;: residual_energy, &#39;cross_helicity&#39;: cross_helicity, &#39;alfven_ratio&#39;: alfven_ratio, &#39;compressibility&#39;: compressibility, &#39;vA&#39;: vA,</span>
+<span class="c1">#             &#39;time_window&#39;: time_windows, &#39;num_valid_p_points&#39;: num_valid_p_points, &#39;num_valid_b_points&#39;: num_valid_b_points}</span>
+<span class="c1">#     # return {&#39;time&#39;: [t[0] for t in time_windows], &#39;r3&#39;: r3, &#39;residual_energy&#39;: residual_energy, &#39;cross_helicity&#39;: cross_helicity, &#39;alfven_ratio&#39;: alfven_ratio, &#39;compressibility&#39;: compressibility, &#39;vA&#39;: vA,</span>
+<span class="c1">#     #         &#39;time_window&#39;: time_windows, &#39;num_valid_p_points&#39;: num_valid_p_points, &#39;num_valid_b_points&#39;: num_valid_b_points}</span>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calc_alfven_window</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for calculating Alfvenic parameters in a single time window.</span>
+<span class="sd">    This function is designed to be used with multiprocessing.</span>
+<span class="sd">    </span>
+<span class="sd">    :param args: Tuple containing all necessary arguments</span>
+<span class="sd">    :type args: tuple</span>
+<span class="sd">    :return: Dictionary of Alfvenic parameters for the window</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">(</span><span class="n">window_idx</span><span class="p">,</span> <span class="n">p_date_window</span><span class="p">,</span> <span class="n">v_window</span><span class="p">,</span> <span class="n">n_window</span><span class="p">,</span> <span class="n">b_date_window</span><span class="p">,</span> <span class="n">b_window</span><span class="p">,</span> 
+     <span class="n">least_data_in_window</span><span class="p">,</span> <span class="n">down_sampling_method</span><span class="p">,</span> <span class="n">down_sampling_window</span><span class="p">)</span> <span class="o">=</span> <span class="n">args</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">alfven_params_window</span> <span class="o">=</span> <span class="n">calc_alfven</span><span class="p">(</span>
+            <span class="n">p_date</span><span class="o">=</span><span class="n">p_date_window</span><span class="p">,</span> 
+            <span class="n">v</span><span class="o">=</span><span class="n">v_window</span><span class="p">,</span> 
+            <span class="n">n</span><span class="o">=</span><span class="n">n_window</span><span class="p">,</span> 
+            <span class="n">b_date</span><span class="o">=</span><span class="n">b_date_window</span><span class="p">,</span> 
+            <span class="n">b</span><span class="o">=</span><span class="n">b_window</span><span class="p">,</span> 
+            <span class="n">least_data_in_window</span><span class="o">=</span><span class="n">least_data_in_window</span><span class="p">,</span> 
+            <span class="n">down_sampling_method</span><span class="o">=</span><span class="n">down_sampling_method</span><span class="p">,</span>
+            <span class="n">down_sampling_window</span><span class="o">=</span><span class="n">down_sampling_window</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">window_idx</span><span class="p">,</span> <span class="n">alfven_params_window</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error calculating Alfvenic parameters for window </span><span class="si">{</span><span class="n">window_idx</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">window_idx</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;r3&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span> 
+            <span class="s1">&#39;p3&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+            <span class="s1">&#39;rvB&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+            <span class="s1">&#39;pvB&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
+            <span class="s1">&#39;residual_energy&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span> 
+            <span class="s1">&#39;cross_helicity&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span> 
+            <span class="s1">&#39;alfven_ratio&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span> 
+            <span class="s1">&#39;compressibility&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span> 
+            <span class="s1">&#39;vA&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> 
+            <span class="s1">&#39;num_valid_p_points&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> 
+            <span class="s1">&#39;num_valid_b_points&#39;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
+
+
 <div class="viewcode-block" id="calc_alfven_t">
 <a class="viewcode-back" href="../../../source/spcphys_common_functions.parameters.html#spcphys_common_functions.parameters.alfvenic_parameters.calc_alfven_t">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_alfven_t</span><span class="p">(</span>
@@ -306,9 +479,10 @@
     <span class="n">n_date</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span><span class="o">|</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
     <span class="n">down_sampling_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">]</span> <span class="o">=</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span>
     <span class="n">down_sampling_window</span><span class="p">:</span> <span class="n">timedelta</span><span class="o">|</span><span class="n">List</span><span class="p">[</span><span class="n">timedelta</span><span class="p">]</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_processes</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="o">**</span><span class="n">slide_time_window_kwargs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate the Alfvenic parameters over time windows.</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculate the Alfvenic parameters over time windows with optional multiprocessing.</span>
 <span class="sd">    </span>
 <span class="sd">    :param p_date: List or array of datetime objects for proton velocity data</span>
 <span class="sd">    :type p_date: List[datetime] or numpy.ndarray</span>
@@ -324,14 +498,27 @@
 <span class="sd">    :type least_data_in_window: int or float, optional</span>
 <span class="sd">    :param n_date: List or array of datetime objects for proton number density data, defaults to None</span>
 <span class="sd">    :type n_date: List[datetime] or numpy.ndarray, optional</span>
+<span class="sd">    :param down_sampling_method: Method for down-sampling, defaults to &#39;interpolate&#39;</span>
+<span class="sd">    :type down_sampling_method: Literal[&#39;interpolate&#39;, &#39;mean&#39;], optional</span>
+<span class="sd">    :param down_sampling_window: Time window for down-sampling, defaults to None</span>
+<span class="sd">    :type down_sampling_window: timedelta or List[timedelta] or None, optional</span>
+<span class="sd">    :param num_processes: Number of processes to use (1 for single process, 0.9 for 90% of CPU cores), defaults to 1</span>
+<span class="sd">    :type num_processes: float or int, optional</span>
 <span class="sd">    :param slide_time_window_kwargs: Additional keyword arguments to pass to the slide_time_window function</span>
 <span class="sd">    :type slide_time_window_kwargs: dict</span>
-<span class="sd">    :return: Dictionary of Alfvenic parameters for each time window (time, r3, p3, residual_energy, cross_helicity, alfven_ratio, compressibility, vA, time_window, num_valid_p_points, num_valid_b_points)</span>
+<span class="sd">    :return: Dictionary of Alfvenic parameters for each time window</span>
 <span class="sd">    :rtype: dict</span>
+<span class="sd">    :raises ValueError: If num_processes is out of valid range</span>
 <span class="sd">    </span>
 <span class="sd">    This function calculates time-dependent Alfvenic parameters including correlation coefficient</span>
 <span class="sd">    between velocity and magnetic field, residual energy, cross helicity, Alfven ratio, and compressibility.</span>
+<span class="sd">    Supports multiprocessing for improved performance with large datasets.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># Validate num_processes</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    <span class="k">if</span> <span class="n">num_processes</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">num_processes</span> <span class="o">&gt;</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_processes should be in the range of (0, 1) or [1, </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span><span class="si">}</span><span class="s1">]!&#39;</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="s1">&#39;start_time&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">slide_time_window_kwargs</span><span class="p">:</span>
         <span class="n">slide_time_window_kwargs</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -342,8 +529,8 @@
     <span class="k">if</span> <span class="s1">&#39;step&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">slide_time_window_kwargs</span><span class="p">:</span>
         <span class="n">slide_time_window_kwargs</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_time_window_kwargs</span><span class="p">[</span><span class="s1">&#39;window_size&#39;</span><span class="p">]</span>
         
-        
     <span class="n">time_windows</span><span class="p">,</span> <span class="n">p_time_window_indices</span> <span class="o">=</span> <span class="n">slide_time_window</span><span class="p">(</span><span class="n">p_date</span><span class="p">,</span> <span class="o">**</span><span class="n">slide_time_window_kwargs</span><span class="p">)</span>
+    
     <span class="k">if</span> <span class="n">n_date</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n must have the same length as v if n_date is not provided.&quot;</span><span class="p">)</span>
@@ -352,6 +539,7 @@
         <span class="n">_</span><span class="p">,</span> <span class="n">n_time_window_indices</span> <span class="o">=</span> <span class="n">slide_time_window</span><span class="p">(</span><span class="n">n_date</span><span class="p">,</span> <span class="o">**</span><span class="n">slide_time_window_kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Any parameters related to Alfven velocity will not be calculated as n is None.&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+        <span class="n">n_time_window_indices</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_windows</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">b_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">b_time_window_indices</span> <span class="o">=</span> <span class="n">p_time_window_indices</span>
@@ -363,6 +551,7 @@
 
     <span class="n">num_window</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_windows</span><span class="p">)</span>
     
+    <span class="c1"># Initialize result arrays</span>
     <span class="n">r3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_window</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
     <span class="n">p3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_window</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
     <span class="n">rvB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_window</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
@@ -376,43 +565,68 @@
     <span class="n">num_valid_p_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_window</span><span class="p">)</span>
     <span class="n">num_valid_b_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_window</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">p_window_indices</span><span class="p">,</span> <span class="n">n_window_indices</span><span class="p">,</span> <span class="n">b_window_indices</span><span class="p">)</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">p_time_window_indices</span><span class="p">,</span> <span class="n">n_time_window_indices</span><span class="p">,</span> <span class="n">b_time_window_indices</span><span class="p">)),</span> <span class="n">total</span><span class="o">=</span><span class="n">num_window</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Calculating Alfvenic Parameters&#39;</span><span class="p">):</span>
-
-            <span class="n">alfven_params_window</span> <span class="o">=</span> <span class="n">calc_alfven</span><span class="p">(</span>
-                <span class="n">p_date</span><span class="o">=</span><span class="n">p_date</span><span class="p">[</span><span class="n">p_window_indices</span><span class="p">],</span> 
-                <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="n">p_window_indices</span><span class="p">],</span> 
-                <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">[</span><span class="n">n_window_indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> 
-                <span class="n">b_date</span><span class="o">=</span><span class="n">b_date</span><span class="p">[</span><span class="n">b_window_indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">b_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> 
-                <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">[</span><span class="n">b_window_indices</span><span class="p">],</span> 
-                <span class="n">least_data_in_window</span><span class="o">=</span><span class="n">least_data_in_window</span><span class="p">,</span> 
-                <span class="n">down_sampling_method</span><span class="o">=</span><span class="n">down_sampling_method</span><span class="p">,</span>
-                <span class="n">down_sampling_window</span><span class="o">=</span><span class="n">down_sampling_window</span><span class="p">,</span>
-            <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">p_window_indices</span><span class="p">,</span> <span class="n">b_window_indices</span><span class="p">)</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">p_time_window_indices</span><span class="p">,</span> <span class="n">b_time_window_indices</span><span class="p">)),</span> <span class="n">total</span><span class="o">=</span><span class="n">num_window</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Calculating Alfvenic Parameters&#39;</span><span class="p">):</span>
-
-            <span class="n">alfven_params_window</span> <span class="o">=</span> <span class="n">calc_alfven</span><span class="p">(</span>
-                <span class="n">p_date</span><span class="o">=</span><span class="n">p_date</span><span class="p">[</span><span class="n">p_window_indices</span><span class="p">],</span> 
-                <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="n">p_window_indices</span><span class="p">],</span> 
-                <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                <span class="n">b_date</span><span class="o">=</span><span class="n">b_date</span><span class="p">[</span><span class="n">b_window_indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">b_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> 
-                <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">[</span><span class="n">b_window_indices</span><span class="p">],</span> 
-                <span class="n">least_data_in_window</span><span class="o">=</span><span class="n">least_data_in_window</span><span class="p">,</span> 
-                <span class="n">down_sampling_method</span><span class="o">=</span><span class="n">down_sampling_method</span><span class="p">,</span>
-                <span class="n">down_sampling_window</span><span class="o">=</span><span class="n">down_sampling_window</span><span class="p">,</span>
-            <span class="p">)</span>
-            
+    <span class="c1"># Prepare arguments for parallel processing</span>
+    <span class="n">args_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_window</span><span class="p">):</span>
+        <span class="n">p_window_indices</span> <span class="o">=</span> <span class="n">p_time_window_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">b_window_indices</span> <span class="o">=</span> <span class="n">b_time_window_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">n_window_indices</span> <span class="o">=</span> <span class="n">n_time_window_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         
-        <span class="n">num_valid_p_points</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num_valid_b_points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;num_valid_p_points&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;num_valid_b_points&#39;</span><span class="p">]</span>
-        <span class="n">r3</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">p3</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rvB</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pvB</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">residual_energy</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cross_helicity</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alfven_ratio</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">compressibility</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">vA</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;r3&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;p3&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;rvB&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;pvB&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;residual_energy&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;cross_helicity&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;alfven_ratio&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;compressibility&#39;</span><span class="p">],</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;vA&#39;</span><span class="p">]</span>
+        <span class="n">p_date_window</span> <span class="o">=</span> <span class="n">p_date</span><span class="p">[</span><span class="n">p_window_indices</span><span class="p">]</span>
+        <span class="n">v_window</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">p_window_indices</span><span class="p">]</span>
+        <span class="n">b_window</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="n">b_window_indices</span><span class="p">]</span>
+        <span class="n">b_date_window</span> <span class="o">=</span> <span class="n">b_date</span><span class="p">[</span><span class="n">b_window_indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">b_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">n_window</span> <span class="o">=</span> <span class="n">n</span><span class="p">[</span><span class="n">n_window_indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_window_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        
+        <span class="n">args_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">p_date_window</span><span class="p">,</span> <span class="n">v_window</span><span class="p">,</span> <span class="n">n_window</span><span class="p">,</span> <span class="n">b_date_window</span><span class="p">,</span> <span class="n">b_window</span><span class="p">,</span>
+            <span class="n">least_data_in_window</span><span class="p">,</span> <span class="n">down_sampling_method</span><span class="p">,</span> <span class="n">down_sampling_window</span>
+        <span class="p">))</span>
+    
+    <span class="c1"># Process windows</span>
+    <span class="k">if</span> <span class="n">num_processes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Single process with progress bar</span>
+        <span class="k">for</span> <span class="n">args</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">args_list</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Calculating Alfvenic Parameters&#39;</span><span class="p">):</span>
+            <span class="n">window_idx</span><span class="p">,</span> <span class="n">alfven_params_window</span> <span class="o">=</span> <span class="n">_calc_alfven_window</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            
+            <span class="n">num_valid_p_points</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;num_valid_p_points&#39;</span><span class="p">]</span>
+            <span class="n">num_valid_b_points</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;num_valid_b_points&#39;</span><span class="p">]</span>
+            <span class="n">r3</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;r3&#39;</span><span class="p">]</span>
+            <span class="n">p3</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;p3&#39;</span><span class="p">]</span>
+            <span class="n">rvB</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;rvB&#39;</span><span class="p">]</span>
+            <span class="n">pvB</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;pvB&#39;</span><span class="p">]</span>
+            <span class="n">residual_energy</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;residual_energy&#39;</span><span class="p">]</span>
+            <span class="n">cross_helicity</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;cross_helicity&#39;</span><span class="p">]</span>
+            <span class="n">alfven_ratio</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;alfven_ratio&#39;</span><span class="p">]</span>
+            <span class="n">compressibility</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;compressibility&#39;</span><span class="p">]</span>
+            <span class="n">vA</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;vA&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Multiprocessing</span>
+        <span class="n">num_processes</span> <span class="o">=</span> <span class="n">_determine_processes</span><span class="p">(</span><span class="n">num_processes</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Using </span><span class="si">{</span><span class="n">num_processes</span><span class="si">}</span><span class="s1"> processes for Alfvenic parameter calculation...&#39;</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">num_processes</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">_calc_alfven_window</span><span class="p">,</span> <span class="n">args_list</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">args_list</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Calculating Alfvenic Parameters&#39;</span><span class="p">))</span>
+        
+        <span class="c1"># Collect results</span>
+        <span class="k">for</span> <span class="n">window_idx</span><span class="p">,</span> <span class="n">alfven_params_window</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">num_valid_p_points</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;num_valid_p_points&#39;</span><span class="p">]</span>
+            <span class="n">num_valid_b_points</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;num_valid_b_points&#39;</span><span class="p">]</span>
+            <span class="n">r3</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;r3&#39;</span><span class="p">]</span>
+            <span class="n">p3</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;p3&#39;</span><span class="p">]</span>
+            <span class="n">rvB</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;rvB&#39;</span><span class="p">]</span>
+            <span class="n">pvB</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;pvB&#39;</span><span class="p">]</span>
+            <span class="n">residual_energy</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;residual_energy&#39;</span><span class="p">]</span>
+            <span class="n">cross_helicity</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;cross_helicity&#39;</span><span class="p">]</span>
+            <span class="n">alfven_ratio</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;alfven_ratio&#39;</span><span class="p">]</span>
+            <span class="n">compressibility</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;compressibility&#39;</span><span class="p">]</span>
+            <span class="n">vA</span><span class="p">[</span><span class="n">window_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">alfven_params_window</span><span class="p">[</span><span class="s1">&#39;vA&#39;</span><span class="p">]</span>
     
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">time_windows</span><span class="p">],</span> <span class="s1">&#39;r3&#39;</span><span class="p">:</span> <span class="n">r3</span><span class="p">,</span> <span class="s1">&#39;p3&#39;</span><span class="p">:</span> <span class="n">p3</span><span class="p">,</span> <span class="s1">&#39;rvB&#39;</span><span class="p">:</span> <span class="n">rvB</span><span class="p">,</span> <span class="s1">&#39;pvB&#39;</span><span class="p">:</span> <span class="n">pvB</span><span class="p">,</span>
-            <span class="s1">&#39;residual_energy&#39;</span><span class="p">:</span> <span class="n">residual_energy</span><span class="p">,</span> <span class="s1">&#39;cross_helicity&#39;</span><span class="p">:</span> <span class="n">cross_helicity</span><span class="p">,</span> <span class="s1">&#39;alfven_ratio&#39;</span><span class="p">:</span> <span class="n">alfven_ratio</span><span class="p">,</span> <span class="s1">&#39;compressibility&#39;</span><span class="p">:</span> <span class="n">compressibility</span><span class="p">,</span> <span class="s1">&#39;vA&#39;</span><span class="p">:</span> <span class="n">vA</span><span class="p">,</span>
-            <span class="s1">&#39;time_window&#39;</span><span class="p">:</span> <span class="n">time_windows</span><span class="p">,</span> <span class="s1">&#39;num_valid_p_points&#39;</span><span class="p">:</span> <span class="n">num_valid_p_points</span><span class="p">,</span> <span class="s1">&#39;num_valid_b_points&#39;</span><span class="p">:</span> <span class="n">num_valid_b_points</span><span class="p">}</span></div>
+            <span class="s1">&#39;residual_energy&#39;</span><span class="p">:</span> <span class="n">residual_energy</span><span class="p">,</span> <span class="s1">&#39;cross_helicity&#39;</span><span class="p">:</span> <span class="n">cross_helicity</span><span class="p">,</span> <span class="s1">&#39;alfven_ratio&#39;</span><span class="p">:</span> <span class="n">alfven_ratio</span><span class="p">,</span> 
+            <span class="s1">&#39;compressibility&#39;</span><span class="p">:</span> <span class="n">compressibility</span><span class="p">,</span> <span class="s1">&#39;vA&#39;</span><span class="p">:</span> <span class="n">vA</span><span class="p">,</span> <span class="s1">&#39;time_window&#39;</span><span class="p">:</span> <span class="n">time_windows</span><span class="p">,</span> 
+            <span class="s1">&#39;num_valid_p_points&#39;</span><span class="p">:</span> <span class="n">num_valid_p_points</span><span class="p">,</span> <span class="s1">&#39;num_valid_b_points&#39;</span><span class="p">:</span> <span class="n">num_valid_b_points</span><span class="p">}</span></div>
 
-    <span class="c1"># return {&#39;time&#39;: [t[0] for t in time_windows], &#39;r3&#39;: r3, &#39;residual_energy&#39;: residual_energy, &#39;cross_helicity&#39;: cross_helicity, &#39;alfven_ratio&#39;: alfven_ratio, &#39;compressibility&#39;: compressibility, &#39;vA&#39;: vA,</span>
-    <span class="c1">#         &#39;time_window&#39;: time_windows, &#39;num_valid_p_points&#39;: num_valid_p_points, &#39;num_valid_b_points&#39;: num_valid_b_points}</span>
 </pre></div>
 
            </div>
