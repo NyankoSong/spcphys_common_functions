@@ -37,7 +37,7 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     :param align_to: List of datetime objects to align the windows to, defaults to None
     :type align_to: List[datetime] or numpy.ndarray, optional
     :return: Tuple containing time_window_ranges (start and end times of each window) and time_window_indices (indices of elements in each window)
-    :rtype: Tuple[List[Tuple[datetime, datetime]], List[numpy.ndarray]]
+    :rtype: Tuple[numpy.ndarray, List[numpy.ndarray]]
     
     This function creates sliding windows of a specified size over a list of datetime objects. 
     The windows can be defined by either a fixed number of elements (int) or a time duration 
@@ -77,4 +77,4 @@ def slide_time_window(time: List[datetime]|np.ndarray, window_size: timedelta|in
     start_index = bisect_left([time_window_range[0] for time_window_range in time_window_ranges], start_time) if start_time is not None else 0
     end_index = bisect_right([time_window_range[1] for time_window_range in time_window_ranges], end_time) if end_time is not None else len(time_window_ranges)
         
-    return time_window_ranges[start_index:end_index], time_window_indices[start_index:end_index]
+    return np.asarray(time_window_ranges[start_index:end_index]), time_window_indices[start_index:end_index]

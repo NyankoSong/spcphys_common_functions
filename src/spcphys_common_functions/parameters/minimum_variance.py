@@ -1,35 +1,36 @@
-'''Modified from https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py'''
+"""
+Minimum Variance Analysis (MVA) for space physics data.
+
+Modified from https://github.com/spedas/pyspedas/blob/master/pyspedas/cotrans_tools/minvar.py
+"""
 
 import numpy as np
 
 
-
-
-
-def min_var(data: np.ndarray, verbose: bool=False):
+def min_var(data: np.ndarray, verbose: bool = False):
+    """Compute the principal variance directions and variances of a vector quantity.
     
-    """
-    This program computes the principal variance directions and variances of a
-    vector quantity as well as the associated eigenvalues.
+    This function performs Minimum Variance Analysis (MVA) to find the principal
+    axes of variance for a set of vector measurements.
 
-    Parameters
-    -----------
-    data:
-        Vxyz, an (npoints, ndim) array of data(ie Nx3)
-
-    Returns
-    -------
-    vrot:
-        an array of (npoints, ndim) containing the rotated data in the new coordinate system, ijk.
-        Vi(maximum direction)=vrot[0,:]
-        Vj(intermediate direction)=vrot[1,:]
-        Vk(minimum variance direction)=Vrot[2,:]
-    v:
-        an (ndim,ndim) array containing the principal axes vectors
-        Maximum variance direction eigenvector, Vi=v[*,0]
-        Intermediate variance direction, Vj=v[*,1] (descending order)
-    w:
-        the eigenvalues of the computation
+    :param data: Input data array with shape (npoints, 3), where npoints is the
+                 number of measurements and 3 represents the vector components (x, y, z)
+    :type data: numpy.ndarray
+    :param verbose: If True, print diagnostic information including average direction,
+                    angle to minimum variance direction, and eigenvalue/eigenvector info,
+                    defaults to False
+    :type verbose: bool, optional
+    :return: Tuple containing:
+             - vrot: Rotated data in the new coordinate system with shape (npoints, 3).
+               vrot[:, 0] is the maximum variance direction,
+               vrot[:, 1] is the intermediate variance direction,
+               vrot[:, 2] is the minimum variance direction.
+             - v: Eigenvector matrix with shape (3, 3) containing the principal axes.
+               v[:, 0] is the maximum variance direction eigenvector,
+               v[:, 1] is the intermediate variance direction eigenvector,
+               v[:, 2] is the minimum variance direction eigenvector.
+             - w: Eigenvalues array with shape (3,) in descending order.
+    :rtype: tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
     """
             
     #  Min var starts here
@@ -67,6 +68,11 @@ def min_var(data: np.ndarray, verbose: bool=False):
     # if v[2, 2] < 0:
     #     v[:, 2] = -v[:, 2]
     #     v[:, 1] = -v[:, 1]
+
+    # Ensure minvar-Z and intvar-Z are both positive, to ensure matching results between IDL and Python
+    if v[2, 1] < 0:
+        v[:, 1] = -v[:, 1]
+        v[:, 0] = -v[:, 0]
 
     vrot = np.array([np.dot(row, v) for row in data])
 
