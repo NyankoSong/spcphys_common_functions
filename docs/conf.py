@@ -14,7 +14,7 @@ author = 'NyankoSong'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 import os, sys
-sys.path.insert(0, os.path.abspath(f'../../src/{project}'))
+sys.path.insert(0, os.path.abspath('../src'))
 
 extensions = [
     'sphinx.ext.autodoc',

@@ -41,7 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/modules.html">spcphys_common_functions</a></li>
 </ul>
 
         </div>
@@ -110,7 +110,7 @@
 <span class="sd">    :param align_to: List of datetime objects to align the windows to, defaults to None</span>
 <span class="sd">    :type align_to: List[datetime] or numpy.ndarray, optional</span>
 <span class="sd">    :return: Tuple containing time_window_ranges (start and end times of each window) and time_window_indices (indices of elements in each window)</span>
-<span class="sd">    :rtype: Tuple[List[Tuple[datetime, datetime]], List[numpy.ndarray]]</span>
+<span class="sd">    :rtype: Tuple[numpy.ndarray, List[numpy.ndarray]]</span>
 <span class="sd">    </span>
 <span class="sd">    This function creates sliding windows of a specified size over a list of datetime objects. </span>
 <span class="sd">    The windows can be defined by either a fixed number of elements (int) or a time duration </span>
@@ -150,7 +150,7 @@
     <span class="n">start_index</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">([</span><span class="n">time_window_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">time_window_range</span> <span class="ow">in</span> <span class="n">time_window_ranges</span><span class="p">],</span> <span class="n">start_time</span><span class="p">)</span> <span class="k">if</span> <span class="n">start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
     <span class="n">end_index</span> <span class="o">=</span> <span class="n">bisect_right</span><span class="p">([</span><span class="n">time_window_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">time_window_range</span> <span class="ow">in</span> <span class="n">time_window_ranges</span><span class="p">],</span> <span class="n">end_time</span><span class="p">)</span> <span class="k">if</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_window_ranges</span><span class="p">)</span>
         
-    <span class="k">return</span> <span class="n">time_window_ranges</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">],</span> <span class="n">time_window_indices</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time_window_ranges</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]),</span> <span class="n">time_window_indices</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]</span></div>
 
 </pre></div>
 

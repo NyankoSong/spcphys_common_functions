@@ -14,7 +14,7 @@ For example, calculating the alfvénicity, backmapping, or batch downloading cdf
    :maxdepth: 2
    :caption: Contents:
 
-   source/spcphys_common_functions
+   source/modules
 
 
 

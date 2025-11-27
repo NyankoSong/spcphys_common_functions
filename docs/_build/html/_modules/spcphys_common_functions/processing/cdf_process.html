@@ -41,7 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/spcphys_common_functions.html">spcphys_common_functions package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/modules.html">spcphys_common_functions</a></li>
 </ul>
 
         </div>
@@ -218,13 +218,18 @@
 <span class="sd">    This function assumes that the satellite data is stored in the following structure:</span>
 <span class="sd">    </span>
 <span class="sd">    - dir_path</span>
+
 <span class="sd">        - satellite1_name</span>
+
 <span class="sd">            - cdf_files</span>
 <span class="sd">            - info_file</span>
+
 <span class="sd">        - satellite2_name</span>
+
 <span class="sd">            - cdf_files</span>
 <span class="sd">            - info_file</span>
-<span class="sd">        ...</span>
+
+<span class="sd">        - ...</span>
 <span class="sd">    </span>
 <span class="sd">    If the info_filename is None, the function will search for the csv file in the satellite directory.</span>
 <span class="sd">    Make sure that there is only one csv file in each satellite directory if the info_filename is not specified.</span>
@@ -247,6 +252,7 @@
 <span class="sd">    - varname contains the names of variables in the dataset, separated by space</span>
 <span class="sd">    - condition is a string with two elements separated by space, the lower and upper boundary of the variable.</span>
 <span class="sd">      If the variable has no condition, use &#39;none&#39; or &#39;&#39;, which will set the boundary to [-1E30, 1E30]</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
