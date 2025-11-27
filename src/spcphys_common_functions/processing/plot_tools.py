@@ -1,4 +1,4 @@
-'''Module for plotting tools.'''
+"""Module for plotting tools used in space physics data visualization."""
 
 from typing import List, Iterable, Literal
 from datetime import datetime, timedelta
@@ -13,7 +13,18 @@ from matplotlib.contour import QuadContourSet
 from scipy import stats
 
 
-def box_stats(data, scale: Literal['linear', 'log'] ='linear', label=None):
+def box_stats(data, scale: Literal['linear', 'log'] = 'linear', label=None):
+    """Calculate box plot statistics for matplotlib's bxp function.
+    
+    :param data: Input data array
+    :type data: array-like
+    :param scale: Scale for data processing, either 'linear' or 'log', defaults to 'linear'
+    :type scale: Literal['linear', 'log'], optional
+    :param label: Label for the box plot, defaults to None
+    :type label: any, optional
+    :return: Dictionary containing box plot statistics (whislo, q1, med, q3, whishi, fliers, mean, cilo, cihi)
+    :rtype: dict
+    """
     if scale == 'log':
         log_nr2 = np.log10(data)
         q1 = np.nanpercentile(log_nr2, 25)
@@ -51,35 +62,26 @@ def box_stats(data, scale: Literal['linear', 'log'] ='linear', label=None):
     return stats
 
 
-def violin_stats(data, scale: Literal['linear', 'log'] ='linear', n_kde_points=1000):
-    """
-    Prepares statistics for matplotlib.axes.Axes.violin's vpstats parameter,
-    with log scale support.
-
-    Parameters
-    ----------
-    data : array-like
-        Input data.
-    scale : {'log', 'linear'}, optional
-        The scale for processing data before KDE and statistics calculation.
-        If 'log', data is log10 transformed (positive, finite values only).
-        Default is 'log'.
-    label : any, optional
-        Included for signature consistency. Not used in the returned vpstats dict.
-    N_kde_points : int, optional
-        Number of points to evaluate the KDE. Default is 100.
-
-    Returns
-    -------
-    dict
-        A dictionary for vpstats:
-        'coords': List of scalars where KDE was evaluated.
-        'vals': List of KDE values at 'coords' (normalized density).
-        'mean': Mean of (processed) data.
-        'median': Median of (processed) data.
-        'min': Min of (processed) data.
-        'max': Max of (processed) data.
-        Returns empty 'coords'/'vals' and NaN stats if data is unsuitable.
+def violin_stats(data, scale: Literal['linear', 'log'] = 'linear', n_kde_points: int =1000):
+    """Prepare statistics for matplotlib.axes.Axes.violin's vpstats parameter.
+    
+    :param data: Input data array
+    :type data: array-like
+    :param scale: Scale for data processing, either 'linear' or 'log'.
+                  If 'log', data is log10 transformed (positive, finite values only).
+                  Defaults to 'linear'.
+    :type scale: Literal['linear', 'log'], optional
+    :param n_kde_points: Number of points to evaluate the KDE, defaults to 1000
+    :type n_kde_points: int, optional
+    :return: Dictionary containing violin plot statistics:
+             - 'coords': List of scalars where KDE was evaluated
+             - 'vals': List of KDE values at 'coords' (normalized density)
+             - 'mean': Mean of (processed) data
+             - 'median': Median of (processed) data
+             - 'min': Min of (processed) data
+             - 'max': Max of (processed) data
+             Returns empty 'coords'/'vals' and NaN stats if data is unsuitable.
+    :rtype: dict
     """
     data_arr = np.asarray(data)
 

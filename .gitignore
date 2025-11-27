@@ -125,8 +125,33 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# other folders
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Ruff
+.ruff_cache/
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# Project-specific
 temp_file/
-.csv
-.cdf
-.pkl
+*.csv
+*.cdf
+*.pkl
+data/
+*.fits
+
+# Temporary files
+*.tmp
+*.temp
+*~
