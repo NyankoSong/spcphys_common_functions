@@ -145,13 +145,18 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     This function assumes that the satellite data is stored in the following structure:
     
     - dir_path
+
         - satellite1_name
+
             - cdf_files
             - info_file
+
         - satellite2_name
+
             - cdf_files
             - info_file
-        ...
+
+        - ...
     
     If the info_filename is None, the function will search for the csv file in the satellite directory.
     Make sure that there is only one csv file in each satellite directory if the info_filename is not specified.
@@ -174,6 +179,7 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
     - varname contains the names of variables in the dataset, separated by space
     - condition is a string with two elements separated by space, the lower and upper boundary of the variable.
       If the variable has no condition, use 'none' or '', which will set the boundary to [-1E30, 1E30]
+
     """
     
     if not os.path.exists(dir_path):

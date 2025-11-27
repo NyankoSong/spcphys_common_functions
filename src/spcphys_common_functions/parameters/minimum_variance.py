@@ -21,15 +21,17 @@ def min_var(data: np.ndarray, verbose: bool = False):
                     defaults to False
     :type verbose: bool, optional
     :return: Tuple containing:
-             - vrot: Rotated data in the new coordinate system with shape (npoints, 3).
-               vrot[:, 0] is the maximum variance direction,
-               vrot[:, 1] is the intermediate variance direction,
-               vrot[:, 2] is the minimum variance direction.
-             - v: Eigenvector matrix with shape (3, 3) containing the principal axes.
-               v[:, 0] is the maximum variance direction eigenvector,
-               v[:, 1] is the intermediate variance direction eigenvector,
-               v[:, 2] is the minimum variance direction eigenvector.
-             - w: Eigenvalues array with shape (3,) in descending order.
+    
+        - vrot: Rotated data in the new coordinate system with shape (npoints, 3).
+          vrot[:, 0] is the maximum variance direction,
+          vrot[:, 1] is the intermediate variance direction,
+          vrot[:, 2] is the minimum variance direction.
+        - v: Eigenvector matrix with shape (3, 3) containing the principal axes.
+          v[:, 0] is the maximum variance direction eigenvector,
+          v[:, 1] is the intermediate variance direction eigenvector,
+          v[:, 2] is the minimum variance direction eigenvector.
+        - w: Eigenvalues array with shape (3,) in descending order.
+
     :rtype: tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
     """
             
