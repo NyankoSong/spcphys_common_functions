@@ -37,10 +37,9 @@ def min_var(data: np.ndarray, verbose: bool = False):
     # data must be Nx3
     vecavg = np.nanmean(np.nan_to_num(data, nan=0.0), axis=0)
 
-    mvamat = np.zeros((3, 3))
-    for i in range(3):
-        for j in range(3):
-            mvamat[i, j] = np.nanmean(np.nan_to_num(data[:, i] * data[:, j], nan=0.0)) - vecavg[i] * vecavg[j]
+    # Vectorized computation of covariance matrix
+    data_clean = np.nan_to_num(data, nan=0.0)
+    mvamat = (data_clean.T @ data_clean) / data_clean.shape[0] - np.outer(vecavg, vecavg)
 
     # Calculate eigenvalues and eigenvectors
     w, v = np.linalg.eigh(mvamat, UPLO='U')
@@ -74,7 +73,7 @@ def min_var(data: np.ndarray, verbose: bool = False):
         v[:, 1] = -v[:, 1]
         v[:, 0] = -v[:, 0]
 
-    vrot = np.array([np.dot(row, v) for row in data])
+    vrot = data @ v
 
     if verbose:
         data_ave = np.mean(data, axis=0)

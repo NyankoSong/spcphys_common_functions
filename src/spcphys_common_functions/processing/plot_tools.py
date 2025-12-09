@@ -30,33 +30,35 @@ def box_stats(data, scale: Literal['linear', 'log'] = 'linear', label=None):
         q1 = np.nanpercentile(log_nr2, 25)
         q3 = np.nanpercentile(log_nr2, 75)
         iqr = q3 - q1
+        med_log = np.nanmedian(log_nr2)
         stats = {
             'label': label,
             'whislo': 10**(q1 - 1.5*iqr),
             'q1': 10**q1,
-            'med': 10**np.nanmedian(log_nr2),
+            'med': 10**med_log,
             'q3': 10**q3,
             'whishi': 10**(q3 + 1.5*iqr),
             'fliers': (10**log_nr2[log_nr2 < q1 - 1.5*iqr]).tolist() + (10**log_nr2[log_nr2 > q3 + 1.5*iqr]).tolist(),
             'mean': 10**np.nanmean(log_nr2),
-            'cilo': 10**(np.nanmedian(log_nr2) - 1.57 * iqr / np.sqrt(len(log_nr2))),
-            'cihi': 10**(np.nanmedian(log_nr2) + 1.57 * iqr / np.sqrt(len(log_nr2))),
+            'cilo': 10**(med_log - 1.57 * iqr / np.sqrt(len(log_nr2))),
+            'cihi': 10**(med_log + 1.57 * iqr / np.sqrt(len(log_nr2))),
         }
     else:
         q1 = np.nanpercentile(data, 25)
         q3 = np.nanpercentile(data, 75)
         iqr = q3 - q1
+        med = np.nanmedian(data)
         stats = {
             'label': label,
             'whislo': q1 - 1.5*iqr,
             'q1': q1,
-            'med': np.nanmedian(data),
+            'med': med,
             'q3': q3,
             'whishi': q3 + 1.5*iqr,
             'fliers': data[data < q1 - 1.5*iqr].tolist() + data[data > q3 + 1.5*iqr].tolist(),
             'mean': np.nanmean(data),
-            'cilo': np.nanmedian(data) - 1.57 * iqr / np.sqrt(len(data)),
-            'cihi': np.nanmedian(data) + 1.57 * iqr / np.sqrt(len(data)),
+            'cilo': med - 1.57 * iqr / np.sqrt(len(data)),
+            'cihi': med + 1.57 * iqr / np.sqrt(len(data)),
         }
     
     return stats
