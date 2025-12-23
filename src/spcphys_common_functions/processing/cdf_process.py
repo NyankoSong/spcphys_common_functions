@@ -124,10 +124,10 @@ def _parallel_convert_epoches(epoch, num_processes=None):
     return np.concatenate(results)
 
 
-def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1, epoch_varname_default: List[str]|str='epoch'):
+def combine_cdf_to_pkl(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1, epoch_varname_default: List[str]|str='epoch'):
     
     """
-    Combine all satellite data into a single file for each satellite.
+    Combine all cdf data into a single pickle file for each satellite.
     
     :param dir_path: The root directory of the satellite data
     :type dir_path: str
@@ -295,6 +295,19 @@ def process_satellite_data(dir_path:str, info_filename: str|None=None, output_di
         print(f'{data_file_name} saved to {dir_path}!')
 
 
+def process_satellite_data(dir_path:str, info_filename: str|None=None, output_dir: str|None=None, num_processes: float|int=1, epoch_varname_default: List[str]|str='epoch'):
+    """
+    .. deprecated:: 
+        Use :func:`combine_cdf_to_pkl` instead. This function will be removed in a future version.
+    """
+    warnings.warn(
+        "process_satellite_data is deprecated and will be removed in a future version. "
+        "Please use combine_cdf_to_pkl instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return combine_cdf_to_pkl(dir_path, info_filename, output_dir, num_processes, epoch_varname_default)
+
 
 def generate_cdf_info_csv(dir_path:str, info_filename:str='info.csv', epoch_varname_default: List[str]|str='epoch', ignore_varname: List[str]|str|None =None) -> dict:
     """
@@ -354,20 +367,30 @@ def generate_cdf_info_csv(dir_path:str, info_filename:str='info.csv', epoch_varn
                 continue
             elif len(epoch_varname) > 1:
                 warnings.warn(f'More than one epoch variable found in {cdf_filename}! You may need to seperate them manually.')
-            satellite_info_dict[satellite_name]['epochname'] = epoch_varname[0]
+            
             cdf_varnames.remove(epoch_varname[0])
             if ignore_varname is not None:
                 cdf_varnames = [zvarname for zvarname in cdf_varnames for ignored_name in ignore_varname if ignored_name not in zvarname.lower()]
+            
             if dataset_name not in satellite_info_dict[satellite_name]['datasets']:
-                satellite_info_dict[satellite_name]['datasets'][dataset_name] = cdf_varnames
+                satellite_info_dict[satellite_name]['datasets'][dataset_name] = {
+                    'varnames': cdf_varnames,
+                    'epochname': epoch_varname[0]
+                }
             else:
-                if set(cdf_varnames) & set(satellite_info_dict[satellite_name]['datasets'][dataset_name]) != set(satellite_info_dict[satellite_name]['datasets'][dataset_name]):
-                    warnings.warn(f'Variable names in {cdf_filename} are not the same as other files in the same dataset!\n{cdf_filename} has {cdf_varnames}, while others have {satellite_info_dict[satellite_name]["datasets"][dataset_name]}')
-                    satellite_info_dict[satellite_name]['datasets'][dataset_name] = list(set(satellite_info_dict[satellite_name]['datasets'][dataset_name]) | set(cdf_varnames))
+                if set(cdf_varnames) & set(satellite_info_dict[satellite_name]['datasets'][dataset_name]['varnames']) != set(satellite_info_dict[satellite_name]['datasets'][dataset_name]['varnames']):
+                    warnings.warn(f'Variable names in {cdf_filename} are not the same as other files in the same dataset!\n{cdf_filename} has {cdf_varnames}, while others have {satellite_info_dict[satellite_name]["datasets"][dataset_name]["varnames"]}')
+                    satellite_info_dict[satellite_name]['datasets'][dataset_name]['varnames'] = list(set(satellite_info_dict[satellite_name]['datasets'][dataset_name]['varnames']) | set(cdf_varnames))
                     
         result = pd.DataFrame(columns=['startswith', 'dataset', 'epochname', 'varname', 'condition'])
-        for dataset_name, varnames in satellite_info_dict[satellite_name]['datasets'].items():
-            result = pd.concat([result, pd.DataFrame([{'startswith': dataset_name, 'dataset': dataset_name.upper(), 'epochname': satellite_info_dict[satellite_name]['epochname'], 'varname': ' '.join(varnames), 'condition': ''}])], ignore_index=True)
+        for dataset_name, dataset_info in satellite_info_dict[satellite_name]['datasets'].items():
+            result = pd.concat([result, pd.DataFrame([{
+                'startswith': dataset_name, 
+                'dataset': dataset_name.upper(), 
+                'epochname': dataset_info['epochname'], 
+                'varname': ' '.join(dataset_info['varnames']), 
+                'condition': ''
+            }])], ignore_index=True)
             
         result.to_csv(output_file, index=False)
         

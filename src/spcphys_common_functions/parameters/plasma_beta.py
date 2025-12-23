@@ -1,3 +1,4 @@
+from typing import Literal
 from astropy import units as u
 from astropy.constants import k_B, mu0
 import numpy as np
@@ -71,6 +72,69 @@ def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity):
     pb = pressure_magnetic(b)
     
     return pth / pb
+
+
+def instability_func(beta: u.Quantity | np.ndarray | float, S: float, alpha: float, beta_0: float):
+    '''Calculate temperature anisotropy from instability function.
+    Hellinger, P., Trávníček, P., Kasper, J. C., & Lazarus, A. J. (2006). Solar wind proton temperature anisotropy: Linear theory and WIND/SWE observations. Geophysical Research Letters, 33(9), 2006GL025925. https://doi.org/10.1029/2006GL025925
+    
+    :param beta: Plasma beta data in shape (time)
+    :type beta: astropy.units.Quantity or np.ndarray
+    :param S: S parameter
+    :type S: float
+    :param alpha: Alpha parameter
+    :type alpha: float
+    :param beta_0: Beta_0 parameter
+    :type beta_0: float
+    :return: Temperature anisotropy
+    :rtype: astropy.units.Quantity or np.ndarray or float
+    '''
+    return 1 + S / (beta + beta_0) ** alpha
+
+
+def fitted_instability(beta: u.Quantity | np.ndarray, gamma_max: Literal['1e-4', '1e-3', '1e-2']):
+    '''Calculate fitted instability.
+    Verscharen, D., Klein, K. G., & Maruca, B. A. (2019). The multi-scale nature of the solar wind. Living Reviews in Solar Physics, 16(1), 5. https://doi.org/10.1007/s41116-019-0021-0
+    
+    :param beta: Plasma beta data in shape (time)
+    :type beta: astropy.units.Quantity or np.ndarray
+    :param gamma_max: Maximum growth rate in unit of proton gyrofrequency
+    :type gamma_max: str
+    
+    :return: Fitted temperature anisotropy
+    :rtype: dict or astropy.units.Quantity or np.ndarray
+    '''
+    
+    if isinstance(beta, u.Quantity) and not beta.unit.is_equivalent(u.dimensionless_unscaled):
+        raise TypeError("beta must be a dimensionless quantity or a numpy array.")
+    
+    params = {}
+    if gamma_max == '1e-2':
+        params['Ion-Cyclotron'] = {'S': 0.649, 'alpha': 0.400, 'beta_0': -0.000}
+        params['Mirror-Mode'] = {'S': 1.040, 'alpha': 0.633, 'beta_0': 0.012}
+        params['Parallel-Firehose'] = {'S': -0.647, 'alpha': 0.583, 'beta_0': -0.713}
+        params['Oblique-Firehose'] = {'S': -1.447, 'alpha': 1.000, 'beta_0': 0.148}
+        
+    elif gamma_max == '1e-3':
+        params['Ion-Cyclotron'] = {'S': 0.437, 'alpha': 0.428, 'beta_0': 0.003}
+        params['Mirror-Mode'] = {'S': 0.801, 'alpha': 0.763, 'beta_0': 0.063}
+        params['Parallel-Firehose'] = {'S': -0.497, 'alpha': 0.566, 'beta_0': -0.543}
+        params['Oblique-Firehose'] = {'S': -1.390, 'alpha': 1.005, 'beta_0': 0.111}
+        
+    elif gamma_max == '1e-4':
+        params['Ion-Cyclotron'] = {'S': 0.367, 'alpha': 0.364, 'beta_0': -0.011}
+        params['Mirror-Mode'] = {'S': 0.702, 'alpha': 0.674, 'beta_0': 0.009}
+        params['Parallel-Firehose'] = {'S': -0.408, 'alpha': 0.529, 'beta_0': -0.410}
+        params['Oblique-Firehose'] = {'S': -1.454, 'alpha': 1.023, 'beta_0': 0.178}
+
+    results = {}
+    for key in params:
+        p = params[key]
+        results[key] = instability_func(beta, p['S'], p['alpha'], p['beta_0'])
+        
+    return results
+    
+
 
 
 

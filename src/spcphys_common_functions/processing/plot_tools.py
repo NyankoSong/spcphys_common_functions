@@ -370,6 +370,8 @@ def histogram(
     if least_samples_per_cell < 1:
         raise ValueError("least_samples_per_cell must be a positive integer.")
 
+    # Make a copy of data to avoid modifying the original list
+    data = list(data)
     for i, x in enumerate(data):
         if isinstance(x, u.Quantity):
             data[i] = x.value
@@ -581,7 +583,7 @@ def plot_hist2d(
     color_norm_type = hist_dict['color_scale']
     least_samples_per_cell = hist_dict['least_samples_per_cell']
     
-    z_hist = hist_dict['hist']
+    z_hist = hist_dict['hist'].copy()  # Copy to avoid modifying the original
     x_edges, y_edges = hist_dict['edges']
     x_mid, y_mid = hist_dict['mids']
     z_mat = hist_dict['color_data_mat']
@@ -795,9 +797,9 @@ def plot_hist3d_slices(
     color_norm_type = hist_dict['color_scale']
     least_samples_per_cell = hist_dict['least_samples_per_cell']
     
-    hist_3d = hist_dict['hist']
-    x_edges, y_edges, z_edges = hist_dict['edges']
-    x_mid, y_mid, z_mid = hist_dict['mids']
+    hist_3d = hist_dict['hist'].copy()  # Copy to avoid modifying the original
+    x_edges, y_edges, z_edges = [e.copy() for e in hist_dict['edges']]  # Copy edges
+    x_mid, y_mid, z_mid = [m.copy() for m in hist_dict['mids']]  # Copy mids
     w_mat = hist_dict['color_data_mat']
     
     if scales[0] == 'log':
