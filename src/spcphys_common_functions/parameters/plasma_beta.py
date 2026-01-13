@@ -5,7 +5,7 @@ import numpy as np
 
 
 
-def pressure_thermal(n: u.Quantity, T: u.Quantity):    
+def pressure_thermal(n: u.Quantity, T: u.Quantity) -> u.Quantity:    
     '''Calculate thermal pressure.
     
     :param n: Proton number density data in shape (time)
@@ -29,7 +29,7 @@ def pressure_thermal(n: u.Quantity, T: u.Quantity):
 
 
 
-def pressure_magnetic(b: u.Quantity):
+def pressure_magnetic(b: u.Quantity) -> u.Quantity:
     '''Calculate magnetic pressure.
     
     :param b: Magnetic field data in shape (time, 3) or magnitude in shape (time,)
@@ -51,7 +51,7 @@ def pressure_magnetic(b: u.Quantity):
 
 
 
-def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity):
+def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity) -> u.Quantity:
     '''Calculate plasma beta.
     
     :param n: Proton number density data in shape (time)
@@ -74,7 +74,7 @@ def calc_beta(n: u.Quantity, b: u.Quantity, T: u.Quantity):
     return pth / pb
 
 
-def instability_func(beta: u.Quantity | np.ndarray | float, S: float, alpha: float, beta_0: float):
+def instability_func(beta: u.Quantity | np.ndarray | float, S: float, alpha: float, beta_0: float) -> u.Quantity | np.ndarray | float:
     '''Calculate temperature anisotropy from instability function.
     Hellinger, P., Trávníček, P., Kasper, J. C., & Lazarus, A. J. (2006). Solar wind proton temperature anisotropy: Linear theory and WIND/SWE observations. Geophysical Research Letters, 33(9), 2006GL025925. https://doi.org/10.1029/2006GL025925
     
@@ -92,7 +92,7 @@ def instability_func(beta: u.Quantity | np.ndarray | float, S: float, alpha: flo
     return 1 + S / (beta + beta_0) ** alpha
 
 
-def fitted_instability(beta: u.Quantity | np.ndarray, gamma_max: Literal['1e-4', '1e-3', '1e-2']):
+def fitted_instability(beta: u.Quantity | np.ndarray, gamma_max: Literal['1e-4', '1e-3', '1e-2']) -> dict:
     '''Calculate fitted instability.
     Verscharen, D., Klein, K. G., & Maruca, B. A. (2019). The multi-scale nature of the solar wind. Living Reviews in Solar Physics, 16(1), 5. https://doi.org/10.1007/s41116-019-0021-0
     

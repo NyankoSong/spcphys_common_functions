@@ -50,13 +50,15 @@ def generate_vdf_cart_unit(vdf_time: List[datetime]|np.ndarray, imf_time: List[d
     _, imf_indices_align_to_vdf = slide_time_window(imf_time, align_to=vdf_time)
     imf_vec_mean = np.array([np.mean(imf[imf_indices_align_to_vdf[i]], axis=0) for i in range(len(imf_indices_align_to_vdf))])
     
-    e_b = imf_vec_mean / np.tile(np.linalg.norm(imf_vec_mean, axis=1), (3, 1)).T
+    imf_norm = np.linalg.norm(imf_vec_mean, axis=1, keepdims=True)
+    e_b = imf_vec_mean / imf_norm
     
     if vp_time is not None and vp is not None:
         _, vp_indices_align_to_vdf = slide_time_window(vp_time, align_to=vdf_time)
         vp_vec_mean = np.array([np.mean(vp[vp_indices_align_to_vdf[i]], axis=0) for i in range(len(vp_indices_align_to_vdf))])
         
-        e_v = vp_vec_mean / np.tile(np.linalg.norm(vp_vec_mean, axis=1), (3, 1)).T
+        vp_norm = np.linalg.norm(vp_vec_mean, axis=1, keepdims=True)
+        e_v = vp_vec_mean / vp_norm
     else:
         e_v = np.tile(np.array([1, 0, 0]), (len(vdf_time), 1))
         
@@ -98,15 +100,25 @@ def vdf_sph_to_cart(azimuth: u.Quantity, elevation: u.Quantity, energy: u.Quanti
     vdf_vec_t = np.zeros((vdf.shape[0], len(azimuth)*len(elevation)*len(energy), 3)) * v.unit
     vdf_value_t = np.zeros((vdf.shape[0], len(azimuth)*len(elevation)*len(energy))) * vdf.unit
     
+    # Pre-compute trigonometric values and v_unit_tmp (same for all time steps)
+    cos_az = np.cos(np.deg2rad(azimuth))
+    sin_az = np.sin(np.deg2rad(azimuth))
+    cos_el = np.cos(np.deg2rad(elevation))
+    sin_el = np.sin(np.deg2rad(elevation))
+    
+    # Create v_unit_tmp once (not dependent on time index i)
+    v_unit_tmp = np.array([
+        np.tile(cos_az.reshape(-1, 1), (1, len(elevation))) * np.tile(cos_el.reshape(1, -1), (len(azimuth), 1)), 
+        np.tile(sin_az.reshape(-1, 1), (1, len(elevation))) * np.tile(cos_el.reshape(1, -1), (len(azimuth), 1)),
+        np.tile(sin_el.reshape(1, -1), (len(azimuth), 1))
+    ])
+    v_unit_tmp = np.transpose(v_unit_tmp, (1, 2, 0))
+    
     for i in range(vdf.shape[0]):
-        v_unit_tmp = np.array([np.tile(np.cos(np.deg2rad(azimuth)).reshape(-1, 1), (1, len(elevation))) * np.tile(np.cos(np.deg2rad(elevation)).reshape(1, -1), (len(azimuth), 1)), 
-                               np.tile(np.sin(np.deg2rad(azimuth)).reshape(-1, 1), (1, len(elevation))) * np.tile(np.cos(np.deg2rad(elevation)).reshape(1, -1), (len(azimuth), 1)),
-                               np.tile(np.sin(np.deg2rad(elevation)).reshape(1, -1), (len(azimuth), 1))])
-        v_unit_tmp = np.transpose(v_unit_tmp, (1, 2, 0))
-        
         v_tmp = np.zeros((len(azimuth)*len(elevation)*len(energy), v_unit_tmp.shape[-1]))
+        v_unit_new_norms = np.linalg.norm(v_unit_new[i], axis=1)
         for j in range(v_unit_tmp.shape[-1]):
-            v_tmp[:, j] = (np.tile(v.reshape(1, 1, -1), (len(azimuth), len(elevation), 1)) * np.tile((np.dot(v_unit_tmp, v_unit_new[i, j, :])/np.linalg.norm(v_unit_new[i, j, :])).reshape(len(azimuth), len(elevation), -1), (1, 1, len(energy)))).reshape(-1)
+            v_tmp[:, j] = (np.tile(v.reshape(1, 1, -1), (len(azimuth), len(elevation), 1)) * np.tile((np.dot(v_unit_tmp, v_unit_new[i, j, :])/v_unit_new_norms[j]).reshape(len(azimuth), len(elevation), -1), (1, 1, len(energy)))).reshape(-1)
             
         vdf_vec_t[i, :, :] = v_tmp * v.unit
         vdf_value_t[i, :] = vdf[i, :, :, :].reshape(-1)
@@ -131,9 +143,10 @@ def _imf_in_vdf(mag_vector_3d: np.ndarray, v_unit: np.ndarray):
     :rtype: np.ndarray
     '''
     mag_vector = np.zeros(3)
-    mag_vector[0] = np.dot(mag_vector_3d, v_unit[0]) / np.linalg.norm(v_unit[0])
-    mag_vector[1] = np.dot(mag_vector_3d, v_unit[1]) / np.linalg.norm(v_unit[1])
-    mag_vector[2] = np.dot(mag_vector_3d, v_unit[2]) / np.linalg.norm(v_unit[2])
+    v_unit_norms = np.linalg.norm(v_unit, axis=1)
+    mag_vector[0] = np.dot(mag_vector_3d, v_unit[0]) / v_unit_norms[0]
+    mag_vector[1] = np.dot(mag_vector_3d, v_unit[1]) / v_unit_norms[1]
+    mag_vector[2] = np.dot(mag_vector_3d, v_unit[2]) / v_unit_norms[2]
     
     # Logic for sign reversal (uncertain reasoning, from Fortran code):
     if v_unit[2, -1] < 0:

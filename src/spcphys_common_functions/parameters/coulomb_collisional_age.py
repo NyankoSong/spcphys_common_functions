@@ -27,6 +27,7 @@ def calc_Ac(v_j: u.Quantity,
             mass_number_j: int = 1,
             m_j: u.Quantity|None = m_p,
             distance: u.Quantity = au,
+            x_assumption: u.Quantity|float|None = None
             ) -> u.Quantity:
 
     '''
@@ -45,6 +46,7 @@ def calc_Ac(v_j: u.Quantity,
     :param mass_number_j: Field particle mass number, default 1, proton
     :param m_j: Field particle mass, kg, default m_p, proton mass, can be set to None, in which case it will be calculated from mass_number_j with atomic mass constant
     :param distance: heliocentric distance, AU, default 1 AU
+    :param x_assumption: Assumed normalized differential streaming value, 0.5 is suggested by Tracy et al. (2015), default None, in which case it will be calculated from velocities and thermal speeds
     
     :return Ac: Coulomb Collisional Age
     '''
@@ -75,8 +77,8 @@ def calc_Ac(v_j: u.Quantity,
         m_j = m_j.si
     
     q_e = e.si
-    q_j = - charge_number_j * q_e
-    q_i = - charge_number_i * q_e
+    q_j = charge_number_j * q_e
+    q_i = charge_number_i * q_e
     
     mass_number_to_mass = lambda m: m_p if m == 1 else m * u_const
     if m_i is None:
@@ -91,7 +93,10 @@ def calc_Ac(v_j: u.Quantity,
     vth2_i = T_to_vth(T_i, mass=m_i, n=n_vth)**2
     
     ln_lambda = 29.9 - np.log(((charge_number_i*charge_number_j*(mass_number_i + mass_number_j) / (mass_number_i*Te_j + mass_number_j*Te_i)) * np.sqrt(n_i*charge_number_i**2 / Te_i + n_j*charge_number_j**2 / Te_j)).to_value()) # 无量纲化
-    x = np.abs(v_i - v_j) / np.sqrt(vth2_i + vth2_j)
+    if x_assumption is not None:
+        x = x_assumption
+    else:
+        x = np.abs(v_i - v_j) / np.sqrt(vth2_i + vth2_j)
     
     # phi_x = np.array([(2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, xi)[0] for xi in x]) if x.size > 1 else (2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, x)[0]
     phi_x = erf(x) # Vectorize

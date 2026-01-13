@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy import stats as astats
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
-from matplotlib.collections import QuadMesh
+from matplotlib.collections import LineCollection, QuadMesh
 from matplotlib.contour import QuadContourSet
 from scipy import stats
 
@@ -30,33 +30,35 @@ def box_stats(data, scale: Literal['linear', 'log'] = 'linear', label=None):
         q1 = np.nanpercentile(log_nr2, 25)
         q3 = np.nanpercentile(log_nr2, 75)
         iqr = q3 - q1
+        med_log = np.nanmedian(log_nr2)
         stats = {
             'label': label,
             'whislo': 10**(q1 - 1.5*iqr),
             'q1': 10**q1,
-            'med': 10**np.nanmedian(log_nr2),
+            'med': 10**med_log,
             'q3': 10**q3,
             'whishi': 10**(q3 + 1.5*iqr),
             'fliers': (10**log_nr2[log_nr2 < q1 - 1.5*iqr]).tolist() + (10**log_nr2[log_nr2 > q3 + 1.5*iqr]).tolist(),
             'mean': 10**np.nanmean(log_nr2),
-            'cilo': 10**(np.nanmedian(log_nr2) - 1.57 * iqr / np.sqrt(len(log_nr2))),
-            'cihi': 10**(np.nanmedian(log_nr2) + 1.57 * iqr / np.sqrt(len(log_nr2))),
+            'cilo': 10**(med_log - 1.57 * iqr / np.sqrt(len(log_nr2))),
+            'cihi': 10**(med_log + 1.57 * iqr / np.sqrt(len(log_nr2))),
         }
     else:
         q1 = np.nanpercentile(data, 25)
         q3 = np.nanpercentile(data, 75)
         iqr = q3 - q1
+        med = np.nanmedian(data)
         stats = {
             'label': label,
             'whislo': q1 - 1.5*iqr,
             'q1': q1,
-            'med': np.nanmedian(data),
+            'med': med,
             'q3': q3,
             'whishi': q3 + 1.5*iqr,
             'fliers': data[data < q1 - 1.5*iqr].tolist() + data[data > q3 + 1.5*iqr].tolist(),
             'mean': np.nanmean(data),
-            'cilo': np.nanmedian(data) - 1.57 * iqr / np.sqrt(len(data)),
-            'cihi': np.nanmedian(data) + 1.57 * iqr / np.sqrt(len(data)),
+            'cilo': med - 1.57 * iqr / np.sqrt(len(data)),
+            'cihi': med + 1.57 * iqr / np.sqrt(len(data)),
         }
     
     return stats
@@ -1055,6 +1057,64 @@ def plot(x: np.ndarray|list|u.Quantity, y: np.ndarray|u.Quantity, axes: plt.Axes
         
     plot_func(x, y, **plot_kwargs)
 
+
+def plot_colored_line(
+    axes: plt.Axes,
+    x: np.ndarray | u.Quantity,
+    y: np.ndarray | u.Quantity,
+    c: np.ndarray | u.Quantity | None = None,
+    **collection_kwargs,
+) -> LineCollection:
+    """Plot a 2D line whose color varies along a scalar array.
+
+    :param axes: Matplotlib axes to draw on.
+    :param x: 1D array of x coordinates.
+    :param y: 1D array of y coordinates (same length as x).
+    :param c: 1D array for color mapping. Defaults to x if None.
+    :param collection_kwargs: Additional keyword arguments forwarded to matplotlib.collections.LineCollection.
+    :return: The created LineCollection added to axes.
+    """
+
+    if x.size < 2:
+        raise ValueError("x must contain at least two points to form a line.")
+
+    if x.ndim != 1 or y.ndim != 1:
+        raise ValueError("x and y must be 1-D arrays.")
+    if x.shape[0] != y.shape[0]:
+        raise ValueError("x and y must have the same length.")
+
+    if c is None:
+        c = x
+    c = np.asarray(c)
+    if c.shape[0] != x.shape[0]:
+        raise ValueError("c must have the same length as x/y.")
+
+    # Build segments between consecutive points: shape (N-1, 2, 2)
+    xy = np.column_stack((x, y))
+    segments = np.concatenate([xy[:-1, None, :], xy[1:, None, :]], axis=1)
+
+    # Default normalization based on finite c values
+    if 'norm' not in collection_kwargs:
+        c_fin = c[np.isfinite(c)]
+        if c_fin.size == 0:
+            raise ValueError("c contains no finite values for normalization.")
+        collection_kwargs['norm'] = Normalize(vmin=np.nanmin(c_fin), vmax=np.nanmax(c_fin))
+        
+    if 'cmap' not in collection_kwargs:
+        collection_kwargs['cmap'] = 'viridis'
+
+    lc = LineCollection(segments, **collection_kwargs)
+    lc.set_array(c[:-1])
+
+    axes.add_collection(lc)
+    
+    x_over = (np.nanmax(x) - np.nanmin(x)) * 0.05
+    y_over = (np.nanmax(y) - np.nanmin(y)) * 0.05
+    
+    axes.set_xlim(np.nanmin(x) - x_over, np.nanmax(x) + x_over)
+    axes.set_ylim(np.nanmin(y) - y_over, np.nanmax(y) + y_over)
+
+    return lc
 
 
 def plot_mesh1d_ts(axes: plt.Axes, t: np.ndarray|List[datetime], y: np.ndarray|u.Quantity|List[np.ndarray|u.Quantity], z: np.ndarray|u.Quantity|List[np.ndarray|u.Quantity],
