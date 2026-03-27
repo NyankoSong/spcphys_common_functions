@@ -17,17 +17,18 @@ from .vth_E_T import T_to_E, T_to_vth
 def calc_Ac(v_j: u.Quantity,
             T_j: u.Quantity,
             n_j: u.Quantity,
-            v_i: u.Quantity,
-            T_i: u.Quantity,
-            n_i: u.Quantity,
-            charge_number_i: int,
-            mass_number_i: int,
+            v_i: u.Quantity|None = None,
+            T_i: u.Quantity|None = None,
+            n_i: u.Quantity|None = None,
+            charge_number_i: int|None = None,
+            mass_number_i: int|None = None,
             m_i: u.Quantity|None = None,
             charge_number_j: int = 1,
             mass_number_j: int = 1,
             m_j: u.Quantity|None = m_p,
             distance: u.Quantity = au,
-            x_assumption: u.Quantity|float|None = None
+            x_assumption: u.Quantity|float|None = None,
+            self_collision: bool = False
             ) -> u.Quantity:
 
     '''
@@ -36,20 +37,31 @@ def calc_Ac(v_j: u.Quantity,
     :param v_j: Field particle velocity, m/s
     :param T_j: Field particle Temperature, K
     :param n_j: Field particle number density, m^-3
-    :param v_i: Test particle velocity, m/s
-    :param T_i: Test particle Temperature, K or J
-    :param n_i: Test particle number density, m^-3
-    :param charge_number_i: Test particle charge number
-    :param mass_number_i: Test particle mass number
-    :param m_i: Test particle mass, kg, default None, in which case it will be calculated from mass_number_i with atomic mass constant
+    :param v_i: Test particle velocity, m/s, default None. Required when self_collision is False.
+    :param T_i: Test particle temperature, K or J, default None. Required when self_collision is False.
+    :param n_i: Test particle number density, m^-3, default None. Required when self_collision is False.
+    :param charge_number_i: Test particle charge number, default None. Required when self_collision is False.
+    :param mass_number_i: Test particle mass number, default None. Required when self_collision is False.
+    :param m_i: Test particle mass, kg, default None. If None, it is calculated from mass_number_i with atomic mass constant.
     :param charge_number_j: Field particle charge number, default 1, proton
     :param mass_number_j: Field particle mass number, default 1, proton
-    :param m_j: Field particle mass, kg, default m_p, proton mass, can be set to None, in which case it will be calculated from mass_number_j with atomic mass constant
+    :param m_j: Field particle mass, kg, default m_p (proton mass). If set to None, it is calculated from mass_number_j with atomic mass constant.
     :param distance: heliocentric distance, AU, default 1 AU
-    :param x_assumption: Assumed normalized differential streaming value, 0.5 is suggested by Tracy et al. (2015), default None, in which case it will be calculated from velocities and thermal speeds
+    :param x_assumption: Assumed normalized differential streaming value. Tracy et al. (2015) suggest 0.5. Default None, in which case it is calculated from velocities and thermal speeds.
+    :param self_collision: If True, use one-species self-collision mode and only provide field-particle parameters.
     
     :return Ac: Coulomb Collisional Age
     '''
+    
+    if self_collision:
+        if not all(x is None for x in [v_i, T_i, n_i, charge_number_i, mass_number_i]):
+            raise ValueError("For self-collision, only field particle parameters should be provided.")
+        v_i = v_j
+        T_i = T_j
+        n_i = n_j
+        charge_number_i = charge_number_j
+        mass_number_i = mass_number_j
+        m_i = m_j
     
     if not all(x.unit.is_equivalent(u.m/u.s) for x in [v_j, v_i]):
         raise ValueError("v_j, vth_j, v_i, and vth_i must be quantities with units of velocity (m/s).")
@@ -98,10 +110,13 @@ def calc_Ac(v_j: u.Quantity,
     else:
         x = np.abs(v_i - v_j) / np.sqrt(vth2_i + vth2_j)
     
-    # phi_x = np.array([(2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, xi)[0] for xi in x]) if x.size > 1 else (2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, x)[0]
-    phi_x = erf(x) # Vectorize
+    if self_collision:
+        phi_x_over_x = 2 / np.sqrt(np.pi) # lim x->0 (erf(x)/x) = 2/sqrt(pi)
+    else:
+        # phi_x = np.array([(2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, xi)[0] for xi in x]) if x.size > 1 else (2 / np.sqrt(np.pi)) * integrate.quad(lambda z: np.exp(-z**2), 0, x)[0]
+        phi_x_over_x = erf(x) / x # Vectorize
     
-    nu_th = ((1 / (3*np.pi*eps0**2)) * (q_i**2 * q_j**2 * ln_lambda * n_j / (m_i * m_j * (vth2_i + vth2_j)**(3/2))) * (phi_x / x))
+    nu_th = ((1 / (3*np.pi*eps0**2)) * (q_i**2 * q_j**2 * ln_lambda * n_j / (m_i * m_j * (vth2_i + vth2_j)**(3/2))) * (phi_x_over_x))
     t_travel = distance / v_j
     Ac = nu_th * t_travel
     
