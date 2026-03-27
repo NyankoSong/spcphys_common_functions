@@ -11,7 +11,7 @@ A collection of commonly used Python functions for my space physics research.
 - **Alfvénic Parameters** (`alfvenic_parameters`): Calculate cross-helicity, residual energy, Alfvén ratio, compressibility, and correlation coefficients. Supports both single-window and time-series analysis with optional multiprocessing.
 - **Plasma Beta** (`plasma_beta`): Compute thermal pressure, magnetic pressure, and plasma beta.
 - **Thermal Velocity/Energy/Temperature** (`vth_E_T`): Conversions between thermal velocity (vth), energy (E), and temperature (T). Also includes temperature tensor decomposition into parallel and perpendicular components.
-- **Coulomb Collisional Age** (`coulomb_collisional_age`): Calculate collisional age following Tracy et al. (2015), supporting arbitrary test and field particle species.
+- **Coulomb Collision** (`coulomb_collision`): Calculate collisional age following Tracy et al. (2015), supporting arbitrary test and field particle species.
 - **Effect Size** (`effectsize`): Cohen's d (Hedges' g) effect size calculations with confidence intervals, supporting log-scale and rank-based transformations.
 - **Minimum Variance Analysis** (`minimum_variance`): MVA for vector data analysis, returning rotated data, eigenvectors, and eigenvalues.
 
@@ -52,7 +52,7 @@ spcphys_common_functions/
 │   ├── alfvenic_parameters.py  # Alfvén wave analysis
 │   ├── plasma_beta.py          # Plasma beta calculations
 │   ├── vth_E_T.py              # Thermal velocity/energy/temperature
-│   ├── coulomb_collisional_age.py  # Collisional age
+│   ├── coulomb_collision.py      # Collisional age
 │   ├── effectsize.py           # Statistical effect size
 │   └── minimum_variance.py     # MVA analysis
 ├── processing/

@@ -207,12 +207,12 @@ class TestVthET:
         assert vth_rms.value > vth_mp.value
 
 
-class TestCoulombCollisionalAge:
-    """Tests for coulomb_collisional_age module."""
+class TestCoulombCollision:
+    """Tests for coulomb_collision module."""
     
     def test_calc_Ac(self):
         """Test Coulomb collisional age calculation."""
-        from spcphys_common_functions.parameters.coulomb_collisional_age import calc_Ac
+        from spcphys_common_functions.parameters.coulomb_collision import calc_Ac
         
         # Proton-proton collision parameters
         v_j = 400 * u.km/u.s
