@@ -227,6 +227,143 @@ class TestCoulombCollision:
         
         # Collisional age should be dimensionless
         assert Ac.unit.is_equivalent(u.dimensionless_unscaled)
+    
+    def test_coloumb_logarithm(self):
+        """Test Coulomb logarithm calculation."""
+        from spcphys_common_functions.parameters.coulomb_collision import coloumb_logarithm
+        
+        n = 5e6 / u.m**3
+        T = 1e5 * u.K
+        
+        # Self-collision
+        ln_lambda = coloumb_logarithm(
+            charge_number_j=1, mass_number_j=1, n_j=n, T_j=T,
+            self_collision=True
+        )
+        
+        # Coulomb logarithm should be in reasonable range (10-30 for solar wind)
+        assert 5 < ln_lambda < 40
+        
+        # Two-species collision
+        ln_lambda_2 = coloumb_logarithm(
+            charge_number_j=1, mass_number_j=1, n_j=n, T_j=T,
+            charge_number_i=2, mass_number_i=4, n_i=n*0.04, T_i=T*4
+        )
+        assert 5 < ln_lambda_2 < 40
+    
+    def test_calc_nu_Ts(self):
+        """Test self-thermalization frequency calculation (Hellinger 2016 Eq. 4)."""
+        from spcphys_common_functions.parameters.coulomb_collision import calc_nu_Ts
+        from astropy.constants import e, m_p
+        from astropy.constants import u as u_const
+        
+        n_p = 5e6 / u.m**3
+        T_para = 1e5 * u.K
+        T_perp = 1.2e5 * u.K
+        
+        species_s = {
+            'charge': 1 * e.si, 'mass': 1 * u_const,
+            'n': n_p, 'T_para': T_para, 'T_perp': T_perp,
+            'v_drift': 400 * u.km / u.s
+        }
+        nu_Ts = calc_nu_Ts(species_s)
+        
+        # Should have units of 1/s
+        assert nu_Ts.unit.is_equivalent(1/u.s)
+        
+        # Should be positive
+        assert nu_Ts.value > 0
+        
+        # Typical values for solar wind should be ~1e-7 to 1e-6 /s
+        assert 1e-9 < nu_Ts.to(1/u.s).value < 1e-4
+    
+    def test_calc_nu_st(self):
+        """Test collision frequency calculation (Hellinger 2016 Eq. 9)."""
+        from spcphys_common_functions.parameters.coulomb_collision import calc_nu_st
+        from astropy.constants import e
+        from astropy.constants import u as u_const
+        
+        n_p = 5e6 / u.m**3
+        T_para = 1e5 * u.K
+        
+        # Proton-alpha collision frequency
+        species_s = {
+            'charge': 1 * e.si, 'mass': 1 * u_const, 'n': n_p, 
+            'T_para': T_para, 'T_perp': T_para * 1.2, 'v_drift': 400 * u.km / u.s
+        }
+        species_t = {
+            'charge': 2 * e.si, 'mass': 4 * u_const, 'n': n_p * 0.04, 
+            'T_para': T_para * 4, 'T_perp': T_para * 4.5, 'v_drift': 430 * u.km / u.s
+        }
+        nu_st = calc_nu_st(species_s, species_t)
+        
+        # Should have units of 1/s
+        assert nu_st.unit.is_equivalent(1/u.s)
+        
+        # Should be positive
+        assert nu_st.value > 0
+    
+    def test_calc_heating_rates(self):
+        """Test heating rate calculation (Hellinger 2016 Eq. 2 & 3)."""
+        from spcphys_common_functions.parameters.coulomb_collision import calc_heating_rates
+        from astropy.constants import e
+        from astropy.constants import u as u_const
+        
+        n_p = 5e6 / u.m**3
+        T_para = 1e5 * u.K
+        T_perp = 1.2e5 * u.K
+        v_drift = 400 * u.km / u.s
+        
+        species_s = {
+            'charge': 1 * e.si, 'mass': 1 * u_const, 'n': n_p,
+            'T_para': T_para, 'T_perp': T_perp, 'v_drift': v_drift
+        }
+        other_species = [{
+            'charge': 2 * e.si,
+            'mass': 4 * u_const,
+            'n': n_p * 0.04,
+            'T_para': T_para * 4,
+            'T_perp': T_perp * 4,
+            'v_drift': v_drift
+        }]
+        
+        result = calc_heating_rates(species_s, other_species)
+        dT_para_dt = result['dT_para_dt']
+        dT_perp_dt = result['dT_perp_dt']
+        
+        # Should have units of K/s
+        assert dT_para_dt.unit.is_equivalent(u.K/u.s)
+        assert dT_perp_dt.unit.is_equivalent(u.K/u.s)
+        
+        # Values should be finite
+        assert np.isfinite(dT_para_dt.value)
+        assert np.isfinite(dT_perp_dt.value)
+    
+    def test_heating_rates_isotropization(self):
+        """Test that isotropization has correct sign."""
+        from spcphys_common_functions.parameters.coulomb_collision import calc_nu_Ts
+        from astropy.constants import e
+        from astropy.constants import u as u_const
+        
+        n_p = 5e6 / u.m**3
+        T_para = 1e5 * u.K
+        T_perp = 1.5e5 * u.K  # Anisotropic: T_perp > T_para
+        
+        species_s = {
+            'charge': 1 * e.si, 'mass': 1 * u_const, 'n': n_p,
+            'T_para': T_para, 'T_perp': T_perp, 'v_drift': 400 * u.km / u.s
+        }
+        nu_Ts = calc_nu_Ts(species_s)
+        
+        # Isotropization term for dT_perp/dt: -nu_Ts * (T_perp - T_para)
+        # When T_perp > T_para, this should be negative (cooling perpendicular)
+        isotropization_perp = -nu_Ts * (T_perp - T_para)
+        assert isotropization_perp.value < 0
+        
+        # Isotropization term for dT_para/dt: 2 * nu_Ts * (T_perp - T_para)
+        # When T_perp > T_para, this should be positive (heating parallel)
+        isotropization_para = 2 * nu_Ts * (T_perp - T_para)
+        assert isotropization_para.value > 0
 
 
 class TestEffectSize:
